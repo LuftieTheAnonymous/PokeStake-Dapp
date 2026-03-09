@@ -1,0 +1,311 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Navigation } from "@/components/navigation";
+import { GradientBackground } from "@/components/gradient-background";
+import { PokemonCard } from "@/components/pokemon-card";
+import { Button } from "@/components/ui/button";
+import { useGameStore } from "@/lib/store";
+import { RARITY_CONFIG } from "@/lib/types";
+import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
+import { 
+  Layers, 
+  Ghost, 
+  TrendingUp, 
+  Clock, 
+  Lock, 
+  Unlock,
+  ArrowRight,
+  Sparkles
+} from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+export default function StakingPage() {
+  const { 
+    ownedCards, 
+    stakedCards, 
+    stakeCard, 
+    unstakeCard, 
+    claimRewards,
+    getAccruedRewards,
+    getTotalAPY,
+    walletConnected,
+    connectWallet,
+    pokemonCoins
+  } = useGameStore();
+
+  const [selectedTab, setSelectedTab] = useState<"stake" | "staked">("stake");
+  const [accruedRewards, setAccruedRewards] = useState(0);
+  const [totalAPY, setTotalAPY] = useState(0);
+
+  // Update rewards every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAccruedRewards(getAccruedRewards());
+      setTotalAPY(getTotalAPY());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [getAccruedRewards, getTotalAPY]);
+
+  const handleStake = (cardId: string) => {
+    stakeCard(cardId);
+  };
+
+  const handleUnstake = (cardId: string) => {
+    unstakeCard(cardId);
+  };
+
+  const handleClaimRewards = () => {
+    const claimed = claimRewards();
+    if (claimed > 0) {
+      // Could add a toast notification here
+    }
+  };
+
+  const getTimeRemaining = (unlockTime: number) => {
+    const now = Date.now();
+    const remaining = unlockTime - now;
+    
+    if (remaining <= 0) return null;
+    
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${hours}h ${minutes}m`;
+  };
+
+  return (
+    <div className="min-h-screen relative">
+      <GradientBackground />
+      <Navigation />
+      
+      <main className="relative">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          {/* Header */}
+          <div className="text-center space-y-4 mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/30">
+              <Layers className="h-4 w-4" />
+              <span className="text-sm font-medium">Staking Protocol</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold">Stake & Earn</h1>
+            <p className="text-muted-foreground max-w-lg mx-auto">
+              Stake your Pokemon cards to earn $PKMN tokens. 
+              Cards are locked for 24 hours after staking.
+            </p>
+          </div>
+
+          {!walletConnected ? (
+            /* Connect Wallet Prompt */
+            <div className="max-w-md mx-auto text-center space-y-6 py-16">
+              <div className="inline-flex p-6 rounded-full bg-secondary/50 border border-border">
+                <Ghost className="h-16 w-16 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-semibold">Connect Your Wallet</h2>
+                <p className="text-muted-foreground">
+                  Connect your wallet to start staking
+                </p>
+              </div>
+              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
+                Connect Wallet
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Stats Dashboard */}
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <PokeCoinIcon size={20} />
+                    </div>
+                    <span className="text-muted-foreground text-sm">Balance</span>
+                  </div>
+                  <TokenBalance amount={pokemonCoins} size="lg" showLabel={true} />
+                </div>
+
+                <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <TrendingUp className="h-5 w-5 text-accent" />
+                    </div>
+                    <span className="text-muted-foreground text-sm">Accrued Rewards</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <PokeCoinIcon size={28} />
+                    <span className="font-mono text-2xl font-bold text-green-500">+{accruedRewards.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">$PKMN</span>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-green-500/10">
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    </div>
+                    <span className="text-muted-foreground text-sm">Average APY</span>
+                  </div>
+                  <div className="font-mono text-2xl font-bold text-green-500">
+                    {totalAPY.toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                      <Layers className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <span className="text-muted-foreground text-sm">Staked Cards</span>
+                  </div>
+                  <div className="font-mono text-2xl font-bold">
+                    {stakedCards.length}
+                    <span className="text-sm text-muted-foreground ml-1">/ {ownedCards.length + stakedCards.length}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Claim Rewards Button */}
+              {accruedRewards > 0 && (
+                <div className="flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={handleClaimRewards}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 shadow-lg"
+                  >
+                    <PokeCoinIcon size={20} className="mr-2" />
+                    Claim {accruedRewards.toFixed(2)} $PKMN
+                  </Button>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="flex items-center justify-center gap-2 p-1 rounded-xl bg-secondary/50 max-w-md mx-auto">
+                <button
+                  onClick={() => setSelectedTab("stake")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    selectedTab === "stake"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Unlock className="h-4 w-4" />
+                  Available ({ownedCards.length})
+                </button>
+                <button
+                  onClick={() => setSelectedTab("staked")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    selectedTab === "staked"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Lock className="h-4 w-4" />
+                  Staked ({stakedCards.length})
+                </button>
+              </div>
+
+              {/* Cards Grid */}
+              {selectedTab === "stake" ? (
+                /* Available Cards */
+                <div>
+                  {ownedCards.length === 0 ? (
+                    <div className="text-center py-16 space-y-4">
+                      <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold">No Cards Available</h3>
+                        <p className="text-muted-foreground">Draw some cards first to start staking</p>
+                      </div>
+                      <Link href="/draw">
+                        <Button className="bg-primary hover:bg-primary/90">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Draw Cards
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {ownedCards.map((card) => (
+                        <div key={card.id} className="space-y-2">
+                          <PokemonCard card={card} showStats={false} />
+                          <Button
+                            onClick={() => handleStake(card.id)}
+                            className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+                            size="sm"
+                          >
+                            <Lock className="h-4 w-4 mr-1" />
+                            Stake
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Staked Cards */
+                <div>
+                  {stakedCards.length === 0 ? (
+                    <div className="text-center py-16 space-y-4">
+                      <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold">No Staked Cards</h3>
+                        <p className="text-muted-foreground">Stake your cards to start earning rewards</p>
+                      </div>
+                      <Button onClick={() => setSelectedTab("stake")} variant="outline">
+                        View Available Cards
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {stakedCards.map((stakedCard) => {
+                        const timeRemaining = getTimeRemaining(stakedCard.unlockTime);
+                        const isLocked = timeRemaining !== null;
+                        const timeStaked = Date.now() - stakedCard.stakedAt;
+                        const daysStaked = timeStaked / (24 * 60 * 60 * 1000);
+                        const currentRewards = daysStaked * RARITY_CONFIG[stakedCard.card.rarity].dailyReward;
+
+                        return (
+                          <div key={stakedCard.card.id} className="space-y-2">
+                            <div className="relative">
+                              <PokemonCard card={stakedCard.card} showStats={false} />
+                              {/* Overlay Info */}
+                              <div className="absolute bottom-0 left-0 right-0 p-2 bg-background/90 backdrop-blur-sm border-t border-border/50">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-muted-foreground">Earned:</span>
+                                  <span className="font-mono text-primary">+{currentRewards.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {isLocked ? (
+                              <div className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
+                                <Clock className="h-4 w-4" />
+                                <span className="font-mono">{timeRemaining}</span>
+                              </div>
+                            ) : (
+                              <Button
+                                onClick={() => handleUnstake(stakedCard.card.id)}
+                                className="w-full bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30"
+                                size="sm"
+                              >
+                                <Unlock className="h-4 w-4 mr-1" />
+                                Unstake
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
