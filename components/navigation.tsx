@@ -17,6 +17,7 @@ import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import { injected, useAccount, useConnect, useDisconnect, useReadContract } from "wagmi";
 import { config } from "@/lib/wagmi/wagmiConfig";
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
+import usePokeData from "@/lib/usePokeData";
 
 const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },
@@ -32,15 +33,7 @@ export function Navigation() {
   const {mutate}=useConnect({config});
   const {mutate:disconnect}=useDisconnect();
 
-  const {data}=useReadContract({
-    abi:snorlieCoinABI,
-     address:snorlieCoinContractAddress, 
-    functionName:"balanceOf",
-    args:[address],
-query:{
-  enabled: typeof address === 'string'
-}
-  });
+  const {getRandomPokemon, tokenBalance}=usePokeData();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -105,7 +98,7 @@ query:{
           {/* Token Balance */}
           {isConnected &&
           <div className="hidden sm:flex items-center px-3 py-1.5 rounded-full bg-secondary border border-border">
-          <TokenBalance amount={data ? (data as bigint) / 1e18 : 0n} size="sm" showLabel={true} />
+          <TokenBalance amount={tokenBalance} size="sm" showLabel={true} />
           </div>
           }
           
@@ -126,7 +119,7 @@ query:{
             <Button
               size="sm"
               onClick={()=>{
-                mutate({'connector': injected({'target':'metaMask'})})
+                mutate({'connector': injected({'target':'rabby'})})
               }}
               className="bg-primary hover:bg-primary/90 cursor-pointer"
             >

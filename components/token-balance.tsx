@@ -7,7 +7,7 @@ import Image from "next/image";
 import SnorlieCoin from "@/public/snorlie.png"
 
 interface TokenBalanceProps {
-  amount: bigint;
+  amount: number;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;

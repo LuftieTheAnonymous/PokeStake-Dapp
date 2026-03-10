@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import { useGameStore } from "@/lib/usePokeCard";
+import { useGameStore } from "@/lib/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import { 

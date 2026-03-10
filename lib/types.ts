@@ -1,7 +1,7 @@
 export type Rarity = "common" | "uncommon" | "rare" | "ultra rare";
 
 export interface PokemonCard {
-  id: string;
+  id: number;
   name: string;
   pokedexIndex: number;
   rarity: Rarity;

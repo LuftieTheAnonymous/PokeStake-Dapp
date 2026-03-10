@@ -1,19 +1,38 @@
 'use client';
 
+import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
 import type { PokemonCard, StakedCard, Rarity } from "./types";
 import { RARITY_CONFIG } from "./types";
 import { th } from "date-fns/locale";
+import { useAccount, useReadContracts } from 'wagmi'
+import { useMemo } from "react";
+import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 
 
 
-
-function usePokeCard() {
- function generateCardId(): string {
-  return `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+function usePokeData() {
+  const {address, isConnected, isConnecting}= useAccount();
+  const {data}=useReadContracts({contracts:[
+    {
+        abi:snorlieCoinABI,
+         address:snorlieCoinContractAddress, 
+        functionName:"balanceOf",
+        args:[address],
+    }
+    {
+      abi:pokeCardCollectionAbi,
+      address:pokeCardCollectionAddress,
+      functionName:"totalSupply"
+    }
+  ],
+query:{
+  enabled: typeof address === 'string'
 }
+});
 
-
-
+const tokenBalance = useMemo(()=>{
+    return data && data[0].result ?  Number((data[0].result as bigint) / BigInt(1e18)) : 0;
+},[data])
 
 async function getRandomPokemon(pokedexIndex:number) {
 try {
@@ -47,8 +66,10 @@ async function drawCard(pokedexIndex:number, rarityLevel:number) {
 
       const pokemonImage = generatePokemonImageUrl(pokemon.pokedexIndex);
 
+      if(!data || data[1].result) throw new Error("Result not found for new Card");
+
         const newCard: PokemonCard = {
-          id: generateCardId(),
+          id: Number(data[1].result as bigint) + 1,
           name: pokemon.name,
           pokedexIndex: pokemon.pokedexIndex,
           rarity: selectedKey as Rarity,
@@ -69,8 +90,12 @@ function generatePokemonImageUrl(pokedexIndex: number): string {
 
 return {
   drawCard,
-  getRandomPokemon
+  getRandomPokemon,
+  tokenBalance,
+  walletAddress: address,
+  isConnected,
+  isConnecting
 }
 }
 
-export default usePokeCard
+export default usePokeData
