@@ -1,4 +1,4 @@
-export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+export type Rarity = "common" | "uncommon" | "rare" | "ultra rare";
 
 export interface PokemonCard {
   id: string;
@@ -21,45 +21,28 @@ export interface StakedCard {
 
 export const RARITY_CONFIG: Record<Rarity, { 
   color: string; 
-  dailyReward: number; 
-  apy: number;
-  chance: number;
+  dailyReward: number;
   borderClass: string;
 }> = {
   common: { 
     color: "#9ca3af", 
-    dailyReward: 10, 
-    apy: 5,
-    chance: 50,
+    dailyReward: 1, 
     borderClass: "border-gray-400"
   },
   uncommon: { 
     color: "#22c55e", 
-    dailyReward: 25, 
-    apy: 12,
-    chance: 25,
+    dailyReward: 2, 
     borderClass: "border-green-500"
   },
   rare: { 
     color: "#3b82f6", 
-    dailyReward: 50, 
-    apy: 25,
-    chance: 15,
+    dailyReward: 3, 
     borderClass: "border-blue-500"
   },
-  epic: { 
+  "ultra rare": { 
     color: "#f43f5e", 
-    dailyReward: 100, 
-    apy: 50,
-    chance: 8,
+    dailyReward: 4, 
     borderClass: "border-rose-500"
-  },
-  legendary: { 
-    color: "#f59e0b", 
-    dailyReward: 250, 
-    apy: 100,
-    chance: 2,
-    borderClass: "border-amber-500"
   },
 };
 

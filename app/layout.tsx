@@ -3,6 +3,7 @@ import { Space_Grotesk, Fira_Code } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
+import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ["latin"],
@@ -17,23 +18,23 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: 'PokeStake | Pokemon Card Web3 Staking Protocol',
   description: 'Stake your Pokemon cards and earn $PKMN tokens. Draw rare cards, manage your staking portfolio, and collect NFTs.',
-  generator: 'v0.app',
+  generator: 'Snorlie',
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
+        url: '/snorlie.png',
         media: '(prefers-color-scheme: light)',
       },
       {
-        url: '/icon-dark-32x32.png',
+        url: '/snorlie.png',
         media: '(prefers-color-scheme: dark)',
       },
       {
-        url: '/icon.svg',
+        url: '/snorlie.svg',
         type: 'image/svg+xml',
       },
     ],
-    apple: '/apple-icon.png',
+    apple: '/snorlie.png',
   },
 }
 
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${firaCode.variable} font-sans antialiased`}>
+        <WagmiWrapper>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -60,6 +62,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        </WagmiWrapper>
         <Analytics />
       </body>
     </html>

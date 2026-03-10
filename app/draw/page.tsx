@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import { useGameStore } from "@/lib/store";
+import usePokeData from "@/lib/usePokeCard";
 import { RARITY_CONFIG } from "@/lib/types";
 import type { PokemonCard as PokemonCardType } from "@/lib/types";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
@@ -18,8 +18,9 @@ export default function DrawPage() {
   const [drawnCard, setDrawnCard] = useState<PokemonCardType | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
-  
-  const { drawCard, pokemonCoins, walletConnected, connectWallet } = useGameStore();
+
+
+  const { drawCard,  } = usePokeData();
 
   const handleDraw = async () => {
     if (pokemonCoins < DRAW_COST) return;

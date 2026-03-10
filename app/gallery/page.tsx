@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import { useGameStore } from "@/lib/store";
+import { useGameStore } from "@/lib/usePokeCard";
 import { RARITY_CONFIG } from "@/lib/types";
 import type { Rarity } from "@/lib/types";
 import { 
@@ -25,12 +25,12 @@ type FilterRarity = Rarity | "all";
 type SortOption = "newest" | "rarity" | "pokedex" | "name";
 
 export default function GalleryPage() {
-  const { 
-    ownedCards, 
-    stakedCards,
-    walletConnected,
-    connectWallet 
-  } = useGameStore();
+  // const { 
+  //   ownedCards, 
+  //   stakedCards,
+  //   walletConnected,
+  //   connectWallet 
+  // } = useGameStore();
 
   const [filterRarity, setFilterRarity] = useState<FilterRarity>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");

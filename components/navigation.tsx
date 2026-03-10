@@ -11,9 +11,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useGameStore } from "@/lib/store";
+
 import { cn } from "@/lib/utils";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
+import { injected, useAccount, useConnect, useDisconnect, useReadContract } from "wagmi";
+import { config } from "@/lib/wagmi/wagmiConfig";
+import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
 
 const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },
@@ -24,7 +27,20 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { walletConnected, walletAddress, connectWallet, disconnectWallet, pokemonCoins } = useGameStore();
+
+  const {isConnected, address}= useAccount();
+  const {mutate}=useConnect({config});
+  const {mutate:disconnect}=useDisconnect();
+
+  const {data}=useReadContract({
+    abi:snorlieCoinABI,
+     address:snorlieCoinContractAddress, 
+    functionName:"balanceOf",
+    args:[address],
+query:{
+  enabled: typeof address === 'string'
+}
+  });
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -87,27 +103,32 @@ export function Navigation() {
           </DropdownMenu>
 
           {/* Token Balance */}
+          {isConnected &&
           <div className="hidden sm:flex items-center px-3 py-1.5 rounded-full bg-secondary border border-border">
-            <TokenBalance amount={pokemonCoins} size="sm" showLabel={true} />
+          <TokenBalance amount={data ? (data as bigint) / 1e18 : 0n} size="sm" showLabel={true} />
           </div>
+          }
+          
 
-          {walletConnected ? (
+          {isConnected ? (
             <Button
               variant="outline"
               size="sm"
-              onClick={disconnectWallet}
-              className="border-primary/50 hover:border-primary hover:bg-primary/10"
+              onClick={()=>disconnect()}
+              className="border-primary/50 hover:border-primary hover:bg-primary/10 cursor-pointer"
             >
               <Wallet className="h-4 w-4 mr-2" />
               <span className="font-mono text-xs">
-                {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                {address?.slice(0, 6)}...{address?.slice(-4)}
               </span>
             </Button>
           ) : (
             <Button
               size="sm"
-              onClick={connectWallet}
-              className="bg-primary hover:bg-primary/90"
+              onClick={()=>{
+                mutate({'connector': injected({'target':'metaMask'})})
+              }}
+              className="bg-primary hover:bg-primary/90 cursor-pointer"
             >
               <Wallet className="h-4 w-4 mr-2" />
               Connect Wallet

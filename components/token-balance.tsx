@@ -2,8 +2,12 @@
 
 import { cn } from "@/lib/utils";
 
+import Image from "next/image";
+
+import SnorlieCoin from "@/public/snorlie.png"
+
 interface TokenBalanceProps {
-  amount: number;
+  amount: bigint;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
@@ -109,9 +113,9 @@ export function TokenBalance({
         className
       )}
     >
-      <PokeCoinIcon size={iconSizes[size]} className="shrink-0" />
-      <span>{amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
-      {showLabel && <span className="text-muted-foreground">$PKMN</span>}
+      <Image src={SnorlieCoin} className="w-8 h-8" width={iconSizes[size]} height={iconSizes[size]} alt="Snorlie-Coin" />
+      <span>{Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+      {showLabel && <span className="text-muted-foreground">$SNORLIE</span>}
     </div>
   );
 }

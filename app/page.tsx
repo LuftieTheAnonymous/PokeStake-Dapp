@@ -7,6 +7,8 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { RARITY_CONFIG } from "@/lib/types";
 import { PokeCoinIcon } from "@/components/token-balance";
+import Image from "next/image";
+import Snorlie from "@/public/snorlie.png"
 
 const features = [
   {
@@ -55,20 +57,20 @@ export default function HomePage() {
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto text-pretty">
                 The ultimate Web3 staking protocol for Pokemon cards. 
-                Draw rare cards, stake to earn $PKMN, and build your collection.
+                Draw rare cards, stake to earn $SNORLIEs, and build your collection.
               </p>
             </div>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Link href="/draw">
-                <Button size="lg" className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 shadow-lg">
+                <Button size="lg" className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 shadow-lg">
                   <Sparkles className="h-5 w-5 mr-2" />
                   Start Drawing
                 </Button>
               </Link>
               <Link href="/staking">
-                <Button size="lg" variant="outline" className="border-amber-500/50 hover:bg-amber-500/10 text-lg px-8">
+                <Button size="lg" variant="outline" className="border-amber-500/50 cursor-pointer hover:bg-amber-500/10 text-lg px-8">
                   View Protocol
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
@@ -105,20 +107,19 @@ export default function HomePage() {
 
           {/* Staking Rewards Table */}
           <div className="mt-24 max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
+            <h2 className="text-2xl md:text-2xl font-bold text-center mb-8">
               Staking Rewards by Rarity
             </h2>
             <div className="rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-              <div className="grid grid-cols-4 gap-4 p-4 border-b border-border/50 bg-secondary/30 text-sm font-medium text-muted-foreground">
+              <div className="grid grid-cols-3 gap-4 p-4 border-b border-border/50 bg-secondary/30 text-sm font-medium text-muted-foreground">
                 <div>Rarity</div>
                 <div className="text-center">Daily Reward</div>
                 <div className="text-center">APY</div>
-                <div className="text-center">Drop Rate</div>
               </div>
               {(Object.entries(RARITY_CONFIG) as [string, typeof RARITY_CONFIG.common][]).map(([rarity, config]) => (
                 <div
                   key={rarity}
-                  className="grid grid-cols-4 gap-4 p-4 border-b border-border/30 last:border-0 items-center"
+                  className="grid grid-cols-3 gap-4 p-4 border-b border-border/30 last:border-0 items-center"
                 >
                   <div className="flex items-center gap-2">
                     <div
@@ -131,12 +132,11 @@ export default function HomePage() {
                     <PokeCoinIcon size={16} />
                     {config.dailyReward}
                   </div>
-                  <div className="text-center font-mono text-primary">
-                    {config.apy}%
+                  <div className="flex items-center gap-2 justify-center font-mono">
+                   <p className="text-primary text-center">{365 * config.dailyReward} </p>
+                    <Image src={Snorlie} className="w-8 h-8" alt="" />
                   </div>
-                  <div className="text-center font-mono text-muted-foreground">
-                    {config.chance}%
-                  </div>
+               
                 </div>
               ))}
             </div>
@@ -150,9 +150,6 @@ export default function HomePage() {
               <PokeCoinIcon size={20} />
               <span className="text-sm">PokeStake Protocol</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              A Web3 staking demo built with Next.js
-            </p>
           </div>
         </footer>
       </main>
