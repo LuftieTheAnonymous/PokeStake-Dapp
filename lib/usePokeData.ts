@@ -175,7 +175,7 @@ return getRandomNumbers;
 }
 
 function connectWallet(){
-  mutate({'connector': injected({'target':'metaMask'})})
+  mutate({'connector': injected({'target':'rabby'})})
 }
 
 function disconnectWallet(){
@@ -224,7 +224,7 @@ const pokemonRarity = Number(pokemonParams[1] % BigInt(2e18) % rarityModulator) 
     name: pokemonData.name,
     pokedexIndex: pokemonData.id,
     pokemonRarity,
-    pokemonImage: generatePokemonImageUrl(Number(pokeIndex)),
+    pokemonImage: pokemonData.sprites.front_default,
     sprites: [pokemonData.sprites.front_default, pokemonData.sprites.back_default],
     types: pokemonData.types.map((pokemonType)=>pokemonType.type.name),
     description:`${pokemonData.types.map((pokemonType)=>pokemonType.type.name).length === 2 ? `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}/${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[1]}` : `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}`}`,
@@ -266,12 +266,13 @@ async function drawCard() {
 
       const rarityBoost =rarityMultiplier[selectedKey as Rarity];
 
+      if(!pokemon) throw new Error("no pokemon created");
 
       if(!data || !data[1].result) throw new Error("Result not found for new Card");
 
         const newCard: PokemonCard = {
           name: pokemon.name,
-          image: pokemon.pokemonImage,
+          image: pokemon.pokemonImage as string,
           description: pokemon.description,
           attributes:{
           pokedexIndex: pokemon.pokedexIndex,
@@ -279,9 +280,9 @@ async function drawCard() {
           rarity: selectedKey as Rarity,
           sprites:pokemon.sprites,
           type: pokemon.types,
-          hp: Math.floor(pokemon.hp * (rarityBoost)),
-          attack: Math.floor(pokemon.attack * rarityBoost),
-          defense: Math.floor(pokemon.defense * rarityBoost),
+          hp: Math.floor(pokemon.hp + (rarityBoost)),
+          attack: Math.floor(pokemon.attack + rarityBoost),
+          defense: Math.floor(pokemon.defense + rarityBoost),
           }
         };
       
@@ -295,7 +296,10 @@ async function drawCard() {
 
     if(!randomValues || randomValues.length === 0) throw new Error("No random values have been detected.");
 
-    const storeInPinata = await pinata.upload.public.json(drawnPokemonCard);
+    const storeInPinata = await pinata.upload.public.json(drawnPokemonCard,{
+      'metadata':{
+      'keyvalues':{stringifiedAttributes:JSON.stringify(drawnPokemonCard.attributes)}}
+  });
 
     console.log(storeInPinata);
 
@@ -313,9 +317,6 @@ async function drawCard() {
   }
 
 
-function generatePokemonImageUrl(pokedexIndex: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokedexIndex}.png`;
-}
 
 return {
   drawCard,

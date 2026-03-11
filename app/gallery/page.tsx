@@ -38,6 +38,10 @@ export default function GalleryPage() {
   const [showStaked, setShowStaked] = useState(true);
   const [gridSize, setGridSize] = useState<"small" | "large">("large");
 
+  console.log(ownedPokeCards, userStakedPokeCards);
+
+
+
   // Combine owned and staked cards
   const allCards = useMemo(() => {
     const cards = [
@@ -171,7 +175,7 @@ export default function GalleryPage() {
                       >
                         <div
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: RARITY_CONFIG[rarity].color }}
+                          style={{backgroundColor: RARITY_CONFIG[rarity].color }}
                         />
                         <span className="text-xs font-mono mt-1">{count}</span>
                       </div>
