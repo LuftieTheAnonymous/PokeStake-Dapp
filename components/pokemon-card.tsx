@@ -61,7 +61,7 @@ export function PokemonCard({
     >
       {/* Card Header */}
       <div className="flex items-center justify-between p-3 border-b border-border/30">
-        <span className="font-bold text-sm truncate">{card.name}</span>
+        <span className="font-bold text-sm truncate">{card.name.replace(/^./, char => char.toUpperCase())}</span>
         <div className="flex items-center gap-1 text-xs">
           <Heart className="h-3 w-3 text-red-400" />
           <span>{card.attributes.hp}</span>

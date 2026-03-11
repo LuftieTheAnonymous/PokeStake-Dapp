@@ -79,7 +79,7 @@ export default function DrawPage() {
                   Connect your wallet to start drawing Pokemon cards
                 </p>
               </div>
-              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
+              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
                 Connect Wallet
               </Button>
             </div>
@@ -150,7 +150,7 @@ export default function DrawPage() {
                   </Button>
 
                   {drawnCard && !isDrawing && showCard &&
-                  <Button size="lg" disabled={isDrawing || !drawnCard || !showCard} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg" onClick={mintPokeCard}>Mint Pokemon <PokeCoinIcon/> </Button>
+                  <Button size="lg" disabled={isDrawing || !drawnCard || !showCard} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg" onClick={mintPokeCard}>Mint Pokemon <PokeCoinIcon/> </Button>
                   }
                 
                 </div>
@@ -162,8 +162,8 @@ export default function DrawPage() {
                       <p className="text-lg font-semibold">
                         You drew{" "}
                         <span style={{ color: RARITY_CONFIG[drawnCard.attributes.rarity].color }}>
-                          {drawnCard.name}
-                        </span>
+                          {drawnCard.name.replace(/^./, char => char.toUpperCase())}
+                        </span>{" "}
                         !
                       </p>
                       <p className="text-muted-foreground">
@@ -197,7 +197,7 @@ export default function DrawPage() {
               {/* Rarity Table */}
               <div className="mt-16 max-w-2xl mx-auto">
                 <h3 className="text-lg font-semibold text-center mb-6">Drop Rates</h3>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {(Object.entries(RARITY_CONFIG) as [string, typeof RARITY_CONFIG.common][]).map(([rarity, config]) => (
                     <div
                       key={rarity}

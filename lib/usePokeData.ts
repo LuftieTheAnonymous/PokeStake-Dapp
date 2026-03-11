@@ -175,7 +175,7 @@ return getRandomNumbers;
 }
 
 function connectWallet(){
-  mutate({'connector': injected({'target':'rabby'})})
+  mutate({'connector': injected({'target':'metaMask'})})
 }
 
 function disconnectWallet(){
@@ -302,8 +302,6 @@ async function drawCard() {
   });
 
     console.log(storeInPinata);
-
-    console.log(randomValues);
       
         writeContract({
           abi: pokeCardCollectionAbi,
