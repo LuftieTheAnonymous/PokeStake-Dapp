@@ -5,8 +5,8 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import { useGameStore } from "@/lib/usePokeData";
-import { RARITY_CONFIG } from "@/lib/types";
+import usePokeData from "@/lib/usePokeData";
+import { Rarity, RARITY_CONFIG } from "@/lib/types";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import { 
   Layers, 
@@ -20,47 +20,46 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function StakingPage() {
   const { 
-    ownedCards, 
-    stakedCards, 
-    stakeCard, 
-    unstakeCard, 
-    claimRewards,
-    getAccruedRewards,
-    getTotalAPY,
-    walletConnected,
     connectWallet,
-    pokemonCoins
-  } = useGameStore();
+    disconnectWallet,
+    stakeCard,
+    unstakeCard,
+    claimRewards,
+    snorliesBalance,
+    isConnected,
+    userGeneratedCards,
+    APYinToken,
+    stakingRewardToClaim,
+    userStakedPokeCards,
+    ownedPokeCards,
+    getCalculatedRewards
+  } = usePokeData();
 
   const [selectedTab, setSelectedTab] = useState<"stake" | "staked">("stake");
-  const [accruedRewards, setAccruedRewards] = useState(0);
-  const [totalAPY, setTotalAPY] = useState(0);
+  
 
   // Update rewards every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAccruedRewards(getAccruedRewards());
-      setTotalAPY(getTotalAPY());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [getAccruedRewards, getTotalAPY]);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+      
+  //   }, 1000);
+  //   return () => clearInterval(interval);
+  // }, [getAccruedRewards, getTotalAPY]);
 
-  const handleStake = (cardId: string) => {
-    stakeCard(cardId);
+  const handleStake = (tokenId:bigint) => {
+    stakeCard(tokenId);
   };
 
-  const handleUnstake = (cardId: string) => {
-    unstakeCard(cardId);
+  const handleUnstake = (tokenId:bigint) => {
+    unstakeCard(tokenId);
   };
 
   const handleClaimRewards = () => {
-    const claimed = claimRewards();
-    if (claimed > 0) {
-      // Could add a toast notification here
-    }
+  claimRewards();
   };
 
   const getTimeRemaining = (unlockTime: number) => {
@@ -95,7 +94,7 @@ export default function StakingPage() {
             </p>
           </div>
 
-          {!walletConnected ? (
+          {!isConnected ? (
             /* Connect Wallet Prompt */
             <div className="max-w-md mx-auto text-center space-y-6 py-16">
               <div className="inline-flex p-6 rounded-full bg-secondary/50 border border-border">
@@ -122,7 +121,7 @@ export default function StakingPage() {
                     </div>
                     <span className="text-muted-foreground text-sm">Balance</span>
                   </div>
-                  <TokenBalance amount={pokemonCoins} size="lg" showLabel={true} />
+                  <TokenBalance amount={snorliesBalance} size="lg" showLabel={true} />
                 </div>
 
                 <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
@@ -134,7 +133,7 @@ export default function StakingPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <PokeCoinIcon size={28} />
-                    <span className="font-mono text-2xl font-bold text-green-500">+{accruedRewards.toFixed(2)}</span>
+                    <span className="font-mono text-2xl font-bold text-green-500">+{getCalculatedRewards.toFixed(2)}</span>
                     <span className="text-sm text-muted-foreground">$PKMN</span>
                   </div>
                 </div>
@@ -147,7 +146,7 @@ export default function StakingPage() {
                     <span className="text-muted-foreground text-sm">Average APY</span>
                   </div>
                   <div className="font-mono text-2xl font-bold text-green-500">
-                    {totalAPY.toFixed(1)}%
+                    {APYinToken.toFixed(2)} SNORLIEs
                   </div>
                 </div>
 
@@ -159,14 +158,14 @@ export default function StakingPage() {
                     <span className="text-muted-foreground text-sm">Staked Cards</span>
                   </div>
                   <div className="font-mono text-2xl font-bold">
-                    {stakedCards.length}
-                    <span className="text-sm text-muted-foreground ml-1">/ {ownedCards.length + stakedCards.length}</span>
+                    {userStakedPokeCards.length}
+                    <span className="text-sm text-muted-foreground ml-1">/ {ownedPokeCards + userStakedPokeCards.length}</span>
                   </div>
                 </div>
               </div>
 
               {/* Claim Rewards Button */}
-              {accruedRewards > 0 && (
+              {stakingRewardToClaim > 0 && (
                 <div className="flex justify-center">
                   <Button
                     size="lg"
@@ -174,7 +173,7 @@ export default function StakingPage() {
                     className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-8 shadow-lg"
                   >
                     <PokeCoinIcon size={20} className="mr-2" />
-                    Claim {accruedRewards.toFixed(2)} $PKMN
+                    Claim {stakingRewardToClaim.toFixed(2)} $SNORLIE
                   </Button>
                 </div>
               )}
@@ -191,7 +190,7 @@ export default function StakingPage() {
                   )}
                 >
                   <Unlock className="h-4 w-4" />
-                  Available ({ownedCards.length})
+                  Available ({ownedPokeCards})
                 </button>
                 <button
                   onClick={() => setSelectedTab("staked")}
@@ -203,7 +202,7 @@ export default function StakingPage() {
                   )}
                 >
                   <Lock className="h-4 w-4" />
-                  Staked ({stakedCards.length})
+                  Staked ({userStakedPokeCards.length})
                 </button>
               </div>
 
@@ -211,7 +210,7 @@ export default function StakingPage() {
               {selectedTab === "stake" ? (
                 /* Available Cards */
                 <div>
-                  {ownedCards.length === 0 ? (
+                  {ownedPokeCards === 0 ? (
                     <div className="text-center py-16 space-y-4">
                       <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
                       <div className="space-y-2">
@@ -227,7 +226,7 @@ export default function StakingPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {ownedCards.map((card) => (
+                      {userGeneratedCards.map((card) => (
                         <div key={card.id} className="space-y-2">
                           <PokemonCard card={card} showStats={false} />
                           <Button
@@ -246,7 +245,7 @@ export default function StakingPage() {
               ) : (
                 /* Staked Cards */
                 <div>
-                  {stakedCards.length === 0 ? (
+                  {userStakedPokeCards.length === 0 ? (
                     <div className="text-center py-16 space-y-4">
                       <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
                       <div className="space-y-2">
@@ -260,12 +259,12 @@ export default function StakingPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {stakedCards.map((stakedCard) => {
+                      {userStakedPokeCards.map((stakedCard) => {
                         const timeRemaining = getTimeRemaining(stakedCard.unlockTime);
                         const isLocked = timeRemaining !== null;
                         const timeStaked = Date.now() - stakedCard.stakedAt;
                         const daysStaked = timeStaked / (24 * 60 * 60 * 1000);
-                        const currentRewards = daysStaked * RARITY_CONFIG[stakedCard.card.rarity].dailyReward;
+                        const currentRewards = daysStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.rarity as bigint)) as Rarity].dailyReward;
 
                         return (
                           <div key={stakedCard.card.id} className="space-y-2">

@@ -19,24 +19,21 @@ const rarityGradients: Record<Rarity, string> = {
   common: "from-slate-400/30 via-slate-300/20 to-slate-400/30",
   uncommon: "from-emerald-500/30 via-green-400/20 to-emerald-500/30",
   rare: "from-blue-500/30 via-sky-400/20 to-blue-500/30",
-  epic: "from-rose-500/40 via-pink-400/30 to-rose-500/40",
-  legendary: "from-amber-500/40 via-yellow-400/30 to-orange-500/40",
+  "ultra rare": "from-rose-500/40 via-pink-400/30 to-rose-500/40"
 };
 
 const rarityBorders: Record<Rarity, string> = {
   common: "border-slate-400",
   uncommon: "border-emerald-500",
   rare: "border-blue-500",
-  epic: "border-rose-500",
-  legendary: "border-amber-500",
+  "ultra rare": "border-rose-500",
 };
 
 const rarityGlow: Record<Rarity, string> = {
   common: "shadow-slate-500/20",
   uncommon: "shadow-emerald-500/30 shadow-lg",
   rare: "shadow-blue-500/40 shadow-lg",
-  epic: "shadow-rose-500/50 shadow-xl",
-  legendary: "shadow-amber-500/60 shadow-2xl",
+  "ultra rare": "shadow-rose-500/50 shadow-xl",
 };
 
 export function PokemonCard({
@@ -53,9 +50,9 @@ export function PokemonCard({
       className={cn(
         "relative group rounded-xl border-2 overflow-hidden transition-all duration-300",
         "bg-gradient-to-br bg-card",
-        rarityGradients[card.rarity],
-        rarityBorders[card.rarity],
-        rarityGlow[card.rarity],
+        rarityGradients[card.attributes.rarity],
+        rarityBorders[card.attributes.rarity],
+        rarityGlow[card.attributes.rarity],
         onClick && "cursor-pointer hover:scale-105 hover:shadow-xl",
         isStaked && "opacity-75 grayscale-[30%]",
         animated && "animate-card-reveal",
@@ -67,14 +64,14 @@ export function PokemonCard({
         <span className="font-bold text-sm truncate">{card.name}</span>
         <div className="flex items-center gap-1 text-xs">
           <Heart className="h-3 w-3 text-red-400" />
-          <span>{card.hp}</span>
+          <span>{card.attributes.hp}</span>
         </div>
       </div>
 
       {/* Card Image */}
       <div className="relative aspect-square bg-gradient-to-b from-transparent to-background/50 p-4">
         <Image
-          src={card.imageUrl}
+          src={card.image}
           alt={card.name}
           fill
           className="object-contain p-2 drop-shadow-2xl"
@@ -83,7 +80,7 @@ export function PokemonCard({
         {/* Glow effect */}
         <div
           className="absolute inset-0 opacity-30 blur-2xl"
-          style={{ backgroundColor: RARITY_CONFIG[card.rarity].color }}
+          style={{ backgroundColor: RARITY_CONFIG[card.attributes.rarity].color }}
         />
       </div>
 
@@ -93,14 +90,14 @@ export function PokemonCard({
           <span
             className="text-xs font-medium px-2 py-0.5 rounded-full capitalize"
             style={{
-              backgroundColor: `${RARITY_CONFIG[card.rarity].color}20`,
-              color: RARITY_CONFIG[card.rarity].color,
+              backgroundColor: `${RARITY_CONFIG[card.attributes.rarity].color}20`,
+              color: RARITY_CONFIG[card.attributes.rarity].color,
             }}
           >
-            {card.rarity}
+            {card.attributes.rarity}
           </span>
           <span className="text-xs text-muted-foreground font-mono">
-            #{card.pokedexIndex.toString().padStart(3, "0")}
+            #{card.attributes.pokedexIndex.toString().padStart(3, "0")}
           </span>
         </div>
 
@@ -109,19 +106,19 @@ export function PokemonCard({
             <div className="flex items-center gap-1 text-xs">
               <Zap className="h-3 w-3 text-amber-400" />
               <span className="text-muted-foreground">ATK</span>
-              <span className="font-medium">{card.attack}</span>
+              <span className="font-medium">{card.attributes.attack}</span>
             </div>
             <div className="flex items-center gap-1 text-xs">
               <Shield className="h-3 w-3 text-blue-400" />
               <span className="text-muted-foreground">DEF</span>
-              <span className="font-medium">{card.defense}</span>
+              <span className="font-medium">{card.attributes.defense}</span>
             </div>
           </div>
         )}
 
         <div className="text-xs text-center text-muted-foreground pt-1">
           <span className="font-medium text-primary">
-            +{RARITY_CONFIG[card.rarity].dailyReward} $PKMN/day
+            +{RARITY_CONFIG[card.attributes.rarity].dailyReward} $PKMN/day
           </span>
         </div>
       </div>
@@ -136,7 +133,7 @@ export function PokemonCard({
       )}
 
       {/* Legendary Shimmer */}
-      {card.rarity === "legendary" && (
+      {card.attributes.rarity === 'ultra rare' && (
         <div className="absolute inset-0 pointer-events-none animate-shimmer" />
       )}
     </div>

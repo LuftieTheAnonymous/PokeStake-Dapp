@@ -5,7 +5,7 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import { useGameStore } from "@/lib/usePokeData";
+import usePokeData from "@/lib/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
 import type { Rarity } from "@/lib/types";
 import { 
@@ -25,12 +25,13 @@ type FilterRarity = Rarity | "all";
 type SortOption = "newest" | "rarity" | "pokedex" | "name";
 
 export default function GalleryPage() {
-  // const { 
-  //   ownedCards, 
-  //   stakedCards,
-  //   walletConnected,
-  //   connectWallet 
-  // } = useGameStore();
+  const { 
+    connectWallet,
+    isConnected,
+    userGeneratedCards,
+    ownedPokeCards,
+    userStakedPokeCards
+  } = usePokeData();
 
   const [filterRarity, setFilterRarity] = useState<FilterRarity>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
@@ -40,8 +41,8 @@ export default function GalleryPage() {
   // Combine owned and staked cards
   const allCards = useMemo(() => {
     const cards = [
-      ...ownedCards.map((card) => ({ card, isStaked: false })),
-      ...(showStaked ? stakedCards.map((s) => ({ card: s.card, isStaked: true })) : []),
+      ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
+      ...(showStaked ? userStakedPokeCards.map((s) => ({ card: s.card, isStaked: true })) : []),
     ];
 
     // Filter by rarity
@@ -55,7 +56,7 @@ export default function GalleryPage() {
         case "newest":
           return b.card.id.localeCompare(a.card.id);
         case "rarity": {
-          const rarityOrder: Rarity[] = ["legendary", "epic", "rare", "uncommon", "common"];
+          const rarityOrder: Rarity[] = ["ultra rare", "rare", "uncommon", "common"];
           return rarityOrder.indexOf(a.card.rarity) - rarityOrder.indexOf(b.card.rarity);
         }
         case "pokedex":
@@ -68,28 +69,27 @@ export default function GalleryPage() {
     });
 
     return sorted;
-  }, [ownedCards, stakedCards, filterRarity, sortBy, showStaked]);
+  }, [userGeneratedCards, userStakedPokeCards, filterRarity, sortBy, showStaked]);
 
   // Stats
   const stats = useMemo(() => {
-    const all = [...ownedCards, ...stakedCards.map((s) => s.card)];
+    const all = [...userGeneratedCards, ...userStakedPokeCards.map((s) => s.card)];
     const byRarity: Record<Rarity, number> = {
       common: 0,
       uncommon: 0,
       rare: 0,
-      epic: 0,
-      legendary: 0,
+      "ultra rare":0
     };
     all.forEach((card) => {
-      byRarity[card.rarity]++;
+      byRarity[card.rarity as Rarity]++;
     });
     return {
       total: all.length,
-      owned: ownedCards.length,
-      staked: stakedCards.length,
+      owned: ownedPokeCards,
+      staked: userStakedPokeCards.length,
       byRarity,
     };
-  }, [ownedCards, stakedCards]);
+  }, [userStakedPokeCards, userGeneratedCards, ownedPokeCards]);
 
   return (
     <div className="min-h-screen relative">
@@ -110,7 +110,7 @@ export default function GalleryPage() {
             </p>
           </div>
 
-          {!walletConnected ? (
+          {!isConnected ? (
             /* Connect Wallet Prompt */
             <div className="max-w-md mx-auto text-center space-y-6 py-16">
               <div className="inline-flex p-6 rounded-full bg-secondary/50 border border-border">

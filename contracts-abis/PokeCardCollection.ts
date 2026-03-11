@@ -1,17 +1,20 @@
-export const pokeCardCollectionAddress="0xb5e246C240DC2b542d30D2b8Cf6D3962D0F4ea83";
+export const pokeCardCollectionAddress="0xBdF1E02796CF7EBCC1ab9e205d3b0baFd45a7935";
 
 export const pokeCardCollectionAbi=[
-    { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
     {
-      "type": "function",
-      "name": "DEFAULT_ADMIN_ROLE",
-      "inputs": [],
-      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
-      "stateMutability": "view"
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "vrfConsumerAddress",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "MINTER_ROLE",
+      "name": "DEFAULT_ADMIN_ROLE",
       "inputs": [],
       "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
       "stateMutability": "view"
@@ -46,6 +49,21 @@ export const pokeCardCollectionAbi=[
     },
     {
       "type": "function",
+      "name": "generatePokemon",
+      "inputs": [
+        { "name": "firstNumber", "type": "uint256", "internalType": "uint256" },
+        {
+          "name": "secondNumber",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        { "name": "token_uri", "type": "string", "internalType": "string" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "getApproved",
       "inputs": [
         { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
@@ -55,11 +73,97 @@ export const pokeCardCollectionAbi=[
     },
     {
       "type": "function",
+      "name": "getGeneratedCardByNftId",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" },
+        { "name": "nftId", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct PokeCardCollection.PokemonCard",
+          "components": [
+            {
+              "name": "pokedexId",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "rarityLevel",
+              "type": "uint8",
+              "internalType": "enum PokeCardCollection.PokemonRarityLevel"
+            },
+            { "name": "nftId", "type": "uint256", "internalType": "uint256" },
+            { "name": "tokenURI", "type": "string", "internalType": "string" }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getGeneratedCards",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct PokeCardCollection.PokemonCard[]",
+          "components": [
+            {
+              "name": "pokedexId",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "rarityLevel",
+              "type": "uint8",
+              "internalType": "enum PokeCardCollection.PokemonRarityLevel"
+            },
+            { "name": "nftId", "type": "uint256", "internalType": "uint256" },
+            { "name": "tokenURI", "type": "string", "internalType": "string" }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getLastTimeGenerated",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getRandomWords",
+      "inputs": [],
+      "outputs": [
+        { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "getRoleAdmin",
       "inputs": [
         { "name": "role", "type": "bytes32", "internalType": "bytes32" }
       ],
       "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getTotalCardsGenerated",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
       "stateMutability": "view"
     },
     {
@@ -134,16 +238,6 @@ export const pokeCardCollectionAbi=[
     },
     {
       "type": "function",
-      "name": "safeMint",
-      "inputs": [
-        { "name": "to", "type": "address", "internalType": "address" },
-        { "name": "uri", "type": "string", "internalType": "string" }
-      ],
-      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
       "name": "safeTransferFrom",
       "inputs": [
         { "name": "from", "type": "address", "internalType": "address" },
@@ -171,6 +265,15 @@ export const pokeCardCollectionAbi=[
       "inputs": [
         { "name": "operator", "type": "address", "internalType": "address" },
         { "name": "approved", "type": "bool", "internalType": "bool" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setPokemonAmountToGenerate",
+      "inputs": [
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -214,15 +317,6 @@ export const pokeCardCollectionAbi=[
         { "name": "from", "type": "address", "internalType": "address" },
         { "name": "to", "type": "address", "internalType": "address" },
         { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "transferOwnership",
-      "inputs": [
-        { "name": "newOwner", "type": "address", "internalType": "address" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -302,6 +396,31 @@ export const pokeCardCollectionAbi=[
       "inputs": [
         {
           "name": "_tokenId",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "PokemonCardGenerated",
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "nftId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "pokedexId",
           "type": "uint256",
           "indexed": false,
           "internalType": "uint256"
@@ -476,5 +595,10 @@ export const pokeCardCollectionAbi=[
       "inputs": [
         { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
       ]
-    }
-]
+    },
+    { "type": "error", "name": "GenerationCooldownNotReached", "inputs": [] },
+    { "type": "error", "name": "NotMinter", "inputs": [] },
+    { "type": "error", "name": "NotOwner", "inputs": [] },
+    { "type": "error", "name": "RandomWordsNotAvailable", "inputs": [] },
+    { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] }
+  ]

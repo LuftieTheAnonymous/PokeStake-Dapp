@@ -1,4 +1,4 @@
-export const pokemonStakingAddress = "0xFB757821c77a3f286285ecD05D582E27493D0f73";
+export const pokemonStakingAddress = "0x9d3985ab5200d0513403Dfd86BF9778E1160F1a7";
 
 export const pokemonStakingAbi= [
     {
@@ -13,19 +13,25 @@ export const pokemonStakingAbi= [
           "name": "nftCollection_",
           "type": "address",
           "internalType": "address"
-        },
-        {
-          "name": "pokeCardGenerator_",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "_rewardCalculator",
-          "type": "address",
-          "internalType": "address"
         }
       ],
       "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "calculateAPY",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "calculateRewards",
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
     },
     {
       "type": "function",
@@ -68,6 +74,18 @@ export const pokemonStakingAbi= [
         }
       ],
       "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "onERC721Received",
+      "inputs": [
+        { "name": "operator", "type": "address", "internalType": "address" },
+        { "name": "from", "type": "address", "internalType": "address" },
+        { "name": "tokenId", "type": "uint256", "internalType": "uint256" },
+        { "name": "data", "type": "bytes", "internalType": "bytes" }
+      ],
+      "outputs": [{ "name": "", "type": "bytes4", "internalType": "bytes4" }],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -161,6 +179,8 @@ export const pokemonStakingAbi= [
       "name": "MinimumBlocksToUnstakeNotReached",
       "inputs": []
     },
+    { "type": "error", "name": "NeedToClaimRewardsFirst", "inputs": [] },
     { "type": "error", "name": "NotTheOwnerOfTheNFT", "inputs": [] },
+    { "type": "error", "name": "OperationNotSuccessful", "inputs": [] },
     { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] }
   ]

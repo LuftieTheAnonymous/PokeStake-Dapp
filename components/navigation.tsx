@@ -14,9 +14,6 @@ import {
 
 import { cn } from "@/lib/utils";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
-import { injected, useAccount, useConnect, useDisconnect, useReadContract } from "wagmi";
-import { config } from "@/lib/wagmi/wagmiConfig";
-import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
 import usePokeData from "@/lib/usePokeData";
 
 const navItems = [
@@ -29,11 +26,9 @@ export function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  const {isConnected, address}= useAccount();
-  const {mutate}=useConnect({config});
-  const {mutate:disconnect}=useDisconnect();
 
-  const {getRandomPokemon, tokenBalance}=usePokeData();
+
+  const {connectWallet, disconnectWallet, walletAddress:address, isConnected, snorliesBalance}=usePokeData();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -98,7 +93,7 @@ export function Navigation() {
           {/* Token Balance */}
           {isConnected &&
           <div className="hidden sm:flex items-center px-3 py-1.5 rounded-full bg-secondary border border-border">
-          <TokenBalance amount={tokenBalance} size="sm" showLabel={true} />
+          <TokenBalance amount={snorliesBalance} size="sm" showLabel={true} />
           </div>
           }
           
@@ -107,7 +102,7 @@ export function Navigation() {
             <Button
               variant="outline"
               size="sm"
-              onClick={()=>disconnect()}
+              onClick={disconnectWallet}
               className="border-primary/50 hover:border-primary hover:bg-primary/10 cursor-pointer"
             >
               <Wallet className="h-4 w-4 mr-2" />
@@ -118,9 +113,7 @@ export function Navigation() {
           ) : (
             <Button
               size="sm"
-              onClick={()=>{
-                mutate({'connector': injected({'target':'rabby'})})
-              }}
+              onClick={connectWallet}
               className="bg-primary hover:bg-primary/90 cursor-pointer"
             >
               <Wallet className="h-4 w-4 mr-2" />
