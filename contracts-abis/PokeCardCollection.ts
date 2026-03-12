@@ -1,4 +1,4 @@
-export const pokeCardCollectionAddress="0xBdF1E02796CF7EBCC1ab9e205d3b0baFd45a7935";
+export const pokeCardCollectionAddress="0x23B8976c196C97d8cCef3c4E3d15e39379A939dC";
 
 export const pokeCardCollectionAbi=[
     {
@@ -51,12 +51,7 @@ export const pokeCardCollectionAbi=[
       "type": "function",
       "name": "generatePokemon",
       "inputs": [
-        { "name": "firstNumber", "type": "uint256", "internalType": "uint256" },
-        {
-          "name": "secondNumber",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
+        { "name": "requestId", "type": "uint256", "internalType": "uint256" },
         { "name": "token_uri", "type": "string", "internalType": "string" }
       ],
       "outputs": [],
@@ -141,10 +136,17 @@ export const pokeCardCollectionAbi=[
     },
     {
       "type": "function",
-      "name": "getRandomWords",
-      "inputs": [],
+      "name": "getRandomValuesConverted",
+      "inputs": [
+        { "name": "requestId", "type": "uint256", "internalType": "uint256" }
+      ],
       "outputs": [
-        { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
+        {
+          "name": "pokedexIndex",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        { "name": "rareLevel", "type": "uint256", "internalType": "uint256" }
       ],
       "stateMutability": "view"
     },
@@ -600,5 +602,12 @@ export const pokeCardCollectionAbi=[
     { "type": "error", "name": "NotMinter", "inputs": [] },
     { "type": "error", "name": "NotOwner", "inputs": [] },
     { "type": "error", "name": "RandomWordsNotAvailable", "inputs": [] },
-    { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] }
+    { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
+    {
+      "type": "error",
+      "name": "ResolvedRequest",
+      "inputs": [
+        { "name": "requestId", "type": "uint256", "internalType": "uint256" }
+      ]
+    }
   ]

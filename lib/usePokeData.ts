@@ -10,7 +10,7 @@ import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer"
 import { config } from "./wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
-
+import { readContract } from '@wagmi/core'
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
@@ -53,16 +53,6 @@ const pokemonClient = new PokemonClient();
       args:[address]
     },
     {
-      abi: VRFConsumerAbi,
-      address:VrfCosumerAddress,
-      functionName:"getRandomWords",
-    },
-    {
-      abi:VRFConsumerAbi,
-      address: VrfCosumerAddress,
-      functionName:"getRequestId"
-    },
-    {
       abi: pokemonStakingAbi,
       address: pokemonStakingAddress,
       functionName:"getRewardAmount"
@@ -102,7 +92,7 @@ const snorliesBalance = useMemo(()=>{
 },[data]);
 
 const ownedPokeCards = useMemo(()=>{
-    return data && data[10].result ?  Number((data[10].result as bigint) / BigInt(1e18)) : 0;
+    return data && data[8].result ?  Number((data[8].result as bigint) / BigInt(1e18)) : 0;
 },[data]);
 
 
@@ -119,7 +109,7 @@ const userTotalGeneratedCards=useMemo(()=>{
 },[data]);
 
 const userStakedPokeCards = useMemo(()=>{
-  return data && data[11].result ? (data[11].result as any[]) : [] 
+  return data && data[9].result ? (data[9].result as any[]) : [] 
 },[data])
 
 const lastBlockGeneratedAt = useMemo(()=>{
@@ -132,8 +122,16 @@ const isElligibleToDraw=useMemo(()=>{
 
 },[lastBlockGeneratedAt, blockNumber])
 
-const getRandomNumbers:{randomValues:bigint[] | undefined, pokemonParams:number[] | undefined }= useMemo(()=>{
-  let randomValues:bigint[] | undefined = data && data[5].result ? (data[5].result as bigint[]) : undefined;
+const getRandomParams = async (requestId:bigint)=>{
+ 
+   let randomValues = await readContract(config,{
+    abi:pokeCardCollectionAbi, 
+    address:pokeCardCollectionAddress, 
+    functionName:"getRandomValuesConverted",
+    args:[requestId]
+  });
+
+  console.log(randomValues);
 
   let randomValuesIntoPokemonParams = randomValues ?(randomValues as bigint[]).map((element:bigint, index:number)=> Number(element % pokemonModulators[index])) : undefined;
 
@@ -142,12 +140,7 @@ const getRandomNumbers:{randomValues:bigint[] | undefined, pokemonParams:number[
     pokemonParams:randomValuesIntoPokemonParams
   }
 
-},[data]);
-
-const requestId = useMemo(()=>{
-  const vrfRequestId:number | undefined = data && data[6].result ? Number((data[6].result as bigint)) : undefined;
-  return vrfRequestId;
-},[data]);
+}
 
 const stakingRewardToClaim = useMemo(()=>{
   return data && data[7].result ? Number((data[7].result as bigint) /BigInt(1e18)) : 0;
@@ -163,15 +156,16 @@ const getCalculatedRewards = useMemo(()=>{
 
 
 async function drawRandomNumber(){
-writeContract({
+ const result = writeContract({
   abi: VRFConsumerAbi,
   address: VrfCosumerAddress,
   functionName:"requestRandomWords",
   args:[]
-});
+},{'onSuccess':(data)=>{
+  console.log(data);
+}});
 
-return getRandomNumbers;
-
+return result as unknown as bigint;
 }
 
 function connectWallet(){
@@ -209,24 +203,25 @@ function claimRewards(){
 }
 
 
-async function getRandomPokemon() {
-try {
-const pokemonParams=getRandomNumbers.randomValues;
+async function getRandomPokemon(requestId:bigint) {
+try {  
 
+  const getRandomValues:bigint[] = await readContract(config, {
+    abi:pokeCardCollectionAbi,
+    address:pokeCardCollectionAddress,
+    functionName:"getRandomValuesConverted",
+    args:[requestId]   
+    }) as unknown as bigint[];
 
-if(!pokemonParams || pokemonParams.length === 0) throw new Error("No drawn have been drawn");
-
-const pokeIndex = Number(pokemonParams[0] % BigInt(1.5e18) % pokemonAmountModulator);
-const pokemonRarity = Number(pokemonParams[1] % BigInt(2e18) % rarityModulator) + 2;
-  
-  const pokemonData = await pokemonClient.getPokemonById(pokeIndex);
+  const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
   return {
     name: pokemonData.name,
     pokedexIndex: pokemonData.id,
-    pokemonRarity,
+    pokemonRarity:Number(getRandomValues[1]),
     pokemonImage: pokemonData.sprites.front_default,
     sprites: [pokemonData.sprites.front_default, pokemonData.sprites.back_default],
     types: pokemonData.types.map((pokemonType)=>pokemonType.type.name),
+    pokemonCry: pokemonData.cries.latest,
     description:`${pokemonData.types.map((pokemonType)=>pokemonType.type.name).length === 2 ? `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}/${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[1]}` : `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}`}`,
     hp: pokemonData.stats.find((s) => s.stat.name === "hp")?.base_stat || 50,
     attack: pokemonData.stats.find((s) => s.stat.name === "attack")?.base_stat || 50,
@@ -253,8 +248,8 @@ function generateRandomNumbers(){
 }
 
 
-async function drawCard() {
-        const pokemon = await getRandomPokemon();
+async function drawCard(requestId:bigint) {
+        const pokemon = await getRandomPokemon(requestId);
         const rarityMultiplier = {
           common: 1,
           uncommon: 2,
@@ -290,11 +285,8 @@ async function drawCard() {
       }
 
 
- async function mintDrawnPokemon(drawnPokemonCard:PokemonCard){
+ async function mintDrawnPokemon(reqeustId:bigint, drawnPokemonCard:PokemonCard){
   try {
-      const randomValues = getRandomNumbers.randomValues;
-
-    if(!randomValues || randomValues.length === 0) throw new Error("No random values have been detected.");
 
     const storeInPinata = await pinata.upload.public.json(drawnPokemonCard,{
       'metadata':{
@@ -307,7 +299,7 @@ async function drawCard() {
           abi: pokeCardCollectionAbi,
           address:pokeCardCollectionAddress,
           functionName:"generatePokemon",
-          args:[randomValues[0], randomValues[1], `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`]
+          args:[reqeustId, `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`]
         });
   } catch (error) {
     console.log(error);
@@ -320,7 +312,6 @@ return {
   drawCard,
   claimRewards,
   getRandomPokemon,
-  getRandomNumbers,
   snorliesBalance,
   walletAddress: address,
   isConnected,
@@ -328,7 +319,6 @@ return {
   isConnecting,
   isElligibleToDraw,
   totalSupply,
-  requestId,
   userGeneratedCards,
   userStakedPokeCards,
   stakingRewardToClaim,

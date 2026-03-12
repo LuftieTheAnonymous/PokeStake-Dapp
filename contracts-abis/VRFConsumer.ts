@@ -1,4 +1,4 @@
-export const VrfCosumerAddress="0x48f750901C0C50c0469cB3e444bEf4Bf05fC2bFc";
+export const VrfCosumerAddress="0x1951265610e83DA93E26447C3Ef80b8e4E90eDFF";
 
 export const VRFConsumerAbi =[
     {
@@ -20,6 +20,13 @@ export const VRFConsumerAbi =[
     },
     {
       "type": "function",
+      "name": "DEFAULT_ADMIN_ROLE",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "acceptOwnership",
       "inputs": [],
       "outputs": [],
@@ -27,10 +34,18 @@ export const VRFConsumerAbi =[
     },
     {
       "type": "function",
-      "name": "getRandomWords",
-      "inputs": [],
+      "name": "getRequestData",
+      "inputs": [
+        { "name": "requestId", "type": "uint256", "internalType": "uint256" },
+        { "name": "caller", "type": "address", "internalType": "address" }
+      ],
       "outputs": [
-        { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
+        {
+          "name": "randomValues",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        },
+        { "name": "isRequestResolved", "type": "bool", "internalType": "bool" }
       ],
       "stateMutability": "view"
     },
@@ -43,9 +58,38 @@ export const VRFConsumerAbi =[
     },
     {
       "type": "function",
+      "name": "getRoleAdmin",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" }
+      ],
+      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "getSubscriptionId",
       "inputs": [],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "grantRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "hasRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
       "stateMutability": "view"
     },
     {
@@ -71,24 +115,34 @@ export const VRFConsumerAbi =[
     },
     {
       "type": "function",
-      "name": "requestRandomWords",
-      "inputs": [],
+      "name": "renounceRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        {
+          "name": "callerConfirmation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
       "outputs": [],
       "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "s_randomWords",
-      "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "name": "requestRandomWords",
+      "inputs": [],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-      "stateMutability": "view"
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "s_requestId",
-      "inputs": [],
-      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-      "stateMutability": "view"
+      "name": "revokeRole",
+      "inputs": [
+        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "account", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -118,9 +172,37 @@ export const VRFConsumerAbi =[
     },
     {
       "type": "function",
+      "name": "supportsInterface",
+      "inputs": [
+        { "name": "interfaceId", "type": "bytes4", "internalType": "bytes4" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "transferManagerRole",
+      "inputs": [
+        { "name": "newManager", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
       "name": "transferOwnership",
       "inputs": [
         { "name": "to", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "updateRequest",
+      "inputs": [
+        { "name": "requestId", "type": "uint256", "internalType": "uint256" },
+        { "name": "caller", "type": "address", "internalType": "address" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -190,6 +272,99 @@ export const VRFConsumerAbi =[
       "anonymous": false
     },
     {
+      "type": "event",
+      "name": "RoleAdminChanged",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "previousAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "newAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleRevoked",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    { "type": "error", "name": "AccessControlBadConfirmation", "inputs": [] },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" },
+        { "name": "neededRole", "type": "bytes32", "internalType": "bytes32" }
+      ]
+    },
+    { "type": "error", "name": "AddressZero", "inputs": [] },
+    { "type": "error", "name": "NotExistingRequest", "inputs": [] },
+    {
+      "type": "error",
+      "name": "NotRequestOwner",
+      "inputs": [
+        { "name": "caller", "type": "address", "internalType": "address" }
+      ]
+    },
+    {
       "type": "error",
       "name": "OnlyCoordinatorCanFulfill",
       "inputs": [
@@ -207,5 +382,6 @@ export const VRFConsumerAbi =[
       ]
     },
     { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
+    { "type": "error", "name": "RequestResolved", "inputs": [] },
     { "type": "error", "name": "ZeroAddress", "inputs": [] }
   ]
