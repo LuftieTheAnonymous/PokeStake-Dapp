@@ -36,7 +36,7 @@ const rarityGlow: Record<Rarity, string> = {
   "ultra rare": "shadow-rose-500/50 shadow-xl",
 };
 
-export function PokemonCard({
+export function PokeCard({
   card,
   onClick,
   showStats = true,

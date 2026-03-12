@@ -3,14 +3,15 @@
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
 import { type PokemonCard, type StakedCard, type Rarity, pokemonAmountModulator, rarityModulator } from "../lib/types";
 import { injected, useAccount, useBlockNumber, useConnect, useDisconnect, useReadContracts, useWriteContract } from 'wagmi'
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {PokemonClient} from "pokenode-ts";
-import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer";
+import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 import { config } from "../lib/wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core'
+import { vrfCoordinatorAddress } from "@/contracts-abis/VRFCoordinator";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
@@ -42,7 +43,7 @@ const {data} = useReadContracts({
     // [9] - pokemonStaking getStakedPositions
     { abi: pokemonStakingAbi, address: pokemonStakingAddress, functionName: "getStakedPositions", args: [address] },
     // [10] - VRFConsumer getRequestId
-    { abi: VRFConsumerAbi, address: VrfCosumerAddress, functionName: "getRequestId" },
+    { abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName: "getRequestId", args:[address]},
   ],
   account: address,
   query: { enabled: typeof address === 'string' }
@@ -104,7 +105,7 @@ const isElligibleToDraw=useMemo(()=>{
 async function drawRandomNumber(){
  const result = writeContract({
   abi: VRFConsumerAbi,
-  address: VrfCosumerAddress,
+  address: VrfConsumerAddress,
   functionName:"requestRandomWords",
   args:[],
 });
@@ -153,11 +154,13 @@ try {
   if(requestId === BigInt(0)) throw new Error("No request has been requested from you");
 
   const getRandomValues = await readContract(config, {
-    abi:pokeCardCollectionAbi,
-    address:pokeCardCollectionAddress,
+    abi:VRFConsumerAbi,
+    address:VrfConsumerAddress,
     functionName:"getRequestData",
-    args:[requestId, pokemonAmountModulator, rarityModulator]   
-    }) as unknown as [bigint, bigint, boolean];
+    args:[address, pokemonAmountModulator, rarityModulator]   
+    }) as [bigint, bigint, boolean];
+
+    console.log(getRandomValues);
 
   const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
   return {
@@ -195,7 +198,7 @@ async function drawCard() {
 
       if(!pokemon) throw new Error("no pokemon created");
 
-      if(!data || !data[1].result) throw new Error("Result not found for new Card");
+      if(!data || typeof data[1].result === 'undefined') throw new Error("Result not found for new Card");
 
         const newCard: PokemonCard = {
           name: pokemon.name,
@@ -225,13 +228,14 @@ async function drawCard() {
       'keyvalues':{stringifiedAttributes:JSON.stringify(drawnPokemonCard.attributes)}}
   });
 
-    console.log(storeInPinata);
+  console.log(storeInPinata);
+
       
         writeContract({
           abi: pokeCardCollectionAbi,
           address:pokeCardCollectionAddress,
           functionName:"generatePokemon",
-          args:[reqeustId, `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`]
+          args:[`https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`, storeInPinata.cid]
         });
   } catch (error) {
     console.log(error);

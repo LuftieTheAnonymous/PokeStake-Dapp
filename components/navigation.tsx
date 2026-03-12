@@ -14,7 +14,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
-import usePokeData from "@/lib/usePokeData";
+import usePokeData from "@/hooks/usePokeData";
 
 const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },

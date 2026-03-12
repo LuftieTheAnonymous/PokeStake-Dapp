@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
-import { PokemonCard } from "@/components/pokemon-card";
+import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import usePokeData from "@/lib/usePokeData";
-import { Rarity, RARITY_CONFIG } from "@/lib/types";
+import usePokeData from "@/hooks/usePokeData";
+import { PokemonCard, Rarity, RARITY_CONFIG } from "@/lib/types";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import { 
   Layers, 
@@ -20,12 +20,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { pinata } from "@/utils/PinataConfig";
+import { useBlockNumber } from "wagmi";
 
 export default function StakingPage() {
   const { 
     connectWallet,
-    disconnectWallet,
+    walletAddress,
     stakeCard,
     unstakeCard,
     claimRewards,
@@ -36,11 +38,27 @@ export default function StakingPage() {
     stakingRewardToClaim,
     userStakedPokeCards,
     ownedPokeCards,
-    getCalculatedRewards
+    calculateRewards
   } = usePokeData();
 
   const [selectedTab, setSelectedTab] = useState<"stake" | "staked">("stake");
+  const {data:blockNumber}=useBlockNumber();
   
+
+  const {data:pokemonCards}=useQuery({queryKey:["NFTies-staked", walletAddress], queryFn:async()=>{
+  
+        let nftCards:{card:PokemonCard, isStaked:boolean}[]=[];
+  
+        for (let index = 0; index < userStakedPokeCards.length; index++) {
+          const pokeCard = userStakedPokeCards[index];
+  
+          const pinataFoundElement = await pinata.gateways.public.get(pokeCard.card.pinataId);
+  
+          if(pinataFoundElement.data) nftCards.push({card:pinataFoundElement as unknown as PokemonCard,...pokeCard, isStaked:pokeCard.isStaked});
+          
+          return nftCards;
+        }
+      }})
 
   // Update rewards every second
   // useEffect(() => {
@@ -62,16 +80,15 @@ export default function StakingPage() {
   claimRewards();
   };
 
-  const getTimeRemaining = (unlockTime: number) => {
-    const now = Date.now();
-    const remaining = unlockTime - now;
+  const getTimeRemaining = (unlockTime: bigint) => {
+    if(!blockNumber) return "could not calculate";
+
+    const remaining = unlockTime - blockNumber;
     
     if (remaining <= 0) return null;
     
-    const hours = Math.floor(remaining / (1000 * 60 * 60));
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
     
-    return `${hours}h ${minutes}m`;
+    return `${remaining} blocks`;
   };
 
   return (
@@ -133,7 +150,7 @@ export default function StakingPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <PokeCoinIcon size={28} />
-                    <span className="font-mono text-2xl font-bold text-green-500">+{getCalculatedRewards.toFixed(2)}</span>
+                    <span className="font-mono text-2xl font-bold text-green-500">+{calculateRewards.toFixed(2)}</span>
                     <span className="text-sm text-muted-foreground">$PKMN</span>
                   </div>
                 </div>
@@ -228,7 +245,7 @@ export default function StakingPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {userGeneratedCards.map((card) => (
                         <div key={card.id} className="space-y-2">
-                          <PokemonCard card={card} showStats={false} />
+                          <PokeCard card={card} showStats={false} />
                           <Button
                             onClick={() => handleStake(card.id)}
                             className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
@@ -245,7 +262,7 @@ export default function StakingPage() {
               ) : (
                 /* Staked Cards */
                 <div>
-                  {userStakedPokeCards.length === 0 ? (
+                  {pokemonCards && pokemonCards.length === 0 ? (
                     <div className="text-center py-16 space-y-4">
                       <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
                       <div className="space-y-2">
@@ -259,17 +276,17 @@ export default function StakingPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {userStakedPokeCards.map((stakedCard) => {
-                        const timeRemaining = getTimeRemaining(stakedCard.unlockTime);
+                      {pokemonCards && pokemonCards.map((stakedCard) => {
+                        const timeRemaining = getTimeRemaining((stakedCard as any).stakedAt);
                         const isLocked = timeRemaining !== null;
-                        const timeStaked = Date.now() - stakedCard.stakedAt;
-                        const daysStaked = timeStaked / (24 * 60 * 60 * 1000);
-                        const currentRewards = daysStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.rarity as bigint)) as Rarity].dailyReward;
+                        const timeStaked = blockNumber ? Math.floor(Number(blockNumber - (stakedCard as any).stakedAt) / 86400) : 0;
+                        
+                        const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.card.attributes.rarity as Rarity)) as Rarity].dailyReward;
 
                         return (
-                          <div key={stakedCard.card.id} className="space-y-2">
+                          <div key={stakedCard.card.attributes.id} className="space-y-2">
                             <div className="relative">
-                              <PokemonCard card={stakedCard.card} showStats={false} />
+                              <PokeCard card={stakedCard.card} showStats={false} />
                               {/* Overlay Info */}
                               <div className="absolute bottom-0 left-0 right-0 p-2 bg-background/90 backdrop-blur-sm border-t border-border/50">
                                 <div className="flex items-center justify-between text-xs">
@@ -286,7 +303,7 @@ export default function StakingPage() {
                               </div>
                             ) : (
                               <Button
-                                onClick={() => handleUnstake(stakedCard.card.id)}
+                                onClick={() => handleUnstake(BigInt(stakedCard.card.attributes.id))}
                                 className="w-full bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30"
                                 size="sm"
                               >

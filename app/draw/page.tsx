@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
-import { PokemonCard } from "@/components/pokemon-card";
+import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
 import usePokeData from "@/hooks/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
@@ -12,7 +12,7 @@ import { Sparkles, Ghost, AlertCircle, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PokeCoinIcon } from "@/components/token-balance";
 import { useWatchContractEvent } from "wagmi";
-import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer";
+import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 export default function DrawPage() {
@@ -25,20 +25,12 @@ export default function DrawPage() {
 
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
-     await drawRandomNumber();
+    await drawRandomNumber();
+
   }
 
 
-   useWatchContractEvent({
-    address: VrfCosumerAddress,
-    abi:VRFConsumerAbi,
-    eventName: 'ReturnedRandomness',
-    onLogs(logs) {
-     if(logs[0].address === walletAddress){
-      setIsDrawing(false);
-     }
-    },
-  });
+
 
 
   const handleDraw = async () => {
@@ -121,7 +113,7 @@ export default function DrawPage() {
                     /* Drawing Animation */
                     <div className="relative">
                       <div className="w-48 h-64 rounded-xl border-2 border-primary/50 bg-card animate-pulse flex items-center justify-center">
-                        <Ghost className="h-16 w-16 text-primary animate-bounce" />
+                        <PokeCoinIcon className="mr-2 h-16 w-16 animate-bounce"/>
                       </div>
                       <div className="absolute inset-0 animate-pulse-glow rounded-xl" />
                       {/* Particles */}
@@ -140,7 +132,7 @@ export default function DrawPage() {
                   ) : drawnCard && showCard ? (
                     /* Revealed Card */
                     <div className="w-52">
-                      <PokemonCard card={drawnCard} animated />
+                      <PokeCard card={drawnCard} animated />
                     </div>
                   ) : (
                     /* Empty State */
@@ -163,7 +155,8 @@ export default function DrawPage() {
                   >
                     {isDrawing ? (
                       <>
-                        <Ghost className="h-5 w-5 mr-2 animate-spin" />
+                      <PokeCoinIcon className="mr-2 animate-spin"/>
+
                         {requestId && requestId !== BigInt(0) ? "Drawing..." : "Requesting..." }
                       </>
                     ) : (
@@ -233,7 +226,7 @@ export default function DrawPage() {
                         style={{ backgroundColor: config.color }}
                       />
                       <div className="text-xs text-muted-foreground capitalize mb-1">{rarity}</div>
-                      <div className="font-mono text-sm font-medium">{config.dailyReward}%</div>
+                      <div className="font-mono text-sm font-medium">{config.chanceRate}%</div>
                     </div>
                   ))}
                 </div>

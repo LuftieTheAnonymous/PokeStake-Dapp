@@ -1,4 +1,4 @@
-export const VrfCosumerAddress="0x1178cD942e1890b6112Ce9825c1dc886Ab9758cF";
+export const VrfConsumerAddress="0x6438dC3481A1f9Abb345D0E4016cCBF33Db5C8a7";
 
 export const VRFConsumerAbi =[
     {

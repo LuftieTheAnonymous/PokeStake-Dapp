@@ -3,11 +3,11 @@
 import { useState, useMemo } from "react";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
-import { PokemonCard } from "@/components/pokemon-card";
+import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import usePokeData from "@/lib/usePokeData";
+import usePokeData from "@/hooks/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
-import type { Rarity } from "@/lib/types";
+import type { PokemonCard, Rarity } from "@/lib/types";
 import { 
   ImageIcon, 
   Ghost, 
@@ -16,10 +16,14 @@ import {
   Grid3X3,
   LayoutGrid,
   SortAsc,
-  Lock
+  Lock,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { pinata } from "@/utils/PinataConfig";
+import { PokeCoinIcon } from "@/components/token-balance";
 
 type FilterRarity = Rarity | "all";
 type SortOption = "newest" | "rarity" | "pokedex" | "name";
@@ -30,7 +34,8 @@ export default function GalleryPage() {
     isConnected,
     userGeneratedCards,
     ownedPokeCards,
-    userStakedPokeCards
+    userStakedPokeCards,
+    walletAddress
   } = usePokeData();
 
   const [filterRarity, setFilterRarity] = useState<FilterRarity>("all");
@@ -38,15 +43,13 @@ export default function GalleryPage() {
   const [showStaked, setShowStaked] = useState(true);
   const [gridSize, setGridSize] = useState<"small" | "large">("large");
 
-  console.log(ownedPokeCards, userStakedPokeCards);
-
 
 
   // Combine owned and staked cards
   const allCards = useMemo(() => {
     const cards = [
       ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
-      ...(showStaked ? userStakedPokeCards.map((s) => ({ card: s.card, isStaked: true })) : []),
+      ...(showStaked ? userStakedPokeCards.map((card) => ({ card, isStaked: true })) : []),
     ];
 
     // Filter by rarity
@@ -75,25 +78,75 @@ export default function GalleryPage() {
     return sorted;
   }, [userGeneratedCards, userStakedPokeCards, filterRarity, sortBy, showStaked]);
 
+
+const { data: pokemonCards, isLoading, isError, error } = useQuery({
+  queryKey: ["NFT-gallery", walletAddress],
+  refetchInterval:1000,
+  queryFn: async () => {
+    let nftCards: { card: PokemonCard; isStaked: boolean }[] = [];
+
+    for (let index = 0; index < allCards.length; index++) {
+      const pokeCard = allCards[index];
+
+      try {
+        console.log(pokeCard);
+        const pinataFoundElement = await pinata.gateways.public.get(
+          pokeCard.card.pinataId
+        );
+
+        if (pinataFoundElement && pinataFoundElement.data) {
+          nftCards.push({
+            card: pinataFoundElement.data as unknown as PokemonCard,
+            isStaked: pokeCard.isStaked,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to fetch card ${pokeCard.card.pinataId}:`, error);
+      }
+    }
+
+    // Return OUTSIDE the loop
+    return nftCards;
+  },
+});
+
+
   // Stats
   const stats = useMemo(() => {
-    const all = [...userGeneratedCards, ...userStakedPokeCards.map((s) => s.card)];
+    if(!pokemonCards){
+      return {
+      total: 0,
+      owned: ownedPokeCards,
+      staked: userStakedPokeCards.length,
+      'byRarity':{
+        'common':0,
+        'rare':0,
+        'uncommon':0,
+        'ultra rare':0,
+      }
+    };
+    }
+   
     const byRarity: Record<Rarity, number> = {
       common: 0,
       uncommon: 0,
       rare: 0,
       "ultra rare":0
     };
-    all.forEach((card) => {
-      byRarity[card.rarity as Rarity]++;
+    pokemonCards.forEach(({card}) => {
+      byRarity[card.attributes.rarity as Rarity]++;
     });
     return {
-      total: all.length,
+      total: pokemonCards.length,
       owned: ownedPokeCards,
       staked: userStakedPokeCards.length,
       byRarity,
     };
   }, [userStakedPokeCards, userGeneratedCards, ownedPokeCards]);
+
+
+
+
 
   return (
     <div className="min-h-screen relative">
@@ -276,14 +329,29 @@ export default function GalleryPage() {
                 </div>
               </div>
 
+  
+
               {/* Cards Grid */}
-              {allCards.length === 0 ? (
+              {isLoading && !isError && (
                 <div className="text-center py-16">
-                  <Ghost className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No cards match your filters</p>
+                  <PokeCoinIcon className="h-12 w-12 mx-auto animate-spin" />
+                  <p className="text-muted-foreground">Loading Cards....</p>
+                  <p>Please be patient, this can take a while...</p>
                 </div>
-              ) : (
-                <div
+              )}
+
+
+              {isError && !isLoading && 
+               <div className="text-center py-16">
+                  <AlertCircle className="h-12 w-12 mx-auto text-orange-600" />
+                  <p className="text-muted-foreground">Error Occured !</p>
+                  <p>{error.message}</p>
+                </div>
+              }
+
+
+              {!isError && !isLoading && pokemonCards && pokemonCards.length > 0 ?
+            (   <div
                   className={cn(
                     "grid gap-4",
                     gridSize === "large"
@@ -291,9 +359,9 @@ export default function GalleryPage() {
                       : "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
                   )}
                 >
-                  {allCards.map(({ card, isStaked }) => (
-                    <div key={card.id} className="relative">
-                      <PokemonCard 
+                  {pokemonCards &&  pokemonCards.map(({ card, isStaked }) => (
+                    <div key={card.attributes.id} className="relative">
+                      <PokeCard 
                         card={card} 
                         showStats={gridSize === "large"}
                         isStaked={isStaked}
@@ -305,8 +373,11 @@ export default function GalleryPage() {
                       )}
                     </div>
                   ))}
-                </div>
-              )}
+                </div>) : (   <div className="text-center py-16">
+                  <Ghost className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No cards match your filters</p>
+                </div>)  
+            }
             </div>
           )}
         </div>
