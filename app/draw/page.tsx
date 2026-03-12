@@ -22,13 +22,13 @@ export default function DrawPage() {
 
 
   const requestRandomNumber = async ()=>{
-    const randomRequestId = await drawRandomNumber();
+     await drawRandomNumber();
   }
 
 
   const handleDraw = async () => {
 
-    if(!requestId) throw new Error("No Id for Request");
+    if(!requestId || requestId === BigInt(0)) throw new Error("No Id for Request");
 
     setIsDrawing(true);
     setShowCard(false);
@@ -38,7 +38,7 @@ export default function DrawPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
     
-    const newCard = await drawCard(requestId);
+    const newCard = await drawCard();
 
     if(!newCard) throw new Error("No Pokemon Card has been drawn");
 
@@ -53,7 +53,7 @@ export default function DrawPage() {
 
   const mintPokeCard = async()=>{
     if(!drawnCard) throw new Error("No Drawn PokeCard");
-    if(!requestId) throw new Error("No Request Id");
+    if(!requestId || (requestId && requestId === BigInt(0))) throw new Error("No Request Id");
       await mintDrawnPokemon(requestId, drawnCard);
     }
 
@@ -142,7 +142,7 @@ export default function DrawPage() {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button
                     size="lg"
-                    onClick={requestId ? handleDraw : requestRandomNumber}
+                    onClick={requestId && requestId !== BigInt(0) ? handleDraw : requestRandomNumber}
                     disabled={isDrawing || isElligibleToDraw}
                     className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
                   >

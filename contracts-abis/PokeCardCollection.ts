@@ -1,4 +1,4 @@
-export const pokeCardCollectionAddress="0x23B8976c196C97d8cCef3c4E3d15e39379A939dC";
+export const pokeCardCollectionAddress="0x550A33AB153108d18e8172301f482098E50cD3F3";
 
 export const pokeCardCollectionAbi=[
     {
