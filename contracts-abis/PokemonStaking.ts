@@ -1,4 +1,4 @@
-export const pokemonStakingAddress = "0xfA94D8AcEbDc23AF2A586a235737Be3B8289420e";
+export const pokemonStakingAddress = "0xDB1614965c3293842aB6a9E5666C5d02801Bf769";
 
 export const pokemonStakingAbi= [
     {
@@ -59,12 +59,19 @@ export const pokemonStakingAbi= [
           "type": "tuple[]",
           "internalType": "struct PokemonStakingPool.PokeStakePosition[]",
           "components": [
-            { "name": "nftId", "type": "uint256", "internalType": "uint256" },
             {
-              "name": "pokemonRarityLevel",
+              "name": "pokedexId",
               "type": "uint256",
               "internalType": "uint256"
             },
+            {
+              "name": "rarityLevel",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            { "name": "nftId", "type": "uint256", "internalType": "uint256" },
+            { "name": "tokenURI", "type": "string", "internalType": "string" },
+            { "name": "pinataId", "type": "string", "internalType": "string" },
             {
               "name": "stakedAtBlock",
               "type": "uint256",

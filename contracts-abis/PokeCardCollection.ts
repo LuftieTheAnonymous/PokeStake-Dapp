@@ -1,4 +1,4 @@
-export const pokeCardCollectionAddress="0x550A33AB153108d18e8172301f482098E50cD3F3";
+export const pokeCardCollectionAddress="0x80aeb89C127e998790e25D5ae282Af86F66b8818";
 
 export const pokeCardCollectionAbi=[
     {
@@ -51,8 +51,8 @@ export const pokeCardCollectionAbi=[
       "type": "function",
       "name": "generatePokemon",
       "inputs": [
-        { "name": "requestId", "type": "uint256", "internalType": "uint256" },
-        { "name": "token_uri", "type": "string", "internalType": "string" }
+        { "name": "token_uri", "type": "string", "internalType": "string" },
+        { "name": "pinataId", "type": "string", "internalType": "string" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
@@ -90,7 +90,8 @@ export const pokeCardCollectionAbi=[
               "internalType": "enum PokeCardCollection.PokemonRarityLevel"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "tokenURI", "type": "string", "internalType": "string" }
+            { "name": "tokenURI", "type": "string", "internalType": "string" },
+            { "name": "pinataId", "type": "string", "internalType": "string" }
           ]
         }
       ],
@@ -119,7 +120,8 @@ export const pokeCardCollectionAbi=[
               "internalType": "enum PokeCardCollection.PokemonRarityLevel"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "tokenURI", "type": "string", "internalType": "string" }
+            { "name": "tokenURI", "type": "string", "internalType": "string" },
+            { "name": "pinataId", "type": "string", "internalType": "string" }
           ]
         }
       ],
@@ -132,22 +134,6 @@ export const pokeCardCollectionAbi=[
         { "name": "user", "type": "address", "internalType": "address" }
       ],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "getRandomValuesConverted",
-      "inputs": [
-        { "name": "requestId", "type": "uint256", "internalType": "uint256" }
-      ],
-      "outputs": [
-        {
-          "name": "pokedexIndex",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
-        { "name": "rareLevel", "type": "uint256", "internalType": "uint256" }
-      ],
       "stateMutability": "view"
     },
     {
@@ -601,7 +587,6 @@ export const pokeCardCollectionAbi=[
     { "type": "error", "name": "GenerationCooldownNotReached", "inputs": [] },
     { "type": "error", "name": "NotMinter", "inputs": [] },
     { "type": "error", "name": "NotOwner", "inputs": [] },
-    { "type": "error", "name": "RandomWordsNotAvailable", "inputs": [] },
     { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
     {
       "type": "error",

@@ -1,13 +1,13 @@
 'use client';
 
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
-import { type PokemonCard, type StakedCard, type Rarity, pokemonModulators } from "./types";
+import { type PokemonCard, type StakedCard, type Rarity, pokemonAmountModulator, rarityModulator } from "../lib/types";
 import { injected, useAccount, useBlockNumber, useConnect, useDisconnect, useReadContracts, useWriteContract } from 'wagmi'
 import { useMemo, useState } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {PokemonClient} from "pokenode-ts";
 import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer";
-import { config } from "./wagmi/wagmiConfig";
+import { config } from "../lib/wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core'
@@ -42,7 +42,7 @@ const {data} = useReadContracts({
     // [9] - pokemonStaking getStakedPositions
     { abi: pokemonStakingAbi, address: pokemonStakingAddress, functionName: "getStakedPositions", args: [address] },
     // [10] - VRFConsumer getRequestId
-    { abi: VRFConsumerAbi, address: VrfCosumerAddress, functionName: "getRequestId" }
+    { abi: VRFConsumerAbi, address: VrfCosumerAddress, functionName: "getRequestId" },
   ],
   account: address,
   query: { enabled: typeof address === 'string' }
@@ -152,12 +152,12 @@ try {
 
   if(requestId === BigInt(0)) throw new Error("No request has been requested from you");
 
-  const getRandomValues:bigint[] = await readContract(config, {
+  const getRandomValues = await readContract(config, {
     abi:pokeCardCollectionAbi,
     address:pokeCardCollectionAddress,
-    functionName:"getRandomValuesConverted",
-    args:[requestId]   
-    }) as unknown as bigint[];
+    functionName:"getRequestData",
+    args:[requestId, pokemonAmountModulator, rarityModulator]   
+    }) as unknown as [bigint, bigint, boolean];
 
   const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
   return {

@@ -2,8 +2,6 @@ export const pokemonAmountModulator:bigint = BigInt(151);
 
 export const rarityModulator:bigint = BigInt(4);
 
-export const pokemonModulators:bigint[]=[pokemonAmountModulator, rarityModulator];
-
 
 export type Rarity = "common" | "uncommon" | "rare" | "ultra rare";
 export interface PokemonCard {

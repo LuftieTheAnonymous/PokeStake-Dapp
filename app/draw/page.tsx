@@ -5,12 +5,14 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { PokemonCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
-import usePokeData from "@/lib/usePokeData";
+import usePokeData from "@/hooks/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
 import type { PokemonCard as PokemonCardType } from "@/lib/types";;
 import { Sparkles, Ghost, AlertCircle, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PokeCoinIcon } from "@/components/token-balance";
+import { useWatchContractEvent } from "wagmi";
+import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 export default function DrawPage() {
@@ -18,14 +20,25 @@ export default function DrawPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
 
-  const { drawCard, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
      await drawRandomNumber();
-     setIsDrawing(false);
   }
+
+
+   useWatchContractEvent({
+    address: VrfCosumerAddress,
+    abi:VRFConsumerAbi,
+    eventName: 'ReturnedRandomness',
+    onLogs(logs) {
+     if(logs[0].address === walletAddress){
+      setIsDrawing(false);
+     }
+    },
+  });
 
 
   const handleDraw = async () => {

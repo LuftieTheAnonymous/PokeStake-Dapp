@@ -1,4 +1,4 @@
-export const VrfCosumerAddress="0x46f15D711aa6d9172737EBF77D97Dd0b8b695acb";
+export const VrfCosumerAddress="0x1178cD942e1890b6112Ce9825c1dc886Ab9758cF";
 
 export const VRFConsumerAbi =[
     {
@@ -36,15 +36,25 @@ export const VRFConsumerAbi =[
       "type": "function",
       "name": "getRequestData",
       "inputs": [
-        { "name": "requestId", "type": "uint256", "internalType": "uint256" },
-        { "name": "caller", "type": "address", "internalType": "address" }
+        { "name": "caller", "type": "address", "internalType": "address" },
+        {
+          "name": "modulatorPokedex",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "rarityModulator",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
       ],
       "outputs": [
         {
-          "name": "randomValues",
-          "type": "uint256[]",
-          "internalType": "uint256[]"
+          "name": "pokedexIndex",
+          "type": "uint256",
+          "internalType": "uint256"
         },
+        { "name": "rarityLevel", "type": "uint256", "internalType": "uint256" },
         { "name": "isRequestResolved", "type": "bool", "internalType": "bool" }
       ],
       "stateMutability": "view"
@@ -52,7 +62,9 @@ export const VRFConsumerAbi =[
     {
       "type": "function",
       "name": "getRequestId",
-      "inputs": [],
+      "inputs": [
+        { "name": "caller", "type": "address", "internalType": "address" }
+      ],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
       "stateMutability": "view"
     },
