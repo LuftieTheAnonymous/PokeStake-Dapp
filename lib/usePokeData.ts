@@ -2,21 +2,23 @@
 
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
 import { type PokemonCard, type StakedCard, type Rarity, pokemonModulators, pokemonAmountModulator, rarityModulator } from "./types";
-import { injected, useAccount, useBlockNumber, useConnect, useDisconnect, useReadContracts, useWriteContract } from 'wagmi'
-import { useMemo } from "react";
+import { injected, useAccount, useBlockNumber, useConnect, useDisconnect, useReadContracts, useWatchContractEvent, useWriteContract } from 'wagmi'
+import { useMemo, useState } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {PokemonClient} from "pokenode-ts";
 import { VRFConsumerAbi, VrfCosumerAddress } from "@/contracts-abis/VRFConsumer";
 import { config } from "./wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
-import { readContract } from '@wagmi/core'
+import { readContract, watchContractEvent } from '@wagmi/core'
+import { parseEventLogs } from "viem/utils";
+import {useWaitForTransactionReceipt} from "wagmi";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
  const {mutate}=useConnect({config});
   const {mutate:disconnect}=useDisconnect()
-
+  const [requestId, setRequestId]= useState<bigint>();
 
   const {address, isConnected, isConnecting}= useAccount();
   const {writeContract}=useWriteContract();
@@ -87,6 +89,9 @@ query:{
 }
 });
 
+
+
+
 const snorliesBalance = useMemo(()=>{
     return data && data[0].result ?  Number((data[0].result as bigint) / BigInt(1e18)) : 0;
 },[data]);
@@ -109,7 +114,7 @@ const userTotalGeneratedCards=useMemo(()=>{
 },[data]);
 
 const userStakedPokeCards = useMemo(()=>{
-  return data && data[9].result ? (data[9].result as any[]) : [] 
+  return data && data[5].result ? (data[5].result as any[]) : [] 
 },[data])
 
 const lastBlockGeneratedAt = useMemo(()=>{
@@ -147,11 +152,11 @@ const stakingRewardToClaim = useMemo(()=>{
 },[data]);
 
 const APYinToken = useMemo(()=>{
-  return data && data[8].result ? Number((data[8].result as bigint) /BigInt(1e18)) : 0;
+  return data && data[6].result ? Number((data[6].result as bigint) /BigInt(1e18)) : 0;
 },[data]);
 
 const getCalculatedRewards = useMemo(()=>{
-  return data && data[9].result ? Number((data[9].result as bigint) /BigInt(1e18)) : 0;
+  return data && data[7].result ? Number((data[7].result as bigint) /BigInt(1e18)) : 0;
 },[data])
 
 
@@ -160,10 +165,8 @@ async function drawRandomNumber(){
   abi: VRFConsumerAbi,
   address: VrfCosumerAddress,
   functionName:"requestRandomWords",
-  args:[]
-},{'onSuccess':(data)=>{
-  console.log(data);
-}});
+  args:[],
+});
 
 return result as unknown as bigint;
 }
@@ -233,20 +236,6 @@ try {
 }
 }
 
-function generateRandomNumbers(){
-  try {
-    writeContract({
-      abi:VRFConsumerAbi, 
-      address:VrfCosumerAddress,
-      functionName:"requestRandomWords"
-    });
-
-
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 
 async function drawCard(requestId:bigint) {
         const pokemon = await getRandomPokemon(requestId);
@@ -310,12 +299,12 @@ async function drawCard(requestId:bigint) {
 
 return {
   drawCard,
+  requestId,
   claimRewards,
   getRandomPokemon,
   snorliesBalance,
   walletAddress: address,
   isConnected,
-  generateRandomNumbers,
   isConnecting,
   isElligibleToDraw,
   totalSupply,
@@ -323,6 +312,7 @@ return {
   userStakedPokeCards,
   stakingRewardToClaim,
   getCalculatedRewards,
+  getRandomParams,
   APYinToken,
   ownedPokeCards,
   userTotalGeneratedCards,

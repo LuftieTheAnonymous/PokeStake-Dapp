@@ -16,11 +16,19 @@ import { PokeCoinIcon } from "@/components/token-balance";
 export default function DrawPage() {
   const [drawnCard, setDrawnCard] = useState<PokemonCardType | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [showCard, setShowCard] = useState(false);;
+  const [showCard, setShowCard] = useState(false);
 
-  const { drawCard, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, generateRandomNumbers, getRandomNumbers} = usePokeData();
+  const { drawCard, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+
+
+  const requestRandomNumber = async ()=>{
+    const randomRequestId = await drawRandomNumber();
+  }
+
 
   const handleDraw = async () => {
+
+    if(!requestId) throw new Error("No Id for Request");
 
     setIsDrawing(true);
     setShowCard(false);
@@ -29,7 +37,8 @@ export default function DrawPage() {
     // Animation delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    const newCard = await drawCard();
+    
+    const newCard = await drawCard(requestId);
 
     if(!newCard) throw new Error("No Pokemon Card has been drawn");
 
@@ -44,8 +53,9 @@ export default function DrawPage() {
 
   const mintPokeCard = async()=>{
     if(!drawnCard) throw new Error("No Drawn PokeCard");
-                    await mintDrawnPokemon(drawnCard);
-          }
+    if(!requestId) throw new Error("No Request Id");
+      await mintDrawnPokemon(requestId, drawnCard);
+    }
 
 
   return (
@@ -132,7 +142,7 @@ export default function DrawPage() {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button
                     size="lg"
-                    onClick={getRandomNumbers && getRandomNumbers.pokemonParams && getRandomNumbers.pokemonParams.length > 0 ? handleDraw : generateRandomNumbers}
+                    onClick={requestId ? handleDraw : requestRandomNumber}
                     disabled={isDrawing || isElligibleToDraw}
                     className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
                   >
