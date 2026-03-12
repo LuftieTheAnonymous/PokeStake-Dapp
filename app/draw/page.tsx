@@ -22,7 +22,9 @@ export default function DrawPage() {
 
 
   const requestRandomNumber = async ()=>{
+    setIsDrawing(true);
      await drawRandomNumber();
+     setIsDrawing(false);
   }
 
 
@@ -144,17 +146,17 @@ export default function DrawPage() {
                     size="lg"
                     onClick={requestId && requestId !== BigInt(0) ? handleDraw : requestRandomNumber}
                     disabled={isDrawing || isElligibleToDraw}
-                    className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
+                    className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
                   >
                     {isDrawing ? (
                       <>
                         <Ghost className="h-5 w-5 mr-2 animate-spin" />
-                        Drawing...
+                        {requestId && requestId !== BigInt(0) ? "Drawing..." : "Requesting..." }
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Draw Card
+                        {requestId && requestId !== BigInt(0) ? "Draw Card" : "Request Number" }
                       </>
                     )}
                   </Button>

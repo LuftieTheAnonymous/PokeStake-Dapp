@@ -50,47 +50,47 @@ const {data} = useReadContracts({
 
 // Now the corrected useMemo hooks:
 const snorliesBalance = useMemo(() => {
-  return data && data[0]?.result ? Number((data[0].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[0].result ? Number((data[0].result as bigint) / BigInt(1e18)) : 0;
 }, [data]);
 
 const totalSupply = useMemo(() => {
-  return data && data[1]?.result ? Number(data[1].result) : 0;
+  return data && data[1].result ? Number(data[1].result) : 0;
 }, [data]);
 
 const userGeneratedCards = useMemo(() => {
-  return data && data[2]?.result ? (data[2].result as any[]) : [];
+  return data && data[2].result ? (data[2].result as any[]) : [];
 }, [data]);
 
 const userTotalGeneratedCards = useMemo(() => {
-  return data && data[3]?.result ? Number(data[3].result) : 0;
+  return data && data[3].result ? Number(data[3].result) : 0;
 }, [data]);
 
 const lastBlockGeneratedAt = useMemo(() => {
-  return data && data[4]?.result ? Number(data[4].result) : 0;
+  return data && data[4].result ? Number(data[4].result) : 0;
 }, [data]);
 
 const stakingRewardToClaim = useMemo(() => {
-  return data && data[5]?.result ? Number((data[5].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[5].result ? Number((data[5].result as bigint) / BigInt(1e18)) : 0;
 }, [data]);
 
 const APYinToken = useMemo(() => {
-  return data && data[6]?.result ? Number((data[6].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[6].result ? Number((data[6].result as bigint) / BigInt(1e18)) : 0;
 }, [data]);
 
 const calculateRewards = useMemo(() => {
-  return data && data[7]?.result ? Number((data[7].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[7].result ? Number((data[7].result as bigint) / BigInt(1e18)) : 0;
 }, [data]);
 
 const ownedPokeCards = useMemo(() => {
-  return data && data[8]?.result ? Number((data[8].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[8].result ? Number((data[8].result as bigint) / BigInt(1e18)) : 0;
 }, [data]);
 
 const userStakedPokeCards = useMemo(() => {
-  return data && data[9]?.result ? (data[9].result as any[]) : [];
+  return data && data[9].result ? (data[9].result as any[]) : [];
 }, [data]);
 
 const requestId = useMemo(() => {
-  return data && data[10]?.result ? data[10].result as bigint : BigInt(0);
+  return data && data[10].result ? data[10].result as bigint : BigInt(0);
 }, [data]);
 
 
