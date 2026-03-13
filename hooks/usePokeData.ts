@@ -249,7 +249,7 @@ async function drawCard() {
           args:[`https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`, storeInPinata.cid]
         });
   } catch (error) {
-    console.log(error);
+    console.log(error, "error while minting");
   }
   }
 
