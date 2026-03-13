@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for pokestake on 2026-03-13T14:57:32Z
+# fly.toml app configuration file generated for pokestake on 2026-03-13T21:09:48Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,7 +9,7 @@ primary_region = 'ams'
 [build]
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
