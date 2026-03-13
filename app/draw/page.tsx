@@ -78,6 +78,7 @@ const handleDraw = async () => {
   const newCard = await drawCard();
   if(!newCard.card){
     setError(newCard.error || "No Pokemon Card has been drawn");
+    setIsDrawing(false);
     return;
   }
   
