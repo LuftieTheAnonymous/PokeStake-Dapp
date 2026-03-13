@@ -1,8 +1,8 @@
 'use client';
 
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
-import { type PokemonCard, type StakedCard, type Rarity, pokemonAmountModulator, rarityModulator } from "../lib/types";
-import { injected, useAccount, useBlockNumber, useConnect, useDisconnect, useReadContracts, useWriteContract } from 'wagmi'
+import { type PokemonCard, type Rarity, pokemonAmountModulator, rarityModulator } from "../lib/types";
+import { useAccount, useBlockNumber, useReadContracts, useWriteContract } from 'wagmi'
 import { useMemo } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {PokemonClient} from "pokenode-ts";
@@ -14,8 +14,6 @@ import { readContract } from '@wagmi/core'
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
- const {mutate}=useConnect({config});
-  const {mutate:disconnect}=useDisconnect()
   const {address, isConnected, isConnecting}= useAccount();
   const {writeContract}=useWriteContract();
   const {data:blockNumber}=useBlockNumber();
@@ -124,13 +122,6 @@ async function drawRandomNumber(){
 return result as unknown as bigint;
 }
 
-function connectWallet(){
-  mutate({'connector': injected({'target':'metaMask'})})
-}
-
-function disconnectWallet(){
-  disconnect()
-}
 
 function stakeCard(tokenId:bigint){
   writeContract({
@@ -277,8 +268,6 @@ return {
   lastBlockGeneratedAt,
   drawRandomNumber,
   mintDrawnPokemon,
-  connectWallet,
-  disconnectWallet,
   stakeCard,
   unstakeCard
 }

@@ -24,13 +24,13 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { pinata } from "@/utils/PinataConfig";
 import { PokeCoinIcon } from "@/components/token-balance";
+import { CustomConnectButton } from "@/components/custom-connect-button";
 
 type FilterRarity = Rarity | "all";
 type SortOption = "newest" | "rarity" | "pokedex" | "name";
 
 export default function GalleryPage() {
   const { 
-    connectWallet,
     isConnected,
     userGeneratedCards,
     ownedPokeCards,
@@ -189,9 +189,7 @@ const stats = useMemo(() => {
                   Connect your wallet to view your collection
                 </p>
               </div>
-              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
-                Connect Wallet
-              </Button>
+             <CustomConnectButton />
             </div>
           ) : stats.total === 0 ? (
             /* Empty State */

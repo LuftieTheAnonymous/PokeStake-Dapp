@@ -21,13 +21,6 @@ export interface PokemonCard {
   };
 }
 
-export interface StakedCard {
-  card: PokemonCard;
-  stakedAt: number;
-  unlockTime: number;
-  accruedTokens: number;
-}
-
 export const RARITY_CONFIG: Record<Rarity, { 
   color: string; 
   dailyReward: number;

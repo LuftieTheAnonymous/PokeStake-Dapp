@@ -23,10 +23,10 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { pinata } from "@/utils/PinataConfig";
 import { useBlockNumber } from "wagmi";
+import { CustomConnectButton } from "@/components/custom-connect-button";
 
 export default function StakingPage() {
-  const { 
-    connectWallet,
+  const {
     walletAddress,
     stakeCard,
     unstakeCard,
@@ -155,9 +155,7 @@ export default function StakingPage() {
                   Connect your wallet to start staking
                 </p>
               </div>
-              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
-                Connect Wallet
-              </Button>
+            <CustomConnectButton />
             </div>
           ) : (
             <div className="space-y-8">

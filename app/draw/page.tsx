@@ -14,6 +14,7 @@ import { PokeCoinIcon } from "@/components/token-balance";
 import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import { toast } from "sonner";
+import { CustomConnectButton } from "@/components/custom-connect-button";
 
 
 export default function DrawPage() {
@@ -22,7 +23,7 @@ export default function DrawPage() {
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
 
-  const { drawCard, walletAddress, mintDrawnPokemon, connectWallet,requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -143,9 +144,7 @@ const handleDraw = async () => {
                   Connect your wallet to start drawing Pokemon cards
                 </p>
               </div>
-              <Button size="lg" onClick={connectWallet} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-lg">
-                Connect Wallet
-              </Button>
+              <CustomConnectButton/>
             </div>
           ) : (
             /* Draw Interface */

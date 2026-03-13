@@ -3,7 +3,9 @@ import { Space_Grotesk, Fira_Code } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
+import '@rainbow-me/rainbowkit/styles.css'
 import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
+import RainbowKitWrapper from '@/lib/rainbow-kit/RainbowKitWrapper'
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ["latin"],
@@ -54,14 +56,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${firaCode.variable} font-sans antialiased`}>
         <WagmiWrapper>
+          <RainbowKitWrapper>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          
+            {children}
         </ThemeProvider>
+        </RainbowKitWrapper>
         </WagmiWrapper>
         <Analytics />
       </body>

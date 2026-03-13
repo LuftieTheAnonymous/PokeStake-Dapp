@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import usePokeData from "@/hooks/usePokeData";
+import { CustomConnectButton } from "./custom-connect-button";
 
 const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },
@@ -28,7 +29,7 @@ export function Navigation() {
 
 
 
-  const {connectWallet, disconnectWallet, walletAddress:address, isConnected, snorliesBalance}=usePokeData();
+  const {walletAddress:address, isConnected, snorliesBalance}=usePokeData();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -97,29 +98,7 @@ export function Navigation() {
           </div>
           }
           
-
-          {isConnected ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={disconnectWallet}
-              className="border-primary/50 hover:border-primary hover:bg-primary/10 cursor-pointer"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              <span className="font-mono text-xs">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </span>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              onClick={connectWallet}
-              className="bg-primary hover:bg-primary/90 cursor-pointer"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
-            </Button>
-          )}
+<CustomConnectButton />
         </div>
       </div>
 
