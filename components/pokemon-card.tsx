@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { PokemonCard as PokemonCardType, Rarity } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Zap, Shield, Heart } from "lucide-react";
+import { useRef } from "react";
 
 interface PokemonCardProps {
   card: PokemonCardType;
@@ -44,6 +45,18 @@ export function PokeCard({
   className,
   animated = false,
 }: PokemonCardProps) {
+  const audioReference = useRef<HTMLAudioElement>(null);
+
+  const triggerCry=()=>{
+    if(audioReference.current){
+      if(audioReference.current.currentTime > 0){
+        audioReference.current.currentTime = 0;
+      }
+
+      audioReference.current.play();
+    }
+  }
+
   return (
     <div
       onClick={onClick}
@@ -69,7 +82,7 @@ export function PokeCard({
       </div>
 
       {/* Card Image */}
-      <div className="relative aspect-square bg-gradient-to-b from-transparent to-background/50 p-4">
+      <div onClick={triggerCry} className="relative aspect-square bg-gradient-to-b from-transparent to-background/50 p-4">
         <Image
           src={card.image}
           alt={card.name}
@@ -77,6 +90,7 @@ export function PokeCard({
           className="object-contain p-2 drop-shadow-2xl"
           unoptimized
         />
+        {card.attributes.cries && card.attributes.cries.latest && <audio ref={audioReference} src={card.attributes.cries.latest} />}
         {/* Glow effect */}
         <div
           className="absolute inset-0 opacity-30 blur-2xl"

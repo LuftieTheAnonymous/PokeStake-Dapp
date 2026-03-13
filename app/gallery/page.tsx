@@ -80,8 +80,7 @@ export default function GalleryPage() {
 
 
 const { data: pokemonCards, isLoading, isError, error } = useQuery({
-  queryKey: ["NFT-gallery", walletAddress],
-  refetchInterval:1000,
+  queryKey: ["NFT-gallery", walletAddress, filterRarity, sortBy, showStaked],
   queryFn: async () => {
     let nftCards: { card: PokemonCard; isStaked: boolean }[] = [];
 
@@ -89,7 +88,6 @@ const { data: pokemonCards, isLoading, isError, error } = useQuery({
       const pokeCard = allCards[index];
 
       try {
-        console.log(pokeCard);
         const pinataFoundElement = await pinata.gateways.public.get(
           pokeCard.card.pinataId
         );
@@ -108,6 +106,7 @@ const { data: pokemonCards, isLoading, isError, error } = useQuery({
     // Return OUTSIDE the loop
     return nftCards;
   },
+  enabled: typeof walletAddress !== 'undefined', 
 });
 
 

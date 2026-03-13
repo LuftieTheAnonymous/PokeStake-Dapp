@@ -11,7 +11,6 @@ import { config } from "../lib/wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core'
-import { vrfCoordinatorAddress } from "@/contracts-abis/VRFCoordinator";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
@@ -170,7 +169,7 @@ try {
     pokemonImage: pokemonData.sprites.front_default,
     sprites: [pokemonData.sprites.front_default, pokemonData.sprites.back_default],
     types: pokemonData.types.map((pokemonType)=>pokemonType.type.name),
-    pokemonCry: pokemonData.cries.latest,
+    pokemonCry: pokemonData.cries,
     description:`${pokemonData.types.map((pokemonType)=>pokemonType.type.name).length === 2 ? `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}/${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[1]}` : `${pokemonData.types.map((pokemonType)=>pokemonType.type.name)[0]}`}`,
     hp: pokemonData.stats.find((s) => s.stat.name === "hp")?.base_stat || 50,
     attack: pokemonData.stats.find((s) => s.stat.name === "attack")?.base_stat || 50,
@@ -178,6 +177,7 @@ try {
     
   };
 } catch (error) {
+  console.log(error);
   throw new Error("Failed to fetch Pokemon data");
 }
 }
@@ -210,6 +210,7 @@ async function drawCard() {
           rarity: selectedKey as Rarity,
           sprites:pokemon.sprites,
           type: pokemon.types,
+          cries: pokemon.pokemonCry,
           hp: Math.floor(pokemon.hp + (rarityBoost)),
           attack: Math.floor(pokemon.attack + rarityBoost),
           defense: Math.floor(pokemon.defense + rarityBoost),
@@ -227,9 +228,6 @@ async function drawCard() {
       'metadata':{
       'keyvalues':{stringifiedAttributes:JSON.stringify(drawnPokemonCard.attributes)}}
   });
-
-  console.log(storeInPinata);
-
       
         writeContract({
           abi: pokeCardCollectionAbi,

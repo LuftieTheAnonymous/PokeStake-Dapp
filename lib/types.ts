@@ -17,6 +17,7 @@ export interface PokemonCard {
   hp: number;
   attack: number;
   defense: number;
+  cries: {legacy:`https://${string}.ogg` | null | undefined, latest:`https://${string}.ogg` | null | undefined}
   };
 }
 

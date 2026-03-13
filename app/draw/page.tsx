@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/button";
 import usePokeData from "@/hooks/usePokeData";
 import { RARITY_CONFIG } from "@/lib/types";
 import type { PokemonCard as PokemonCardType } from "@/lib/types";;
-import { Sparkles, Ghost, AlertCircle, ChevronRight } from "lucide-react";
+import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PokeCoinIcon } from "@/components/token-balance";
-import { useWatchContractEvent } from "wagmi";
-import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 export default function DrawPage() {
@@ -20,7 +18,7 @@ export default function DrawPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
 
-  const { drawCard, walletAddress, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -29,34 +27,62 @@ export default function DrawPage() {
 
   }
 
+  useEffect(()=>{
+    if(BigInt(requestId) !== BigInt(0)) setIsDrawing(false);
+  },[requestId]);
 
 
 
 
-  const handleDraw = async () => {
+const handleDraw = async () => {
+  if(!requestId || requestId === BigInt(0)) throw new Error("No Id for Request");
 
-    if(!requestId || requestId === BigInt(0)) throw new Error("No Id for Request");
-
-    setIsDrawing(true);
-    setShowCard(false);
-    setDrawnCard(null);
+  setIsDrawing(true);
+  setShowCard(false);
+  setDrawnCard(null);
+  
+  // Play drawing sound and wait for it
+  const drawingSound = new Audio("/sound-effects/sound_drawing_pokemon.mp3");
+  drawingSound.play();
+  
+  await new Promise((resolve) => {
+    drawingSound.onloadedmetadata = () => {
+      setTimeout(resolve, drawingSound.duration * 1000);
+    };
+    // Fallback in case metadata loads before this runs
+    if (drawingSound.duration) {
+      setTimeout(resolve, drawingSound.duration * 1000);
+    }
+  });
+  
+  // Fetch the card
+  const newCard = await drawCard();
+  if(!newCard) throw new Error("No Pokemon Card has been drawn");
+  
+  setDrawnCard(newCard);
+  
+  // Play cry sound
+  if(newCard.attributes.cries.latest) {
+    const crySound = new Audio(newCard.attributes.cries.latest);
+    crySound.play();
     
-    // Animation delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    
-    const newCard = await drawCard();
+    await new Promise((resolve) => {
+      crySound.onloadedmetadata = () => {
+        setTimeout(resolve, crySound.duration * 1000 + 200);
+      };
+      if (crySound.duration) {
+        setTimeout(resolve, crySound.duration * 1000 + 200);
+      }
+    });
+  }
+  
+  // Play emerged sound and reveal
+  new Audio('/sound-effects/emerged_pokemon.mp3').play();
+  setShowCard(true);
+  setIsDrawing(false);
+};
 
-    if(!newCard) throw new Error("No Pokemon Card has been drawn");
 
-    setDrawnCard(newCard);
-    
-    // Slight delay before revealing
-    setTimeout(() => {
-      setShowCard(true);
-      setIsDrawing(false);
-    }, 200);
-  };
 
   const mintPokeCard = async()=>{
     if(!drawnCard) throw new Error("No Drawn PokeCard");
