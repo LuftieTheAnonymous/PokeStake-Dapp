@@ -37,14 +37,6 @@ PokeStake is a Web3 staking protocol that lets users stake Pokemon cards and par
 
 ---
 
-# Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- Foundry (`curl -L https://foundry.paradigm.xyz | bash`)
-- A Web3 wallet (MetaMask, Rainbow, etc.)
-
 ### Installation
 
 TO BE CONTINUED
