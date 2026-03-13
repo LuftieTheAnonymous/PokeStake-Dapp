@@ -36,7 +36,3 @@ PokeStake is a Web3 staking protocol that lets users stake Pokemon cards and par
 - ⚡ **Type-Safe** - Full TypeScript implementation
 
 ---
-
-### Installation
-
-TO BE CONTINUED
