@@ -49,8 +49,7 @@ export default function StakingPage() {
   queryKey:["NFTies-staked", selectedTab, walletAddress], 
   queryFn: async () => {
 
-    
-    let nftCards: {card: PokemonCard, isStaked: boolean}[] = [];
+    let nftCards: {card: PokemonCard, isStaked: boolean, stakedAtBlock:bigint}[] = [];
     
     const sourceCards = selectedTab === 'staked' ? userStakedPokeCards : userGeneratedCards;
     
@@ -61,15 +60,13 @@ export default function StakingPage() {
     for (let index = 0; index < sourceCards.length; index++) {
       const pokeCard = sourceCards[index];
       
-      
       try {
         const pinataFoundElement = await pinata.gateways.public.get(pokeCard.pinataId);
-      
         
         if (pinataFoundElement.data) {
           nftCards.push({
             card: pinataFoundElement.data as unknown as PokemonCard,
-            ...pokeCard,
+            stakedAtBlock: pokeCard.stakedAtBlock || BigInt(0),
             isStaked: selectedTab === 'staked'
           });
         }
@@ -77,8 +74,7 @@ export default function StakingPage() {
         console.error(`Failed to fetch card ${pokeCard.pinataId}:`, err);
       }
     }
-    
-    console.log("Final nftCards:", nftCards);
+  
     return nftCards;
   },
   enabled: typeof selectedTab !== 'undefined' && walletAddress && walletAddress.length > 0, 
@@ -111,15 +107,20 @@ export default function StakingPage() {
   claimRewards();
   };
 
-  const getTimeRemaining = (unlockTime: bigint) => {
+  const getTimeRemaining = (lockTime: bigint) => {
     if(!blockNumber) return "could not calculate";
 
-    const remaining = Number(unlockTime - blockNumber);
+    const remaining = Number((lockTime + BigInt(7200))- blockNumber) * 12;
     
+    const remainingHours = Math.floor(remaining / 60 / 60);
+
+    const remaingMinutes =  Math.floor(((remaining / 60 / 60) - remainingHours) * 60)
+    
+
     if (remaining <= 0) return null;
     
     
-    return `${remaining} blocks`;
+    return `${remainingHours}:${remaingMinutes} Left`;
   };
 
   return (
@@ -137,7 +138,7 @@ export default function StakingPage() {
             </div>
             <h1 className="text-3xl md:text-4xl font-bold">Stake & Earn</h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Stake your Pokemon cards to earn $PKMN tokens. 
+              Stake your Pokemon cards to earn $SNORLIE tokens. 
               Cards are locked for 24 hours after staking.
             </p>
           </div>
@@ -182,7 +183,7 @@ export default function StakingPage() {
                   <div className="flex items-center gap-2">
                     <PokeCoinIcon size={28} />
                     <span className="font-mono text-2xl font-bold text-green-500">+{calculateRewards.toFixed(2)}</span>
-                    <span className="text-sm text-muted-foreground">$PKMN</span>
+                    <span className="text-sm text-muted-foreground">$SNORLIE</span>
                   </div>
                 </div>
 
@@ -238,7 +239,7 @@ export default function StakingPage() {
                   )}
                 >
                   <Unlock className="h-4 w-4" />
-                  Available ({ownedPokeCards})
+                  Available ({userGeneratedCards.length})
                 </button>
                 <button
                   onClick={() => setSelectedTab("staked")}
@@ -315,9 +316,9 @@ export default function StakingPage() {
     ) : (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {pokemonCards && pokemonCards.map((stakedCard) => {
-          const timeRemaining = getTimeRemaining((stakedCard as any).stakedAt);
+          const timeRemaining = getTimeRemaining(stakedCard.stakedAtBlock);
           const isLocked = timeRemaining !== null;
-          const timeStaked = blockNumber ? Math.floor(Number(blockNumber - (stakedCard as any).stakedAt) / 86400) : 0;
+          const timeStaked = blockNumber ? (((Number(blockNumber - stakedCard.stakedAtBlock)*12) / 86400)) : 0;
           
           const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.card.attributes.rarity as Rarity)) as Rarity].dailyReward;
 

@@ -18,7 +18,7 @@ export default function DrawPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
 
-  const { drawCard, mintDrawnPokemon, connectWallet, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, mintDrawnPokemon, connectWallet,requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -175,8 +175,8 @@ const handleDraw = async () => {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button
                     size="lg"
-                    onClick={requestId && requestId !== BigInt(0) ? handleDraw : requestRandomNumber}
-                    disabled={isDrawing || isElligibleToDraw}
+                    onClick={((requestId && requestId !== BigInt(0)) && !recentRequest.isResolved)? handleDraw : requestRandomNumber}
+                    disabled={isDrawing || isElligibleToDraw || (recentRequest && recentRequest.isResolved)}
                     className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
                   >
                     {isDrawing ? (

@@ -43,6 +43,8 @@ const {data} = useReadContracts({
     { abi: pokemonStakingAbi, address: pokemonStakingAddress, functionName: "getStakedPositions", args: [address] },
     // [10] - VRFConsumer getRequestId
     { abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName: "getRequestId", args:[address]},
+    {abi: VRFConsumerAbi, address:VrfConsumerAddress, functionName:"getRequestData", args:[address, pokemonAmountModulator, rarityModulator]}
+  
   ],
   account: address,
   query: { enabled: typeof address === 'string',retry:5, refetchInterval:100000, refetchIntervalInBackground:true, 
@@ -94,6 +96,15 @@ const requestId = useMemo(() => {
   return data && data[10].result ? data[10].result as bigint : BigInt(0);
 }, [data]);
 
+const requestData=useMemo(()=>{
+  let requestRecent = data && data[11].result ? data[11].result as [bigint, bigint, boolean] : [BigInt(0), BigInt(0), false] as [bigint, bigint, boolean];
+  return {
+    pokedexIndex: requestRecent[0],
+    rarityLevel:requestRecent[1],
+    isResolved: requestRecent[2]
+  }
+},[data])
+
 
 const isElligibleToDraw=useMemo(()=>{
 
@@ -126,7 +137,7 @@ function stakeCard(tokenId:bigint){
     abi:pokeCardCollectionAbi,
     address:pokeCardCollectionAddress,
     functionName:"safeTransferFrom",
-    args:[address, pokeCardCollectionAddress, tokenId]
+    args:[address, pokeCardCollectionAddress, tokenId]  
   })
 }
 
@@ -248,6 +259,7 @@ return {
   drawCard,
   requestId,
   claimRewards,
+  requestData,
   getRandomPokemon,
   snorliesBalance,
   walletAddress: address,

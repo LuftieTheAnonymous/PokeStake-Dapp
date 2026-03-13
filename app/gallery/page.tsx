@@ -43,17 +43,58 @@ export default function GalleryPage() {
   const [showStaked, setShowStaked] = useState(true);
   const [gridSize, setGridSize] = useState<"small" | "large">("large");
 
+const { data: pokemonCards, isLoading, isError, error } = useQuery({
+  queryKey: ["NFT-gallery", walletAddress, showStaked],
+  queryFn: async () => {
+    const nftCards: {card:PokemonCard, isStaked:boolean}[] = [];
 
-// Step 1: Build filtered & sorted array BEFORE fetching
-const filteredAndSortedCards = useMemo(() => {
-  const cards: {card:PokemonCard, isStaked:boolean}[] = [
+      const cards: {card:{
+      nftId:bigint,
+      pinataId:string,
+      pokedexId:bigint,
+      rarityLevel:number,
+      tokenURI:string
+    }, isStaked:boolean}[] = [
     ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
     ...(showStaked ? userStakedPokeCards.map((card) => ({ card, isStaked: true })) : []),
   ];
 
+  console.log(cards, "pokemon cards");
+
+
+    for (const pokeCard of cards) {
+      try {
+        const pinataFoundElement = await pinata.gateways.public.get(
+          pokeCard.card.pinataId
+        );
+
+        if (pinataFoundElement.data) {
+          nftCards.push({
+            card: pinataFoundElement.data as unknown as PokemonCard,
+            isStaked: pokeCard.isStaked,
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to fetch card ${pokeCard.card.pinataId}`, error);
+      }
+    }
+
+    return nftCards;
+  },
+  enabled: walletAddress && walletAddress.length > 0,
+  retry: 5,
+  refetchInterval: 100000,
+  refetchIntervalInBackground: true,
+  refetchOnReconnect: false,
+  refetchOnMount: true,
+});
+
+const filteredAndSortedCards = useMemo(() => {
+if(!pokemonCards || (pokemonCards && pokemonCards.length === 0)) return [];
+
   const filtered = filterRarity === "all" 
-    ? cards 
-    : cards.filter((c) => c.card.attributes.rarity === filterRarity);
+    ? pokemonCards 
+    : pokemonCards.filter((c) => c.card.attributes.rarity === filterRarity);
 
   const sorted = [...filtered].sort((a, b) => {
     switch (sortBy) {
@@ -73,47 +114,13 @@ const filteredAndSortedCards = useMemo(() => {
   });
 
   return sorted;
-}, [userGeneratedCards, userStakedPokeCards, filterRarity, sortBy, showStaked]);
+}, [pokemonCards, filterRarity, sortBy, showStaked]);
 
 
-// Step 2: Query only fetches from Pinata with already filtered/sorted data
-const { data: pokemonCards, isLoading, isError, error } = useQuery({
-  queryKey: ["NFT-gallery", walletAddress, filterRarity, sortBy, showStaked],
-  queryFn: async () => {
-    const nftCards: {card:PokemonCard, isStaked:boolean}[] = [];
-
-    for (const pokeCard of filteredAndSortedCards) {
-      try {
-
-
-        const pinataFoundElement = await pinata.gateways.public.get(
-          pokeCard.card.image.slice(59)
-        );
-
-        if (pinataFoundElement?.data) {
-          nftCards.push({
-            card: pinataFoundElement.data as unknown as PokemonCard,
-            isStaked: pokeCard.isStaked,
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to fetch card ${pokeCard.card.image.slice(59)}`, error);
-      }
-    }
-
-    return nftCards;
-  },
-  enabled: walletAddress && walletAddress.length > 0 && filteredAndSortedCards.length > 0,
-  retry: 5,
-  refetchInterval: 100000,
-  refetchIntervalInBackground: true,
-  refetchOnReconnect: false,
-  refetchOnMount: true,
-});
 
 // Step 3: Stats from fetched data
 const stats = useMemo(() => {
-  if (!pokemonCards?.length) {
+  if (!pokemonCards || (pokemonCards && pokemonCards.length === 0)) {
     return {
       total: 0,
       owned: ownedPokeCards,
@@ -134,7 +141,7 @@ const stats = useMemo(() => {
     "ultra rare": 0,
   };
 
-  pokemonCards.forEach(({ card }) => {
+  filteredAndSortedCards.forEach(({ card }) => {
     const rarity = (card.attributes.rarity) as Rarity;
     if (rarity in byRarity) {
       byRarity[rarity]++;
@@ -350,7 +357,7 @@ const stats = useMemo(() => {
   </div>
 )}
 
-{!isError && !isLoading && pokemonCards?.length ? (
+{!isError && !isLoading && pokemonCards && pokemonCards.length ? (
   <div
     className={cn(
       "grid gap-4",
@@ -359,7 +366,7 @@ const stats = useMemo(() => {
         : "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
     )}
   >
-    {pokemonCards.map(({ card, isStaked }) => (
+    {filteredAndSortedCards.map(({ card, isStaked }) => (
       <div key={card.attributes.id} className="relative">
         <PokeCard 
           card={card} 
