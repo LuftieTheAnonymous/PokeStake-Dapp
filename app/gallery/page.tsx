@@ -357,7 +357,7 @@ const stats = useMemo(() => {
   </div>
 )}
 
-{!isError && !isLoading && pokemonCards && pokemonCards.length ? (
+{!isError && !isLoading && filteredAndSortedCards && filteredAndSortedCards.length ? (
   <div
     className={cn(
       "grid gap-4",
