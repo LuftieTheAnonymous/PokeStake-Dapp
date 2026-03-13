@@ -11,14 +11,18 @@ import type { PokemonCard as PokemonCardType } from "@/lib/types";;
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PokeCoinIcon } from "@/components/token-balance";
+import { useWatchContractEvent } from "wagmi";
+import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
+import { toast } from "sonner";
 
 
 export default function DrawPage() {
   const [drawnCard, setDrawnCard] = useState<PokemonCardType | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [error, setError]=useState<any>();
 
-  const { drawCard, mintDrawnPokemon, connectWallet,requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, connectWallet,requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -30,6 +34,20 @@ export default function DrawPage() {
   useEffect(()=>{
     if(BigInt(requestId) !== BigInt(0)) setIsDrawing(false);
   },[requestId]);
+
+  useWatchContractEvent({
+    abi:pokeCardCollectionAbi,
+    address:pokeCardCollectionAddress,
+    'eventName':"PokemonCardGenerated",
+    args:[],
+    'onLogs':(logs)=>{
+      console.log(logs);
+      if((logs[0] as any).args[0] === walletAddress){
+        toast.success("Your PokeCard NFT has been minted");
+      }
+    }
+    
+  });
 
 
 
@@ -57,13 +75,16 @@ const handleDraw = async () => {
   
   // Fetch the card
   const newCard = await drawCard();
-  if(!newCard) throw new Error("No Pokemon Card has been drawn");
+  if(!newCard.card){
+    setError(newCard.error || "No Pokemon Card has been drawn");
+    return;
+  }
   
-  setDrawnCard(newCard);
+  setDrawnCard(newCard.card);
   
   // Play cry sound
-  if(newCard.attributes.cries.latest) {
-    const crySound = new Audio(newCard.attributes.cries.latest);
+  if(newCard.card.attributes.cries.latest) {
+    const crySound = new Audio(newCard.card.attributes.cries.latest);
     crySound.play();
     
     await new Promise((resolve) => {
@@ -87,7 +108,7 @@ const handleDraw = async () => {
   const mintPokeCard = async()=>{
     if(!drawnCard) throw new Error("No Drawn PokeCard");
     if(!requestId || (requestId && requestId === BigInt(0))) throw new Error("No Request Id");
-      await mintDrawnPokemon(requestId, drawnCard);
+      await mintDrawnPokemon(drawnCard);
     }
 
 
@@ -135,9 +156,9 @@ const handleDraw = async () => {
               <div className="flex flex-col items-center gap-8">
                 {/* Card Display */}
                 <div className="relative w-64 h-96 flex items-center justify-center">
-                  {isDrawing ? (
+                  {isDrawing && !error ? (
                     /* Drawing Animation */
-                    <div className="relative">
+                    <div className={`relative ${isDrawing && 'animate-bounce'}`}>
                       <div className="w-48 h-64 rounded-xl border-2 border-primary/50 bg-card animate-pulse flex items-center justify-center">
                         <PokeCoinIcon className="mr-2 h-16 w-16 animate-bounce"/>
                       </div>
@@ -155,7 +176,7 @@ const handleDraw = async () => {
                         />
                       ))}
                     </div>
-                  ) : drawnCard && showCard ? (
+                  ) : drawnCard && showCard && !error ? (
                     /* Revealed Card */
                     <div className="w-52">
                       <PokeCard card={drawnCard} animated />
@@ -164,9 +185,17 @@ const handleDraw = async () => {
                     /* Empty State */
                     <div className="w-48 h-64 rounded-xl border-2 border-dashed border-border bg-card/30 flex flex-col items-center justify-center gap-4 text-muted-foreground">
                       <Ghost className="h-12 w-12" />
-                      <span className="text-sm text-center px-4">
+                      {error ?
+                      (  <span className="text-sm text-center px-4">
+                        {typeof error === 'string' ? error : 'An error occured !, please try to mint the card again.'}
+                      </span>): (
+                          <span className="text-sm text-center px-4">
                         Click below to draw a card
                       </span>
+                      )
+                    }
+                      
+                    
                     </div>
                   )}
                 </div>
@@ -177,7 +206,7 @@ const handleDraw = async () => {
                     size="lg"
                     onClick={((requestId && requestId !== BigInt(0)) && !recentRequest.isResolved)? handleDraw : requestRandomNumber}
                     disabled={isDrawing || isElligibleToDraw || (recentRequest && recentRequest.isResolved)}
-                    className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg"
+                    className={`bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg`}
                   >
                     {isDrawing ? (
                       <>
@@ -200,7 +229,7 @@ const handleDraw = async () => {
                 </div>
 
                 {/* Result Message */}
-                {drawnCard && showCard && (
+                {drawnCard && showCard && !error && (
                   <div className="text-center space-y-4 animate-fade-in">
                     <div className="space-y-1">
                       <p className="text-lg font-semibold">

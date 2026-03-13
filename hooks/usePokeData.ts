@@ -163,7 +163,7 @@ function claimRewards(){
 async function getRandomPokemon() {
 try {  
 
-  if(requestId === BigInt(0)) throw new Error("No request has been requested from you");
+  if(requestId === BigInt(0)) return {card:null, error:"No request has been requested from you"}
 
   const getRandomValues = await readContract(config, {
     abi:VRFConsumerAbi,
@@ -175,7 +175,7 @@ try {
     console.log(getRandomValues);
 
   const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
-  return {
+  return {card:{
     name: pokemonData.name,
     pokedexIndex: pokemonData.id,
     pokemonRarity:Number(getRandomValues[1]),
@@ -188,10 +188,10 @@ try {
     attack: pokemonData.stats.find((s) => s.stat.name === "attack")?.base_stat || 50,
     defense: pokemonData.stats.find((s) => s.stat.name === "defense")?.base_stat || 50,
     
-  };
+  }, error:null}
 } catch (error) {
   console.log(error);
-  throw new Error("Failed to fetch Pokemon data");
+  return {error, card:null} 
 }
 }
 
@@ -204,37 +204,37 @@ async function drawCard() {
           rare: 3,
           "ultra rare": 4,
         };
+        
+         if(!pokemon.card) return {card:null, error: pokemon.error ?? "No pokemon card drawn"};
 
-      const selectedKey=Object.keys(rarityMultiplier).at(pokemon.pokemonRarity);
+      const selectedKey=Object.keys(rarityMultiplier).at(pokemon.card.pokemonRarity);
 
       const rarityBoost =rarityMultiplier[selectedKey as Rarity];
-
-      if(!pokemon) throw new Error("no pokemon created");
 
       if(!data || typeof data[1].result === 'undefined') throw new Error("Result not found for new Card");
 
         const newCard: PokemonCard = {
-          name: pokemon.name,
-          image: pokemon.pokemonImage as string,
-          description: pokemon.description,
+          name: pokemon.card.name,
+          image: pokemon.card.pokemonImage as string,
+          description: pokemon.card.description,
           attributes:{
-          pokedexIndex: pokemon.pokedexIndex,
+          pokedexIndex: pokemon.card.pokedexIndex,
           id: Number(data[1].result as bigint) + 1,
           rarity: selectedKey as Rarity,
-          sprites:pokemon.sprites,
-          type: pokemon.types,
-          cries: pokemon.pokemonCry,
-          hp: Math.floor(pokemon.hp + (rarityBoost)),
-          attack: Math.floor(pokemon.attack + rarityBoost),
-          defense: Math.floor(pokemon.defense + rarityBoost),
+          sprites:pokemon.card.sprites,
+          type: pokemon.card.types,
+          cries: pokemon.card.pokemonCry,
+          hp: Math.floor(pokemon.card.hp + (rarityBoost)),
+          attack: Math.floor(pokemon.card.attack + rarityBoost),
+          defense: Math.floor(pokemon.card.defense + rarityBoost),
           }
         };
       
-        return newCard;
+        return {card:newCard, error:null};
       }
 
 
- async function mintDrawnPokemon(reqeustId:bigint, drawnPokemonCard:PokemonCard){
+ async function mintDrawnPokemon(drawnPokemonCard:PokemonCard){
   try {
 
     const storeInPinata = await pinata.upload.public.json(drawnPokemonCard,{
