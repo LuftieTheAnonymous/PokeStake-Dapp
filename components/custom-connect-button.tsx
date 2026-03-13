@@ -2,9 +2,8 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from './ui/button';
 import { Wallet } from 'lucide-react';
 
-type Props = {}
 
-export function CustomConnectButton({}: Props) {
+export function CustomConnectButton() {
   return (
     <ConnectButton.Custom>{({account,
         chain,
