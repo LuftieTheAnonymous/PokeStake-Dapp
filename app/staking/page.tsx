@@ -45,20 +45,51 @@ export default function StakingPage() {
   const {data:blockNumber}=useBlockNumber();
   
 
-  const {data:pokemonCards}=useQuery({queryKey:["NFTies-staked", walletAddress], queryFn:async()=>{
-  
-        let nftCards:{card:PokemonCard, isStaked:boolean}[]=[];
-  
-        for (let index = 0; index < userStakedPokeCards.length; index++) {
-          const pokeCard = userStakedPokeCards[index];
-  
-          const pinataFoundElement = await pinata.gateways.public.get(pokeCard.card.pinataId);
-  
-          if(pinataFoundElement.data) nftCards.push({card:pinataFoundElement as unknown as PokemonCard,...pokeCard, isStaked:pokeCard.isStaked});
-          
-          return nftCards;
+ const {data:pokemonCards, isLoading, error}=useQuery({
+  queryKey:["NFTies-staked", selectedTab, walletAddress], 
+  queryFn: async () => {
+
+    
+    let nftCards: {card: PokemonCard, isStaked: boolean}[] = [];
+    
+    const sourceCards = selectedTab === 'staked' ? userStakedPokeCards : userGeneratedCards;
+    
+    if (!sourceCards || sourceCards.length === 0) {
+      return nftCards;
+    }
+
+    for (let index = 0; index < sourceCards.length; index++) {
+      const pokeCard = sourceCards[index];
+      
+      
+      try {
+        const pinataFoundElement = await pinata.gateways.public.get(pokeCard.pinataId);
+      
+        
+        if (pinataFoundElement.data) {
+          nftCards.push({
+            card: pinataFoundElement.data as unknown as PokemonCard,
+            ...pokeCard,
+            isStaked: selectedTab === 'staked'
+          });
         }
-      }})
+      } catch (err) {
+        console.error(`Failed to fetch card ${pokeCard.pinataId}:`, err);
+      }
+    }
+    
+    console.log("Final nftCards:", nftCards);
+    return nftCards;
+  },
+  enabled: typeof selectedTab !== 'undefined' && walletAddress && walletAddress.length > 0, 
+  retry: 5, 
+  refetchInterval: 10000, 
+  refetchIntervalInBackground: true
+});
+
+
+
+      
 
   // Update rewards every second
   // useEffect(() => {
@@ -83,7 +114,7 @@ export default function StakingPage() {
   const getTimeRemaining = (unlockTime: bigint) => {
     if(!blockNumber) return "could not calculate";
 
-    const remaining = unlockTime - blockNumber;
+    const remaining = Number(unlockTime - blockNumber);
     
     if (remaining <= 0) return null;
     
@@ -223,101 +254,109 @@ export default function StakingPage() {
                 </button>
               </div>
 
-              {/* Cards Grid */}
-              {selectedTab === "stake" ? (
-                /* Available Cards */
-                <div>
-                  {ownedPokeCards === 0 ? (
-                    <div className="text-center py-16 space-y-4">
-                      <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold">No Cards Available</h3>
-                        <p className="text-muted-foreground">Draw some cards first to start staking</p>
-                      </div>
-                      <Link href="/draw">
-                        <Button className="bg-primary hover:bg-primary/90">
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Draw Cards
-                        </Button>
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {userGeneratedCards.map((card) => (
-                        <div key={card.id} className="space-y-2">
-                          <PokeCard card={card} showStats={false} />
-                          <Button
-                            onClick={() => handleStake(card.id)}
-                            className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
-                            size="sm"
-                          >
-                            <Lock className="h-4 w-4 mr-1" />
-                            Stake
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+
+
+
+
+
+
+
+            {/* Cards Grid */}
+{selectedTab === "stake" ? (
+  /* Available Cards */
+  <div>
+    {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) ? (
+      <div className="text-center py-16 space-y-4">
+        <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">No Cards Available</h3>
+          <p className="text-muted-foreground">Draw some cards first to start staking</p>
+        </div>
+        <Link href="/draw">
+          <Button className="bg-primary hover:bg-primary/90">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Draw Cards
+          </Button>
+        </Link>
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {pokemonCards && pokemonCards.map((card) => (
+          <div key={card.card.attributes.id} className="space-y-2">
+            <PokeCard card={card.card} showStats={false} />
+            <Button
+              onClick={() => handleStake(BigInt(card.card.attributes.id))}
+              className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+              size="sm"
+            >
+              <Lock className="h-4 w-4 mr-1" />
+              Stake
+            </Button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+) : (
+  /* Staked Cards */
+  <div>
+    {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) ? (
+      <div className="text-center py-16 space-y-4">
+        <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">No Staked Cards</h3>
+          <p className="text-muted-foreground">Stake your cards to start earning rewards</p>
+        </div>
+        <Button onClick={() => setSelectedTab("stake")} variant="outline">
+          View Available Cards
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {pokemonCards && pokemonCards.map((stakedCard) => {
+          const timeRemaining = getTimeRemaining((stakedCard as any).stakedAt);
+          const isLocked = timeRemaining !== null;
+          const timeStaked = blockNumber ? Math.floor(Number(blockNumber - (stakedCard as any).stakedAt) / 86400) : 0;
+          
+          const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.card.attributes.rarity as Rarity)) as Rarity].dailyReward;
+
+          return (
+            <div key={stakedCard.card.attributes.id} className="space-y-2">
+              <div className="relative">
+                <PokeCard card={stakedCard.card} showStats={false} />
+                {/* Overlay Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-2 bg-background/90 backdrop-blur-sm border-t border-border/50">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Earned:</span>
+                    <span className="font-mono text-primary">+{currentRewards.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {isLocked ? (
+                <div className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-mono">{timeRemaining}</span>
                 </div>
               ) : (
-                /* Staked Cards */
-                <div>
-                  {pokemonCards && pokemonCards.length === 0 ? (
-                    <div className="text-center py-16 space-y-4">
-                      <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold">No Staked Cards</h3>
-                        <p className="text-muted-foreground">Stake your cards to start earning rewards</p>
-                      </div>
-                      <Button onClick={() => setSelectedTab("stake")} variant="outline">
-                        View Available Cards
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                      {pokemonCards && pokemonCards.map((stakedCard) => {
-                        const timeRemaining = getTimeRemaining((stakedCard as any).stakedAt);
-                        const isLocked = timeRemaining !== null;
-                        const timeStaked = blockNumber ? Math.floor(Number(blockNumber - (stakedCard as any).stakedAt) / 86400) : 0;
-                        
-                        const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.card.attributes.rarity as Rarity)) as Rarity].dailyReward;
-
-                        return (
-                          <div key={stakedCard.card.attributes.id} className="space-y-2">
-                            <div className="relative">
-                              <PokeCard card={stakedCard.card} showStats={false} />
-                              {/* Overlay Info */}
-                              <div className="absolute bottom-0 left-0 right-0 p-2 bg-background/90 backdrop-blur-sm border-t border-border/50">
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-muted-foreground">Earned:</span>
-                                  <span className="font-mono text-primary">+{currentRewards.toFixed(2)}</span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {isLocked ? (
-                              <div className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-secondary/50 border border-border text-sm text-muted-foreground">
-                                <Clock className="h-4 w-4" />
-                                <span className="font-mono">{timeRemaining}</span>
-                              </div>
-                            ) : (
-                              <Button
-                                onClick={() => handleUnstake(BigInt(stakedCard.card.attributes.id))}
-                                className="w-full bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30"
-                                size="sm"
-                              >
-                                <Unlock className="h-4 w-4 mr-1" />
-                                Unstake
-                              </Button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <Button
+                  onClick={() => handleUnstake(BigInt(stakedCard.card.attributes.id))}
+                  className="w-full bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30"
+                  size="sm"
+                >
+                  <Unlock className="h-4 w-4 mr-1" />
+                  Unstake
+                </Button>
               )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
+
             </div>
           )}
         </div>

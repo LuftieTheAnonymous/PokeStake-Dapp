@@ -44,106 +44,110 @@ export default function GalleryPage() {
   const [gridSize, setGridSize] = useState<"small" | "large">("large");
 
 
+// Step 1: Build filtered & sorted array BEFORE fetching
+const filteredAndSortedCards = useMemo(() => {
+  const cards: {card:PokemonCard, isStaked:boolean}[] = [
+    ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
+    ...(showStaked ? userStakedPokeCards.map((card) => ({ card, isStaked: true })) : []),
+  ];
 
-  // Combine owned and staked cards
-  const allCards = useMemo(() => {
-    const cards = [
-      ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
-      ...(showStaked ? userStakedPokeCards.map((card) => ({ card, isStaked: true })) : []),
-    ];
+  const filtered = filterRarity === "all" 
+    ? cards 
+    : cards.filter((c) => c.card.attributes.rarity === filterRarity);
 
-    // Filter by rarity
-    const filtered = filterRarity === "all" 
-      ? cards 
-      : cards.filter((c) => c.card.rarity === filterRarity);
-
-    // Sort
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return b.card.id.localeCompare(a.card.id);
-        case "rarity": {
-          const rarityOrder: Rarity[] = ["ultra rare", "rare", "uncommon", "common"];
-          return rarityOrder.indexOf(a.card.rarity) - rarityOrder.indexOf(b.card.rarity);
-        }
-        case "pokedex":
-          return a.card.pokedexIndex - b.card.pokedexIndex;
-        case "name":
-          return a.card.name.localeCompare(b.card.name);
-        default:
-          return 0;
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return b.card.attributes.id - a.card.attributes.id
+      case "rarity": {
+        const rarityOrder: Rarity[] = ["ultra rare", "rare", "uncommon", "common"];
+        return rarityOrder.indexOf(a.card.attributes.rarity) - rarityOrder.indexOf(b.card.attributes.rarity);
       }
-    });
+      case "pokedex":
+        return a.card.attributes.pokedexIndex - b.card.attributes.pokedexIndex;
+      case "name":
+        return a.card.name.localeCompare(b.card.name);
+      default:
+        return 0;
+    }
+  });
 
-    return sorted;
-  }, [userGeneratedCards, userStakedPokeCards, filterRarity, sortBy, showStaked]);
+  return sorted;
+}, [userGeneratedCards, userStakedPokeCards, filterRarity, sortBy, showStaked]);
 
 
+// Step 2: Query only fetches from Pinata with already filtered/sorted data
 const { data: pokemonCards, isLoading, isError, error } = useQuery({
   queryKey: ["NFT-gallery", walletAddress, filterRarity, sortBy, showStaked],
   queryFn: async () => {
-    let nftCards: { card: PokemonCard; isStaked: boolean }[] = [];
+    const nftCards: {card:PokemonCard, isStaked:boolean}[] = [];
 
-    for (let index = 0; index < allCards.length; index++) {
-      const pokeCard = allCards[index];
-
+    for (const pokeCard of filteredAndSortedCards) {
       try {
+
+
         const pinataFoundElement = await pinata.gateways.public.get(
-          pokeCard.card.pinataId
+          pokeCard.card.image.slice(59)
         );
 
-        if (pinataFoundElement && pinataFoundElement.data) {
+        if (pinataFoundElement?.data) {
           nftCards.push({
             card: pinataFoundElement.data as unknown as PokemonCard,
             isStaked: pokeCard.isStaked,
           });
         }
       } catch (error) {
-        console.error(`Failed to fetch card ${pokeCard.card.pinataId}:`, error);
+        console.error(`Failed to fetch card ${pokeCard.card.image.slice(59)}`, error);
       }
     }
 
-    // Return OUTSIDE the loop
     return nftCards;
   },
-  enabled: typeof walletAddress !== 'undefined', 
+  enabled: walletAddress && walletAddress.length > 0 && filteredAndSortedCards.length > 0,
+  retry: 5,
+  refetchInterval: 100000,
+  refetchIntervalInBackground: true,
+  refetchOnReconnect: false,
+  refetchOnMount: true,
 });
 
-
-  // Stats
-  const stats = useMemo(() => {
-    if(!pokemonCards){
-      return {
+// Step 3: Stats from fetched data
+const stats = useMemo(() => {
+  if (!pokemonCards?.length) {
+    return {
       total: 0,
       owned: ownedPokeCards,
       staked: userStakedPokeCards.length,
-      'byRarity':{
-        'common':0,
-        'rare':0,
-        'uncommon':0,
-        'ultra rare':0,
-      }
+      byRarity: {
+        common: 0,
+        uncommon: 0,
+        rare: 0,
+        "ultra rare": 0,
+      },
     };
+  }
+
+  const byRarity: Record<Rarity, number> = {
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    "ultra rare": 0,
+  };
+
+  pokemonCards.forEach(({ card }) => {
+    const rarity = (card.attributes.rarity) as Rarity;
+    if (rarity in byRarity) {
+      byRarity[rarity]++;
     }
-   
-    const byRarity: Record<Rarity, number> = {
-      common: 0,
-      uncommon: 0,
-      rare: 0,
-      "ultra rare":0
-    };
-    pokemonCards.forEach(({card}) => {
-      byRarity[card.attributes.rarity as Rarity]++;
-    });
-    return {
-      total: pokemonCards.length,
-      owned: ownedPokeCards,
-      staked: userStakedPokeCards.length,
-      byRarity,
-    };
-  }, [userStakedPokeCards, userGeneratedCards, ownedPokeCards]);
+  });
 
-
+  return {
+    total: pokemonCards.length,
+    owned: ownedPokeCards,
+    staked: userStakedPokeCards.length,
+    byRarity,
+  };
+}, [pokemonCards, ownedPokeCards, userStakedPokeCards.length]);
 
 
 
@@ -330,53 +334,52 @@ const { data: pokemonCards, isLoading, isError, error } = useQuery({
 
   
 
-              {/* Cards Grid */}
               {isLoading && !isError && (
-                <div className="text-center py-16">
-                  <PokeCoinIcon className="h-12 w-12 mx-auto animate-spin" />
-                  <p className="text-muted-foreground">Loading Cards....</p>
-                  <p>Please be patient, this can take a while...</p>
-                </div>
-              )}
+  <div className="text-center py-16">
+    <PokeCoinIcon className="h-12 w-12 mx-auto animate-spin" />
+    <p className="text-muted-foreground">Loading Cards....</p>
+    <p>Please be patient, this can take a while...</p>
+  </div>
+)}
 
+{isError && !isLoading && (
+  <div className="text-center py-16">
+    <AlertCircle className="h-12 w-12 mx-auto text-orange-600" />
+    <p className="text-muted-foreground">Error Occurred!</p>
+    <p>{error?.message || "Unknown error"}</p>
+  </div>
+)}
 
-              {isError && !isLoading && 
-               <div className="text-center py-16">
-                  <AlertCircle className="h-12 w-12 mx-auto text-orange-600" />
-                  <p className="text-muted-foreground">Error Occured !</p>
-                  <p>{error.message}</p>
-                </div>
-              }
-
-
-              {!isError && !isLoading && pokemonCards && pokemonCards.length > 0 ?
-            (   <div
-                  className={cn(
-                    "grid gap-4",
-                    gridSize === "large"
-                      ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                      : "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-                  )}
-                >
-                  {pokemonCards &&  pokemonCards.map(({ card, isStaked }) => (
-                    <div key={card.attributes.id} className="relative">
-                      <PokeCard 
-                        card={card} 
-                        showStats={gridSize === "large"}
-                        isStaked={isStaked}
-                      />
-                      {isStaked && (
-                        <div className="absolute top-2 right-2 p-1.5 rounded-full bg-accent/90 text-accent-foreground">
-                          <Lock className="h-3 w-3" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>) : (   <div className="text-center py-16">
-                  <Ghost className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No cards match your filters</p>
-                </div>)  
-            }
+{!isError && !isLoading && pokemonCards?.length ? (
+  <div
+    className={cn(
+      "grid gap-4",
+      gridSize === "large"
+        ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+        : "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+    )}
+  >
+    {pokemonCards.map(({ card, isStaked }) => (
+      <div key={card.attributes.id} className="relative">
+        <PokeCard 
+          card={card} 
+          showStats={gridSize === "large"}
+          isStaked={isStaked}
+        />
+        {isStaked && (
+          <div className="absolute top-2 right-2 p-1.5 rounded-full bg-accent/90 text-accent-foreground">
+            <Lock className="h-3 w-3" />
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+) : (
+  <div className="text-center py-16">
+    <Ghost className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+    <p className="text-muted-foreground">No cards match your filters</p>
+  </div>
+)}
             </div>
           )}
         </div>

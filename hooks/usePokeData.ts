@@ -45,7 +45,8 @@ const {data} = useReadContracts({
     { abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName: "getRequestId", args:[address]},
   ],
   account: address,
-  query: { enabled: typeof address === 'string' }
+  query: { enabled: typeof address === 'string',retry:5, refetchInterval:100000, refetchIntervalInBackground:true, 
+  'refetchOnReconnect':false, 'refetchOnMount':true }
 });
 
 // Now the corrected useMemo hooks:
@@ -122,10 +123,10 @@ function disconnectWallet(){
 
 function stakeCard(tokenId:bigint){
   writeContract({
-    abi:pokemonStakingAbi,
-    address:pokemonStakingAddress,
-    functionName:"stake",
-    args:[tokenId]
+    abi:pokeCardCollectionAbi,
+    address:pokeCardCollectionAddress,
+    functionName:"safeTransferFrom",
+    args:[address, pokeCardCollectionAddress, tokenId]
   })
 }
 
@@ -134,7 +135,8 @@ function unstakeCard(tokenId:bigint){
     abi:pokemonStakingAbi,
     address:pokemonStakingAddress,
     functionName:"unstake",
-    args:[tokenId]
+    args:[tokenId],
+    gas: BigInt(200000)
   })
 }
 
