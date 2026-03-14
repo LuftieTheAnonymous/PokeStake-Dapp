@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sparkles, Layers, ImageIcon, Wallet, Sun, Moon, Monitor } from "lucide-react";
+import { Sparkles, Layers, ImageIcon, Sun, Moon, Monitor, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },
   { href: "/staking", label: "Staking", icon: Layers },
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
+  {href:"/marketplace", label:"MarketPlace", icon: ShoppingCart}
 ];
 
 export function Navigation() {
