@@ -16,7 +16,8 @@ import {
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { useToast } from "@/hooks/use-toast";
-import { mockNFTs, type Currency } from "@/data/mockNFTs";;
+import { mockNFTs, type Currency } from "@/data/mockNFTs";import Image from "next/image";
+;
 
 const ETH_USD = 3200;
 const SNORLIE_USD = 0.42;
@@ -75,14 +76,27 @@ const CreateListing = () => {
           <div className="space-y-2">
             <Label className="text-sm font-medium">PokeCards Owned</Label>
 <div
-  className={`relative gap-4 flex flex-col items-center  justify-center h-72 flex-shrink-0 overflow-y-auto rounded-xl border border-primary px-8 py-10 cursor-pointer transition-colors duration-150`}
+  className={`relative gap-4 flex flex-col items-center  justify-center h-72 overflow-y-auto rounded-xl border border-primary px-8 py-10 cursor-pointer transition-colors duration-150`}
 >
   {mockNFTs.map((mockNft) => (
     <div
       key={mockNft.id}
       id={mockNft.id}
-      className="w-full h-32 rounded-md p-2 bg-secondary border-primary border">
-        <p>Hello my friend !</p>
+      className="w-full h-32 flex items-center gap-2 justify-between rounded-md p-2 bg-secondary border-primary border">
+       
+       <div className="flex items-center gap-1">
+        <Image alt={mockNft.id} src={mockNft.image} className="" width={64} height={64}  />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-bold">{mockNft.name}</p>
+          <p className="text-xs">{mockNft.collection}</p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <p className="text-xs">ID: {mockNft.id.padStart(4, "0")}</p>
+          <p>
+        </div>
+
+       </div>
         </div>
   ))}
 </div>
