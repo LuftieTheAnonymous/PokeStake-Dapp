@@ -186,7 +186,7 @@ const handleDraw = async () => {
                     <div className="w-48 h-64 rounded-xl border-2 border-dashed border-border bg-card/30 flex flex-col items-center justify-center gap-4 text-muted-foreground">
                       <Ghost className="h-12 w-12" />
                       {error ?
-                      (  <span className="text-sm text-center px-4">
+                      (  <span className="text-sm text-red-500 text-center px-4">
                         {typeof error === 'string' ? error : 'An error occured !, please try to mint the card again.'}
                       </span>): (
                           <span className="text-sm text-center px-4">
