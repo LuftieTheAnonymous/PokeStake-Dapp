@@ -4,7 +4,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Coins, Layers, Tag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import MarketplaceNav from "@/components/nft-marketplace/MarketPlaceNav";
+import { Navigation } from "@/components/navigation";
+import { GradientBackground } from "@/components/gradient-background";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
@@ -14,13 +15,15 @@ const ETH_USD = 3200;
 const SNORLIE_USD = 0.42;
 
 const NFTDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { listingId:id } = useParams<{ listingId: string }>();
   const nft = mockNFTs.find((n) => n.id === id);
 
   if (!nft) {
     return (
       <div className="min-h-screen bg-background">
-        <MarketplaceNav />
+      <GradientBackground />
+      <Navigation />
+
         <div className="container px-4 py-20 text-center">
           <p className="text-muted-foreground">NFT not found.</p>
           <Link href="/marketplace">
@@ -39,8 +42,10 @@ const NFTDetail = () => {
   ).toFixed(2);
 
   return (
-    <div className="min-h-screen bg-background">
-      <MarketplaceNav />
+    <div className="min-h-screen">
+        <GradientBackground />
+      <Navigation />
+    
       <div className="container px-4 py-6 max-w-5xl mx-auto">
         <Link
           href="/marketplace"

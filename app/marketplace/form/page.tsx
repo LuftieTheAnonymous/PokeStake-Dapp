@@ -13,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import MarketplaceNav from "@/components/nft-marketplace/MarketPlaceNav";
+import { Navigation } from "@/components/navigation";
+import { GradientBackground } from "@/components/gradient-background";
 import { useToast } from "@/hooks/use-toast";
-import type { Currency } from "@/data/mockNFTs";
+import { mockNFTs, type Currency } from "@/data/mockNFTs";;
 
 const ETH_USD = 3200;
 const SNORLIE_USD = 0.42;
@@ -56,8 +57,9 @@ const CreateListing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <MarketplaceNav />
+    <div className="min-h-screen">
+      <GradientBackground />
+      <Navigation />
       <div className="container px-4 py-6 max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -71,75 +73,22 @@ const CreateListing = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dropzone */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Asset</Label>
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragActive(true);
-              }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-              onClick={() => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = "image/*";
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0];
-                  if (file) handleFile(file);
-                };
-                input.click();
-              }}
-              className={`relative flex flex-col items-center justify-center rounded-xl border border-dashed p-12 cursor-pointer transition-colors duration-150 ${
-                dragActive
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-muted/50 hover:border-muted-foreground/30"
-              }`}
-            >
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-48 rounded-lg object-contain"
-                />
-              ) : (
-                <>
-                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground tracking-wide">
-                    Upload Asset
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Drag & drop or click to browse
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
+            <Label className="text-sm font-medium">PokeCards Owned</Label>
+<div
+  className={`relative gap-4 flex flex-col items-center  justify-center h-72 flex-shrink-0 overflow-y-auto rounded-xl border border-primary px-8 py-10 cursor-pointer transition-colors duration-150`}
+>
+  {mockNFTs.map((mockNft) => (
+    <div
+      key={mockNft.id}
+      id={mockNft.id}
+      className="w-full h-32 rounded-md p-2 bg-secondary border-primary border">
+        <p>Hello my friend !</p>
+        </div>
+  ))}
+</div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">Name</Label>
-            <Input
-              id="name"
-              placeholder="e.g. Inferno Drake #042"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
           </div>
-
-          {/* Collection */}
-          <div className="space-y-2">
-            <Label htmlFor="collection" className="text-sm font-medium">Collection</Label>
-            <Input
-              id="collection"
-              placeholder="e.g. Elemental Beasts"
-              value={collection}
-              onChange={(e) => setCollection(e.target.value)}
-            />
-          </div>
-
+         
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium">Description</Label>
@@ -193,10 +142,10 @@ const CreateListing = () => {
             )}
           </div>
 
-          <Button type="submit" size="lg" className="w-full font-semibold">
-            <Upload className="h-4 w-4 mr-2" />
-            Complete Listing
-          </Button>
+             <Button size="lg" className="bg-gradient-to-r cursor-pointer mt-3 from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg py-6 w-full shadow-lg">
+                <Upload className="h-4 w-4 mr-2" />
+                  Complete Listing
+                </Button>
         </form>
       </div>
     </div>
