@@ -106,7 +106,7 @@ const requestData=useMemo(()=>{
 
 const isElligibleToDraw=useMemo(()=>{
 
-  return Number(blockNumber) - lastBlockGeneratedAt < 86400;
+  return (Number(blockNumber) - lastBlockGeneratedAt) > 7200;
 
 },[lastBlockGeneratedAt, blockNumber]);
 
@@ -269,7 +269,8 @@ return {
   drawRandomNumber,
   mintDrawnPokemon,
   stakeCard,
-  unstakeCard
+  unstakeCard,
+  blockNumber
 }
 }
 

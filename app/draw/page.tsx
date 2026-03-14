@@ -23,7 +23,7 @@ export default function DrawPage() {
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
 
-  const { drawCard, walletAddress, mintDrawnPokemon, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt,blockNumber, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -32,8 +32,9 @@ export default function DrawPage() {
 
   }
 
+
   useEffect(()=>{
-    if(BigInt(requestId) !== BigInt(0)) setIsDrawing(false);
+    if(BigInt(requestId) !== BigInt(0) && recentRequest && recentRequest.pokedexIndex !== BigInt(0) && recentRequest.rarityLevel !== recentRequest.pokedexIndex) setIsDrawing(false);
   },[requestId]);
 
   useWatchContractEvent({
@@ -202,25 +203,28 @@ const handleDraw = async () => {
 
                 {/* Draw Button */}
                 <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {!drawnCard &&
                   <Button
                     size="lg"
-                    onClick={((requestId && requestId !== BigInt(0)) && !recentRequest.isResolved)? handleDraw : requestRandomNumber}
-                    disabled={isDrawing || isElligibleToDraw || (recentRequest && recentRequest.isResolved)}
+                    onClick={(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && !recentRequest.isResolved) ? handleDraw : requestRandomNumber}
+                    disabled={isDrawing || !isElligibleToDraw}
                     className={`bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg`}
                   >
                     {isDrawing ? (
                       <>
                       <PokeCoinIcon className="mr-2 animate-spin"/>
 
-                        {requestId && requestId !== BigInt(0) ? "Drawing..." : "Requesting..." }
+                        {(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && recentRequest.isResolved) ? "Requesting..."  : "Drawing..."}
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        {requestId && requestId !== BigInt(0) ? "Draw Card" : "Request Number" }
+                        {(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && recentRequest.isResolved) ? "Request Number" : "Draw Card" }
                       </>
                     )}
-                  </Button>
+                  </Button>    
+                  }
+
 
                   {drawnCard && !isDrawing && showCard &&
                   <Button size="lg" disabled={isDrawing || !drawnCard || !showCard} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg" onClick={mintPokeCard}>Mint Pokemon <PokeCoinIcon/> </Button>
