@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Image as ImageIcon, Coins } from "lucide-react";
+import {FaEthereum} from "react-icons/fa";
+import { Upload, Image as ImageIcon, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import SnorlieImage from "@/public/snorlie.png"
 import {
   Select,
   SelectContent,
@@ -17,6 +19,7 @@ import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { useToast } from "@/hooks/use-toast";
 import { mockNFTs, type Currency } from "@/data/mockNFTs";import Image from "next/image";
+import { NFTCard } from "@/components/nft-marketplace/NftListElement";
 ;
 
 const ETH_USD = 3200;
@@ -24,30 +27,17 @@ const SNORLIE_USD = 0.42;
 
 const CreateListing = () => {
   const { toast } = useToast();
-  const [name, setName] = useState("");
-  const [collection, setCollection] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState<Currency>("ETH");
-  const [dragActive, setDragActive] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pageStartIndex, setPageStartIndex]=useState<number>(0);
 
   const usdEstimate = price
     ? (parseFloat(price) * (currency === "ETH" ? ETH_USD : SNORLIE_USD)).toFixed(2)
     : null;
 
-  const handleFile = (file: File) => {
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-  };
+  
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    if (e.dataTransfer.files?.[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,32 +65,30 @@ const CreateListing = () => {
           {/* Dropzone */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">PokeCards Owned</Label>
-<div
-  className={`relative gap-4 flex flex-col items-center  justify-center h-72 overflow-y-auto rounded-xl border border-primary px-8 py-10 cursor-pointer transition-colors duration-150`}
->
-  {mockNFTs.map((mockNft) => (
-    <div
-      key={mockNft.id}
-      id={mockNft.id}
-      className="w-full h-32 flex items-center gap-2 justify-between rounded-md p-2 bg-secondary border-primary border">
-       
-       <div className="flex items-center gap-1">
-        <Image alt={mockNft.id} src={mockNft.image} className="" width={64} height={64}  />
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold">{mockNft.name}</p>
-          <p className="text-xs">{mockNft.collection}</p>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <p className="text-xs">ID: {mockNft.id.padStart(4, "0")}</p>
-          <p>
-        </div>
-
-       </div>
-        </div>
+<div className={`relative gap-4 flex shadow-lg shadow-primary/60 flex-col items-center max-h-80 h-full justify-center px-4 py-8 rounded-lg border border-primary cursor-pointer transition-colors duration-150`}>
+  {mockNFTs.slice(pageStartIndex, pageStartIndex + 3).map((mockNft) => (
+  <NFTCard nft={mockNft} key={mockNft.id} />
   ))}
 </div>
 
+<div className="flex mt-5  sm:flex-row flex-col items-center gap-2 justify-center">
+
+             <Button disabled={pageStartIndex <= 0 } onClick={(e)=>{
+              e.preventDefault();
+              if(pageStartIndex > 0) setPageStartIndex(pageStartIndex - 3);
+             }} size="lg" className="bg-gradient-to-r cursor-pointer mt-3 from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg py-6 max-w-32 w-full shadow-lg">
+                <ArrowLeft className="h-4 w-4 mr-2"  />
+                  Previous
+                </Button>
+
+             <Button disabled={pageStartIndex >= mockNFTs.length - 3} onClick={(e)=>{
+              e.preventDefault();
+              if(pageStartIndex < mockNFTs.length - 3) setPageStartIndex(pageStartIndex + 3);
+             }} size="lg" className="bg-gradient-to-r cursor-pointer mt-3 from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg py-6 max-w-32 w-full shadow-lg">
+                  Next
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                </Button>
+</div>
           </div>
          
           {/* Description */}
@@ -136,13 +124,13 @@ const CreateListing = () => {
                 <SelectContent>
                   <SelectItem value="ETH">
                     <span className="flex items-center gap-1.5">
-                      <Coins className="h-3.5 w-3.5" />
+                      <FaEthereum className="h-3.5 w-3.5" />
                       ETH
                     </span>
                   </SelectItem>
                   <SelectItem value="SNORLIE">
                     <span className="flex items-center gap-1.5">
-                      <Coins className="h-3.5 w-3.5" />
+                      <Image src={SnorlieImage} className="h-4 w-4" alt="" width={16} height={16} />
                       SNORLIE
                     </span>
                   </SelectItem>

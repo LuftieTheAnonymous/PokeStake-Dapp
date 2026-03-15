@@ -8,6 +8,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Currency } from "@/data/mockNFTs";
+import { Button } from "../ui/button";
+import { CirclePlus } from "lucide-react";
+import Link from "next/link";
 
 export type SortOption = "recent" | "price-asc" | "price-desc";
 
@@ -114,6 +117,15 @@ const FilterSidebar = ({
           </Select>
         </div>
       </div>
+
+      
+        <Link href={`/marketplace/form`}>
+          <Button size="lg" className="bg-gradient-to-r w-full cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg p-6 shadow-lg">
+                  <CirclePlus className="h-5 w-5 mr-2" />
+                  List PokeCard
+                </Button>
+
+        </Link>
     </aside>
   );
 };

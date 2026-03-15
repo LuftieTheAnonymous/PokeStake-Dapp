@@ -1,9 +1,12 @@
+import { Rarity } from "@/lib/types";
+
 export type Currency = "ETH" | "SNORLIE";
 
 export interface NFTItem {
   id: string;
   name: string;
   collection: string;
+  rarity: Rarity;
   image: string;
   price: number;
   currency: Currency;
@@ -11,7 +14,7 @@ export interface NFTItem {
   listedAt: Date;
 }
 
-export const mockNFTs: NFTItem[] = [
+export const  mockNFTs: NFTItem[] = [
   {
     id: "1",
     name: "Inferno Drake #042",
@@ -21,6 +24,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "ETH",
     creator: "0x1a2b...3c4d",
     listedAt: new Date("2026-03-10"),
+    rarity:'common'
   },
   {
     id: "2",
@@ -31,6 +35,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "SNORLIE",
     creator: "0x5e6f...7g8h",
     listedAt: new Date("2026-03-12"),
+    rarity:'ultra rare'
   },
   {
     id: "3",
@@ -41,6 +46,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "ETH",
     creator: "0x9i0j...1k2l",
     listedAt: new Date("2026-03-13"),
+    rarity:'uncommon'
   },
   {
     id: "4",
@@ -51,6 +57,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "SNORLIE",
     creator: "0x3m4n...5o6p",
     listedAt: new Date("2026-03-11"),
+    rarity:'ultra rare'
   },
   {
     id: "5",
@@ -61,6 +68,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "ETH",
     creator: "0x7q8r...9s0t",
     listedAt: new Date("2026-03-09"),
+    rarity:'rare'
   },
   {
     id: "6",
@@ -71,6 +79,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "SNORLIE",
     creator: "0xu1v2...w3x4",
     listedAt: new Date("2026-03-14"),
+    rarity:'rare'
   },
   {
     id: "7",
@@ -81,6 +90,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "ETH",
     creator: "0x1a2b...3c4d",
     listedAt: new Date("2026-03-08"),
+    rarity:'common'
   },
   {
     id: "8",
@@ -91,6 +101,7 @@ export const mockNFTs: NFTItem[] = [
     currency: "SNORLIE",
     creator: "0x5e6f...7g8h",
     listedAt: new Date("2026-03-07"),
+    rarity:'uncommon'
   },
   {
     id: "9",
@@ -101,5 +112,6 @@ export const mockNFTs: NFTItem[] = [
     currency: "ETH",
     creator: "0x9i0j...1k2l",
     listedAt: new Date("2026-03-06"),
+    rarity:'uncommon'
   },
 ];
