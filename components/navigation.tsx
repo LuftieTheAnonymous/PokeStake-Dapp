@@ -104,7 +104,7 @@ export function Navigation() {
       </div>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden flex items-center justify-around border-t border-border/50 py-2 px-4">
+      <nav className="md:hidden flex w-full items-center justify-around border-t border-border/50 py-2 px-4">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

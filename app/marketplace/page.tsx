@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Package } from "lucide-react";
-import MarketplaceNav from "@/components/nft-marketplace/MarketPlaceNav";
 import NFTCard from "@/components/nft-marketplace/Listing";
 import FilterSidebar, { type SortOption } from "@/components/nft-marketplace/FIlterSideBar";
 import { mockNFTs, type Currency } from "@/data/mockNFTs";
@@ -83,7 +82,7 @@ const Browse = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-6 mt-4">
           <FilterSidebar
             currency={currency}
             setCurrency={setCurrency}

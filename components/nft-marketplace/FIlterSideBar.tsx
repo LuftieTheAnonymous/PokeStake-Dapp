@@ -40,7 +40,7 @@ const FilterSidebar = ({
   setSearchQuery,
 }: FilterSidebarProps) => {
   return (
-    <aside className="w-full lg:w-[280px] shrink-0 space-y-6">
+    <aside className="w-full lg:w-80 shrink-0 space-y-6">
       <div className="rounded-xl bg-card p-5 shadow-card space-y-5">
         <div>
           <h2 className="text-sm font-semibold tracking-tight text-foreground mb-4">

@@ -146,10 +146,11 @@ const NFTDetail = () => {
 
             {/* Action */}
             <div className="mt-8">
-              <Button size="lg" className="w-full font-semibold text-base gap-2">
-                <Coins className="h-5 w-5" />
+               <Button size="lg" className="bg-gradient-to-r w-full cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg p-6 shadow-lg">
+                  <Coins className="h-5 w-5" />
                 Buy Now for {nft.price} {nft.currency}
-              </Button>
+                </Button>
+
             </div>
           </div>
         </motion.div>
