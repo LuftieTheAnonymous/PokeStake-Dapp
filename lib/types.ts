@@ -21,6 +21,17 @@ export interface PokemonCard {
   };
 }
 
+
+export interface SaleListing {
+  listingOwner: `0x${string}`;
+  nftId:bigint;
+  pinataId:string;
+  listingBlockNumber:bigint;
+  expiryBlock:bigint;
+  listingPrice:bigint;
+  isPriceInEth:boolean;
+}
+
 export const RARITY_CONFIG: Record<Rarity, { 
   color: string; 
   dailyReward: number;

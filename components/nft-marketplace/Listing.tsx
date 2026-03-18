@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { NFTItem } from "@/data/mockNFTs";
 import { cn } from "@/lib/utils";
+import { PokemonCard, SaleListing } from "@/lib/types";
 
 interface ListingProps {
-  nft: NFTItem;
+  nft: {saleDetails: SaleListing, card:PokemonCard};
   index?: number;
 }
 
@@ -62,12 +63,12 @@ const getRarityClass = (rarity?: string) => {
 };
 
 const Listing = ({ nft, index = 0 }: ListingProps) => {
-  const rarity = getRarityClass(nft.rarity);
+  const rarity = getRarityClass(nft.card.attributes.rarity);
 
   return (
     <motion.div variants={itemVariants}>
       <Link
-        href={`/marketplace/listing/${nft.id}`}
+        href={`/marketplace/listing/${Number(nft.saleDetails.nftId)}`}
         className={cn(
           "group relative block border-2 rounded-xl bg-gradient-to-br bg-card overflow-hidden",
           "transition-all duration-300 cursor-pointer",
@@ -86,8 +87,8 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
         {/* Image Container */}
         <div className="aspect-square overflow-hidden bg-muted relative">
           <img
-            src={nft.image}
-            alt={nft.name}
+            src={nft.card.image}
+            alt={nft.card.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
@@ -127,9 +128,9 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
         <div className="p-3 space-y-2 bg-background/60 backdrop-blur-sm border-t border-border/20">
           {/* Collection & Name */}
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">{nft.collection}</p>
+            <p className="text-xs text-muted-foreground">{nft.card.attributes.type.map((pokeType)=> `${pokeType}`)}</p>
             <h3 className="text-sm font-semibold tracking-tight text-foreground truncate">
-              {nft.name}
+              {nft.card.name}
             </h3>
           </div>
 
@@ -138,17 +139,17 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
             <div className="flex items-center gap-1.5">
               <Tag className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="font-mono text-sm font-medium tabular-nums tracking-tight text-foreground">
-                {nft.price}
+                {Number(nft.saleDetails.listingPrice / BigInt(1e18))}
               </span>
               <Badge
-                variant={nft.currency === "SNORLIE" ? "default" : "secondary"}
+                variant={!nft.saleDetails.isPriceInEth ? "default" : "secondary"}
                 className={cn(
                   "text-[10px] px-1.5 py-0 h-5 font-mono",
-                  nft.currency === "SNORLIE" &&
+                  !nft.saleDetails.isPriceInEth &&
                     "bg-accent text-accent-foreground"
                 )}
               >
-                {nft.currency}
+                {nft.saleDetails.isPriceInEth ? "ETH" : "SNORLIE"}
               </Badge>
             </div>
           </div>

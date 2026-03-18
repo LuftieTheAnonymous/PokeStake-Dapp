@@ -9,6 +9,12 @@ import { mockNFTs, type Currency } from "@/data/mockNFTs";
 
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
+import { useQuery } from "@tanstack/react-query";
+import { PokemonCard, SaleListing } from "@/lib/types";
+import { readContract } from "viem/actions";
+import { config } from "@/lib/wagmi/wagmiConfig";
+import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
+import { pinata } from "@/utils/PinataConfig";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -25,48 +31,87 @@ const Browse = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const {data, isLoading, error} = useQuery({
+    queryKey:["pokeCards-marketplace"],
+    queryFn:async ()=>{
+ let nftCards: {saleDetails: SaleListing, card:PokemonCard}[] = [];
+
+ const marketPlaceElements:bigint = await readContract(config as any, {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListingsAmount"}) as bigint;
+ 
+ if(!marketPlaceElements){
+  return nftCards;
+ }
+ 
+   for (let index = 0; index < Number(marketPlaceElements); index++) {
+      const pokeCard:SaleListing = await readContract(config as any, {abi:marketPlaceAbi, address:marketPlaceAddress, functionName:'getListing', args:[BigInt(index + 1)]}) as SaleListing;
+      
+
+      if(!pokeCard){
+        continue;
+      }
+
+      try {
+        const pinataFoundElement = await pinata.gateways.public.get(pokeCard.pinataId);
+        
+        if (pinataFoundElement.data) {
+          nftCards.push({
+            saleDetails: pokeCard,
+            card: pinataFoundElement.data as unknown as PokemonCard,
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to fetch card ${pokeCard.pinataId}:`, err);
+      }
+    }
+
+    return nftCards;
+      
+    }
+  });
+
+
   const filteredNFTs = useMemo(() => {
-    let result = [...mockNFTs];
+    let result = data && data.length > 0 ? data : [];
 
     // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (nft) =>
-          nft.name.toLowerCase().includes(q) ||
-          nft.collection.toLowerCase().includes(q)
+          nft.card.name.toLowerCase().includes(q) ||
+          nft.card.name.toLowerCase().includes(q)
       );
     }
 
     // Currency filter
     if (currency !== "ALL") {
-      result = result.filter((nft) => nft.currency === currency);
+      result = result.filter((nft) => currency === 'ETH' ? nft.saleDetails.isPriceInEth : !nft.saleDetails.isPriceInEth);
     }
 
     // Price range
     if (minPrice) {
-      result = result.filter((nft) => nft.price >= parseFloat(minPrice));
+      result = result.filter((nft) => Number(nft.saleDetails.isPriceInEth) >= parseFloat(minPrice));
     }
     if (maxPrice) {
-      result = result.filter((nft) => nft.price <= parseFloat(maxPrice));
+      result = result.filter((nft) => Number(nft.saleDetails.isPriceInEth) <= parseFloat(maxPrice));
     }
 
     // Sort
     switch (sort) {
       case "price-asc":
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => Number(a.saleDetails.isPriceInEth) - Number(b.saleDetails.isPriceInEth));
         break;
       case "price-desc":
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => Number(b.saleDetails.isPriceInEth) - Number(a.saleDetails.isPriceInEth));
         break;
       case "recent":
       default:
-        result.sort((a, b) => b.listedAt.getTime() - a.listedAt.getTime());
+        result.sort((a, b) => Number(b.saleDetails.listingBlockNumber) - Number(a.saleDetails.listingBlockNumber));
         break;
     }
 
     return result;
-  }, [currency, sort, minPrice, maxPrice, searchQuery]);
+  }, [data, currency, sort, minPrice, maxPrice, searchQuery]);
 
   return (
     <div className="min-h-screen">
@@ -112,7 +157,7 @@ const Browse = () => {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {filteredNFTs.map((nft, i) => (
-                  <NFTCard key={nft.id} nft={nft} index={i} />
+                  <NFTCard key={Number(nft.saleDetails.nftId)} nft={nft} index={i} />
                 ))}
               </motion.div>
             )}
