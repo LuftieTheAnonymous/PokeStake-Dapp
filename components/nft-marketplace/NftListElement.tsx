@@ -2,15 +2,16 @@
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import type { Rarity } from "@/lib/types"; // adjust your type imports
+import type { PokemonCard, Rarity } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
-import { NFTItem } from "@/data/mockNFTs";
 
 interface NFTCardProps {
-  nft: NFTItem;
+  nft: PokemonCard;
+  nftId: bigint;
   onClick?: () => void;
   className?: string;
   animated?: boolean;
+  selected?: boolean;
 }
 
 const rarityGradients: Record<Rarity, string> = {
@@ -34,48 +35,88 @@ const rarityGlow: Record<Rarity, string> = {
   "ultra rare": "shadow-rose-500/50 shadow-md",
 };
 
+const raritySelectedGlow: Record<Rarity, string> = {
+  common: "shadow-slate-500/60 shadow-lg",
+  uncommon: "shadow-emerald-500/60 shadow-lg",
+  rare: "shadow-blue-500/70 shadow-lg",
+  "ultra rare": "shadow-rose-500/80 shadow-xl",
+};
+
+const rarityRing: Record<Rarity, string> = {
+  common: "ring-slate-400",
+  uncommon: "ring-emerald-500",
+  rare: "ring-blue-500",
+  "ultra rare": "ring-rose-500",
+};
+
 export function NFTCard({
   nft,
   onClick,
   className,
   animated = false,
+  selected = false,
+  nftId
 }: NFTCardProps) {
-  const rarity = nft.rarity as Rarity; // map your rarity field accordingly
+  const rarity = nft.attributes.rarity as Rarity;
 
   return (
     <div
-      key={nft.id}
-      id={nft.id}
+      key={nft.attributes.id}
+      id={`${nft.attributes.id}`}
       onClick={onClick}
       className={cn(
-        "w-full h-28 flex items-center gap-2 justify-between rounded-md p-2",
+        "relative w-full h-28 flex items-center gap-2 justify-between rounded-md p-2",
         "bg-gradient-to-br",
         rarityGradients[rarity],
-        "border",
+        "border-2",
         rarityBorders[rarity],
-        rarityGlow[rarity],
+        selected ? raritySelectedGlow[rarity] : rarityGlow[rarity],
         "transition-all duration-300",
-        onClick && "cursor-pointer hover:scale-105",
+        onClick && "cursor-pointer hover:scale-95",
+        selected && "ring-2 ring-offset-2",
+        selected && rarityRing[rarity],
         animated && "animate-card-reveal",
         className
       )}
     >
+      {/* Selected Badge */}
+      {selected && (
+        <div
+          className={cn(
+            "absolute top-1 right-1 px-2 py-1 rounded-full text-xs font-semibold",
+            "bg-gradient-to-r backdrop-blur-sm",
+            "animate-pulse"
+          )}
+          style={{
+            background: `linear-gradient(135deg, ${RARITY_CONFIG[rarity].color}80, ${RARITY_CONFIG[rarity].color}40)`,
+            color: RARITY_CONFIG[rarity].color,
+            boxShadow: `0 0 12px ${RARITY_CONFIG[rarity].color}60`,
+          }}
+        >
+          ✓ Selected
+        </div>
+      )}
+
       <div className="flex items-center gap-1">
         <Image
           className="w-16 h-16 rounded object-cover"
-          alt={nft.id}
+          alt={`${nft.attributes.id}`}
           src={nft.image}
           width={64}
           height={64}
         />
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold">{nft.name}</p>
-          <p className="text-xs text-muted-foreground">{nft.collection}</p>
+          <p className="text-sm capitalize font-bold">{nft.name}</p>
+          <p className="text-xs text-muted-foreground">{nft.attributes.type.map((type, i) => (
+            <span key={i} className="capitalize">
+              {type} {i === 0 ? " / " : ""}
+            </span>
+          ))}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-1 text-right">
-        <p className="text-xs font-mono">ID: #{nft.id.padStart(4, "0")}</p>
+        <p className="text-xs font-mono">ID: #{`${nftId}`.padStart(4, "0")}</p>
         <p
           className="text-xs font-medium px-2 py-0.5 rounded-full capitalize"
           style={{

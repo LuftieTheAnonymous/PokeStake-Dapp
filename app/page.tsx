@@ -150,6 +150,8 @@ export default function HomePage() {
               <PokeCoinIcon size={20} />
               <span className="text-sm">PokeStake Protocol</span>
             </div>
+
+            <p className="text-sm">Done by <Link target="_blank" className="text-primary font-bold" href={"https://luftietheanonymous.netlify.app/"}>@LuftieTheAnonymous</Link></p>
           </div>
         </footer>
       </main>

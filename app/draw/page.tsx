@@ -15,6 +15,7 @@ import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import { toast } from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
+import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 export default function DrawPage() {
@@ -23,32 +24,36 @@ export default function DrawPage() {
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
 
-  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt,blockNumber, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber,requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
     await drawRandomNumber();
-
   }
 
 
-  useEffect(()=>{
-    if(BigInt(requestId) !== BigInt(0) && recentRequest && recentRequest.pokedexIndex !== BigInt(0) && recentRequest.rarityLevel !== recentRequest.pokedexIndex) setIsDrawing(false);
-  },[requestId]);
+useEffect(()=>{
+if(requestId !== null || requestId !== undefined) {
+  toast.success("Successfully drawn random data");
+  setIsDrawing(false);
+}
+},[requestId])
+
 
   useWatchContractEvent({
     abi:pokeCardCollectionAbi,
     address:pokeCardCollectionAddress,
     'eventName':"PokemonCardGenerated",
-    args:[],
-    'onLogs':(logs)=>{
+    'onLogs': async (logs)=>{
       console.log(logs);
-      if((logs[0] as any).args[0] === walletAddress){
-        toast.success("Your PokeCard NFT has been minted");
+      if(drawnCard && (logs[0] as any).args.user === walletAddress){
+        toast.success(`Your PokeCard of ${drawnCard.name} (ID: #${Number((logs[0] as any).args.nftId).toString().padStart(4, "0")}) has been minted`);
       }
+    },
+    onError(error){
+      toast.error(`${error.name}: ${error.message}`)
     }
-    
   });
 
 
@@ -110,7 +115,7 @@ const handleDraw = async () => {
 
   const mintPokeCard = async()=>{
     if(!drawnCard) throw new Error("No Drawn PokeCard");
-    if(!requestId || (requestId && requestId === BigInt(0))) throw new Error("No Request Id");
+    if(requestId === undefined || requestId === null || requestId === BigInt(0)) throw new Error("No Request Id");
       await mintDrawnPokemon(drawnCard);
     }
 
@@ -207,19 +212,26 @@ const handleDraw = async () => {
                   <Button
                     size="lg"
                     onClick={(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && !recentRequest.isResolved) ? handleDraw : requestRandomNumber}
-                    disabled={isDrawing || !isElligibleToDraw}
+                    disabled={isDrawing || !isElligibleToDraw || (blockNumber && lastBlockGeneratedAt ? Number(blockNumber) - Number(lastBlockGeneratedAt) < 7200 : false)}
                     className={`bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg`}
                   >
                     {isDrawing ? (
                       <>
                       <PokeCoinIcon className="mr-2 animate-spin"/>
+                      {(requestId !== null && requestId !== undefined && Number(requestId) === 0) || 
+ (requestId !== null && requestId !== undefined && recentRequest && Number(requestId) !== 0 && recentRequest.isResolved) 
+? "Requesting..."  : "Drawing..."}
 
-                        {(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && recentRequest.isResolved) ? "Requesting..."  : "Drawing..."}
+
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        {(requestId && requestId === BigInt(0)) || (requestId !== BigInt(0) && recentRequest.isResolved) ? "Request Number" : "Draw Card" }
+                        {(requestId !== null && requestId !== undefined && Number(requestId) === 0) || 
+ (requestId !== null && requestId !== undefined && recentRequest && Number(requestId) !== 0 && recentRequest.isResolved) 
+  ? "Request Number" 
+  : "Draw Card"}
+
                       </>
                     )}
                   </Button>    
@@ -227,7 +239,7 @@ const handleDraw = async () => {
 
 
                   {drawnCard && !isDrawing && showCard &&
-                  <Button size="lg" disabled={isDrawing || !drawnCard || !showCard} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg" onClick={mintPokeCard}>Mint Pokemon <PokeCoinIcon/> </Button>
+                  <Button size="lg" disabled={isDrawing || !drawnCard || !showCard || (requestId > BigInt(0) && recentRequest.isResolved == true)} className="bg-gradient-to-r cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg px-8 py-6 disabled:opacity-50 shadow-lg" onClick={mintPokeCard}>Mint Pokemon <PokeCoinIcon/> </Button>
                   }
                 
                 </div>

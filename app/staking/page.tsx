@@ -22,8 +22,11 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { pinata } from "@/utils/PinataConfig";
-import { useBlockNumber } from "wagmi";
+import { useBlockNumber, useWatchContractEvent } from "wagmi";
 import { CustomConnectButton } from "@/components/custom-connect-button";
+import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
+import { pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
+import { toast } from "sonner";
 
 export default function StakingPage() {
   const {
@@ -38,11 +41,28 @@ export default function StakingPage() {
     stakingRewardToClaim,
     userStakedPokeCards,
     ownedPokeCards,
-    calculateRewards
+    calculateRewards,
+    approveToStakingProtocol
   } = usePokeData();
 
   const [selectedTab, setSelectedTab] = useState<"stake" | "staked">("stake");
+  const [approved, setApproved]=useState<boolean>();
   const {data:blockNumber}=useBlockNumber();
+
+  useWatchContractEvent({
+    abi:pokeCardCollectionAbi,
+    address: pokeCardCollectionAddress,
+    eventName:'Approval',
+    onError(error) {
+      console.log(error);
+    },
+    onLogs(logs){
+      if(logs[0].args.owner === walletAddress && logs[0].args.approved === pokemonStakingAddress){
+        setApproved(true);
+        toast.success("Approval commited successfully !");
+      }
+    }
+  });
   
 
  const {data:pokemonCards, isLoading, error}=useQuery({
@@ -82,18 +102,6 @@ export default function StakingPage() {
   refetchInterval: 10000, 
   refetchIntervalInBackground: true
 });
-
-
-
-      
-
-  // Update rewards every second
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-      
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, [getAccruedRewards, getTotalAPY]);
 
   const handleStake = (tokenId:bigint) => {
     stakeCard(tokenId);
@@ -284,12 +292,12 @@ export default function StakingPage() {
           <div key={card.card.attributes.id} className="space-y-2">
             <PokeCard card={card.card} showStats={false} />
             <Button
-              onClick={() => handleStake(BigInt(card.card.attributes.id))}
+              onClick={() => !approved ? approveToStakingProtocol(BigInt(card.card.attributes.id - 1), setApproved) :  handleStake(BigInt(card.card.attributes.id - 1))}
               className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
               size="sm"
             >
               <Lock className="h-4 w-4 mr-1" />
-              Stake
+              {!approved ? "Approve" : "Stake"}
             </Button>
           </div>
         ))}

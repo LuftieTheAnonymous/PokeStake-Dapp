@@ -1,4 +1,4 @@
-export const snorlieCoinContractAddress = "0x071517b802291aC98901bE3b21A6195a7D408BBf";
+export const snorlieCoinContractAddress = "0xbDF44CDD3AceDf3F1cf8897BfCFE0212257f0884";
 
 export const snorlieCoinABI= [
     { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },

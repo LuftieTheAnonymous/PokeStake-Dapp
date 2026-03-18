@@ -82,7 +82,7 @@ const Browse = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 mt-4">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mt-4">
           <FilterSidebar
             currency={currency}
             setCurrency={setCurrency}
@@ -109,7 +109,7 @@ const Browse = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {filteredNFTs.map((nft, i) => (
                   <NFTCard key={nft.id} nft={nft} index={i} />

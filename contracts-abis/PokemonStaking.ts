@@ -1,4 +1,4 @@
-export const pokemonStakingAddress = "0xB0F4Ef0AD9981BEF80979050972622Dc3c422b15";
+export const pokemonStakingAddress = "0xf809dFFb111c41E3a7D979047b6fB8E7181b5Ee1";
 
 export const pokemonStakingAbi= [
     {
@@ -20,7 +20,9 @@ export const pokemonStakingAbi= [
     {
       "type": "function",
       "name": "calculateAPY",
-      "inputs": [],
+      "inputs": [
+        { "name": "user", "type": "address", "internalType": "address" }
+      ],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
       "stateMutability": "view"
     },
@@ -43,7 +45,9 @@ export const pokemonStakingAbi= [
     {
       "type": "function",
       "name": "getRewardAmount",
-      "inputs": [],
+      "inputs": [
+        { "name": "member", "type": "address", "internalType": "address" }
+      ],
       "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
       "stateMutability": "view"
     },
@@ -188,6 +192,6 @@ export const pokemonStakingAbi= [
     },
     { "type": "error", "name": "NeedToClaimRewardsFirst", "inputs": [] },
     { "type": "error", "name": "NotTheOwnerOfTheNFT", "inputs": [] },
-    { "type": "error", "name": "OperationNotSuccessful", "inputs": [] },
-    { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] }
+    { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },
+    { "type": "error", "name": "ZeroAmountOfAwards", "inputs": [] }
   ]

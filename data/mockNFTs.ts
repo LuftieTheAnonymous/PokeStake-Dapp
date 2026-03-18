@@ -2,6 +2,7 @@ import { Rarity } from "@/lib/types";
 
 export type Currency = "ETH" | "SNORLIE";
 
+
 export interface NFTItem {
   id: string;
   name: string;

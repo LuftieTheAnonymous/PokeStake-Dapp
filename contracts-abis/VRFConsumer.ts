@@ -1,4 +1,4 @@
-export const VrfConsumerAddress="0x6438dC3481A1f9Abb345D0E4016cCBF33Db5C8a7";
+export const VrfConsumerAddress="0xEDd39DaA5A9E8875087DbEff90fd520041DA34BD";
 
 export const VRFConsumerAbi =[
     {
@@ -56,6 +56,17 @@ export const VRFConsumerAbi =[
         },
         { "name": "rarityLevel", "type": "uint256", "internalType": "uint256" },
         { "name": "isRequestResolved", "type": "bool", "internalType": "bool" }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getRequestDataArray",
+      "inputs": [
+        { "name": "caller", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [
+        { "name": "", "type": "uint256[]", "internalType": "uint256[]" }
       ],
       "stateMutability": "view"
     },
@@ -368,6 +379,7 @@ export const VRFConsumerAbi =[
       ]
     },
     { "type": "error", "name": "AddressZero", "inputs": [] },
+    { "type": "error", "name": "BlockTimeNotExpired", "inputs": [] },
     { "type": "error", "name": "NotExistingRequest", "inputs": [] },
     {
       "type": "error",

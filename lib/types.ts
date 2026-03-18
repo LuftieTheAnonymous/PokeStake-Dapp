@@ -31,13 +31,13 @@ export const RARITY_CONFIG: Record<Rarity, {
     color: "#9ca3af", 
     dailyReward: 1, 
     borderClass: "border-gray-400",
-    chanceRate:40,
+    chanceRate:45,
   },
   uncommon: { 
     color: "#22c55e", 
     dailyReward: 2, 
     borderClass: "border-green-500",
-    chanceRate:30
+    chanceRate:35
   },
   rare: { 
     color: "#3b82f6", 

@@ -1,4 +1,4 @@
-export const pokeCardCollectionAddress="0x6470C8c56Ec636b57c7Ed498f5fC60d7c844C2F7";
+export const pokeCardCollectionAddress="0x848490f4F639471bC790bEFc30E2170d45878198";
 
 export const pokeCardCollectionAbi=[
     {
@@ -412,6 +412,12 @@ export const pokeCardCollectionAbi=[
           "type": "uint256",
           "indexed": false,
           "internalType": "uint256"
+        },
+        {
+          "name": "requestId",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         }
       ],
       "anonymous": false
@@ -585,6 +591,13 @@ export const pokeCardCollectionAbi=[
       ]
     },
     { "type": "error", "name": "GenerationCooldownNotReached", "inputs": [] },
+    {
+      "type": "error",
+      "name": "NoResolvedRequestOrNoRequestSent",
+      "inputs": [
+        { "name": "caller", "type": "address", "internalType": "address" }
+      ]
+    },
     { "type": "error", "name": "NotMinter", "inputs": [] },
     { "type": "error", "name": "NotOwner", "inputs": [] },
     { "type": "error", "name": "ReentrancyGuardReentrantCall", "inputs": [] },

@@ -11,6 +11,8 @@ import { config } from "../lib/wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core'
+import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
+import { vrfCoordinatorAddress } from "@/contracts-abis/VRFCoordinator";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
@@ -41,7 +43,11 @@ const {data} = useReadContracts({
     { abi: pokemonStakingAbi, address: pokemonStakingAddress, functionName: "getStakedPositions", args: [address] },
     // [10] - VRFConsumer getRequestId
     { abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName: "getRequestId", args:[address]},
-    {abi: VRFConsumerAbi, address:VrfConsumerAddress, functionName:"getRequestData", args:[address, pokemonAmountModulator, rarityModulator]}
+    // [11]
+    {abi: VRFConsumerAbi, address:VrfConsumerAddress, functionName:"getRequestData", args:[address, pokemonAmountModulator, rarityModulator]},
+    // [12]
+    {abi: VRFConsumerAbi, address: vrfCoordinatorAddress, functionName:"getRequestDataArray", args:[address]},
+    {abi: marketPlaceAbi, address: marketPlaceAddress, functionName:"getLatestEthUsdPrice", args:[]}
   
   ],
   account: address,
@@ -101,6 +107,14 @@ const requestData=useMemo(()=>{
     rarityLevel:requestRecent[1],
     isResolved: requestRecent[2]
   }
+},[data]);
+
+const ethUsdPrice=useMemo(()=>{
+  return data && data[13].result && data[13].result !== null ? Number(BigInt(data[13].result as bigint) / BigInt(1e18)) : 0;
+},[data])
+
+const requestDataArray = useMemo(()=>{
+  return data && data[12].result as unknown as bigint[] ? (data[12].result as unknown as bigint[]) : [];
 },[data])
 
 
@@ -125,10 +139,10 @@ return result as unknown as bigint;
 
 function stakeCard(tokenId:bigint){
   writeContract({
-    abi:pokeCardCollectionAbi,
-    address:pokeCardCollectionAddress,
-    functionName:"safeTransferFrom",
-    args:[address, pokeCardCollectionAddress, tokenId]  
+    abi:pokemonStakingAbi,
+    address:pokemonStakingAddress,
+    functionName:"stake",
+    args:[tokenId],
   })
 }
 
@@ -242,14 +256,71 @@ async function drawCard() {
   } catch (error) {
     console.log(error, "error while minting");
   }
-  }
+}
 
+
+function approveToMarketPlace(tokenId:bigint, updateLoadingState:(state:boolean)=>void){
+  writeContract({
+    abi: pokeCardCollectionAbi,
+    address: pokeCardCollectionAddress,
+    functionName:"approve",
+    args:[marketPlaceAddress, tokenId],
+    gas: BigInt(200_000)
+  }, {
+    onError(error){
+      console.log(error);
+      updateLoadingState(false);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+      console.log(data, variables, onMutateResult, context);
+      updateLoadingState(true);
+    },
+  })
+
+}
+
+function approveToStakingProtocol(tokenId:bigint, updateApprovedState:(value:boolean)=>void){
+    writeContract({
+    abi: pokeCardCollectionAbi,
+    address: pokeCardCollectionAddress,
+    functionName:"approve",
+    args:[pokemonStakingAddress, tokenId],
+    gas: BigInt(200_000)
+  }, {
+    onError(error){
+      console.log(error);
+      updateApprovedState(false);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+      console.log(data, variables, onMutateResult, context);
+    },
+  })
+}
+
+function listPokeCardOnMarketPlace(tokenId:bigint, listingPrice:bigint, isPriceInEth:boolean, updateLoadingState:(value:boolean)=>void){
+  writeContract({
+    abi: marketPlaceAbi,
+    address: marketPlaceAddress,
+    functionName:"listPokeCard",
+    args:[tokenId, listingPrice, isPriceInEth]
+  },{
+onError(error, variables, onMutateResult, context) {
+  updateLoadingState(false);
+},
+onSuccess(data, variables, onMutateResult, context) {
+  updateLoadingState(true);
+},
+  });
+}
 
 
 return {
   drawCard,
   requestId,
   claimRewards,
+  approveToMarketPlace,
+  approveToStakingProtocol,
+  listPokeCardOnMarketPlace,
   requestData,
   getRandomPokemon,
   snorliesBalance,
@@ -270,7 +341,9 @@ return {
   mintDrawnPokemon,
   stakeCard,
   unstakeCard,
-  blockNumber
+  blockNumber,
+  requestDataArray,
+  ethUsdPrice
 }
 }
 
