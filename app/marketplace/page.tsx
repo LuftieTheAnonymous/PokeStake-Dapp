@@ -5,13 +5,13 @@ import { motion } from "framer-motion";
 import { Package } from "lucide-react";
 import NFTCard from "@/components/nft-marketplace/Listing";
 import FilterSidebar, { type SortOption } from "@/components/nft-marketplace/FIlterSideBar";
-import { mockNFTs, type Currency } from "@/data/mockNFTs";
-
+import { type Currency } from "@/data/mockNFTs";
+import usePokeData from "@/hooks/usePokeData";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { useQuery } from "@tanstack/react-query";
 import { PokemonCard, SaleListing } from "@/lib/types";
-import { readContract } from "viem/actions";
+import { readContract } from '@wagmi/core';
 import { config } from "@/lib/wagmi/wagmiConfig";
 import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
 import { pinata } from "@/utils/PinataConfig";
@@ -31,22 +31,20 @@ const Browse = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const {listingsAmount}=usePokeData();
   const {data, isLoading, error} = useQuery({
     queryKey:["pokeCards-marketplace"],
-    queryFn:async ()=>{
+    queryFn: async ()=>{
  let nftCards: {saleDetails: SaleListing, card:PokemonCard}[] = [];
 
- const marketPlaceElements:bigint = await readContract(config as any, {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListingsAmount"}) as bigint;
- 
- if(!marketPlaceElements){
+ if(!listingsAmount){
   return nftCards;
  }
  
-   for (let index = 0; index < Number(marketPlaceElements); index++) {
-      const pokeCard:SaleListing = await readContract(config as any, {abi:marketPlaceAbi, address:marketPlaceAddress, functionName:'getListing', args:[BigInt(index + 1)]}) as SaleListing;
-      
+   for (let index = 0; index < Number(listingsAmount); index++) {
+      const pokeCard:SaleListing = await readContract(config, {abi:marketPlaceAbi, address:marketPlaceAddress, functionName:'getListing', args:[BigInt(index + 1)]}) as SaleListing;
 
-      if(!pokeCard){
+      if(!pokeCard || pokeCard.listingPrice === 0){
         continue;
       }
 

@@ -10,7 +10,7 @@ import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer
 import { config } from "../lib/wagmi/wagmiConfig";
 import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { pinata } from "@/utils/PinataConfig";
-import { readContract } from '@wagmi/core'
+import { readContract } from '@wagmi/core';
 import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
 import { vrfCoordinatorAddress } from "@/contracts-abis/VRFCoordinator";
 
@@ -41,13 +41,16 @@ const {data} = useReadContracts({
     { abi: pokeCardCollectionAbi, address: pokeCardCollectionAddress, functionName: "balanceOf", args: [address] },
     // [9] - pokemonStaking getStakedPositions
     { abi: pokemonStakingAbi, address: pokemonStakingAddress, functionName: "getStakedPositions", args: [address] },
-    // [10] - VRFConsumer getRequestId
+    // [14] - VRFConsumer getRequestId
     { abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName: "getRequestId", args:[address]},
     // [11]
     {abi: VRFConsumerAbi, address:VrfConsumerAddress, functionName:"getRequestData", args:[address, pokemonAmountModulator, rarityModulator]},
     // [12]
     {abi: VRFConsumerAbi, address: vrfCoordinatorAddress, functionName:"getRequestDataArray", args:[address]},
-    {abi: marketPlaceAbi, address: marketPlaceAddress, functionName:"getLatestEthUsdPrice", args:[]}
+    // 13
+    {abi: marketPlaceAbi, address: marketPlaceAddress, functionName:"getLatestEthUsdPrice"},
+    // 14
+    {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListingsAmount"}
   
   ],
   account: address,
@@ -117,6 +120,9 @@ const requestDataArray = useMemo(()=>{
   return data && data[12].result as unknown as bigint[] ? (data[12].result as unknown as bigint[]) : [];
 },[data])
 
+const listingsAmount = useMemo(()=>{
+   return data && data[14].result ? data[14].result as bigint : BigInt(0);
+},[data])
 
 const isElligibleToDraw=useMemo(()=>{
 
@@ -246,6 +252,10 @@ async function drawCard() {
       'metadata':{
       'keyvalues':{stringifiedAttributes:JSON.stringify(drawnPokemonCard.attributes)}}
   });
+
+  if(storeInPinata.cid.trim().length === 0){
+    return {error: "CID cannot be equal 0"};
+  }
       
         writeContract({
           abi: pokeCardCollectionAbi,
@@ -329,6 +339,7 @@ return {
   isConnecting,
   isElligibleToDraw,
   totalSupply,
+  listingsAmount,
   userGeneratedCards,
   userStakedPokeCards,
   stakingRewardToClaim,
