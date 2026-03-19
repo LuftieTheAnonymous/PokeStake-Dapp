@@ -44,20 +44,21 @@ const Browse = () => {
    for (let index = 0; index < getListings.length; index++) {
       const pokeCard:SaleListing = getListings[index];
 
-      console.log(pokeCard);
-
       if(!pokeCard || pokeCard.listingPrice === BigInt(0)){
         continue;
       }
 
+      const httpsInitial= `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`;
+
+      const cid = pokeCard.tokenURI.slice(httpsInitial.length);
+      console.log(cid);
+
       try {
-        const cid = pokeCard.tokenURI.split(`https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`)[1];
-        console.log(cid);
         const pinataFoundElement = await pinata.gateways.public.get(cid);
         
         if (pinataFoundElement.data) {
           nftCards.push({
-            saleDetails: pokeCard,
+            saleDetails: {...pokeCard, tokenURI:cid},
             card: pinataFoundElement.data as unknown as PokemonCard,
           });
         }
@@ -156,7 +157,7 @@ const Browse = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {filteredNFTs.map((nft, i) => (
                   <NFTCard key={Number(nft.saleDetails.nftId)} nft={nft} index={i} />

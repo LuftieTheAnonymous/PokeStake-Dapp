@@ -1,4 +1,4 @@
-export const marketPlaceAddress="0x3ef11BEebB861E14EB45A8d92DF3a140214141F0";
+export const marketPlaceAddress="0x1843e9c34D9e6C6Dc061e09B2B9375374714E262";
 
 export const marketPlaceAbi=[
     {
@@ -74,7 +74,7 @@ export const marketPlaceAbi=[
               "internalType": "uint256"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "pinataId", "type": "string", "internalType": "string" },
+            { "name": "tokenURI", "type": "string", "internalType": "string" },
             {
               "name": "listingBlockNumber",
               "type": "uint256",
@@ -117,7 +117,7 @@ export const marketPlaceAbi=[
               "internalType": "uint256"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "pinataId", "type": "string", "internalType": "string" },
+            { "name": "tokenURI", "type": "string", "internalType": "string" },
             {
               "name": "listingBlockNumber",
               "type": "uint256",

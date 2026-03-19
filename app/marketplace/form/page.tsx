@@ -52,8 +52,7 @@ const CreateListing = () => {
   }),
   isPaidInEth:z.boolean({
     message:"Cannot be other type than boolean"
-  }),
-  description: z.string({message:"Cannot be other type than string"}).min(40,{message:"Text has to be at least 40 characters long."})
+  })
   }).required();
 
  type FormInput = z.infer<typeof formScheme>;
@@ -64,7 +63,6 @@ const CreateListing = () => {
   }=useForm<FormInput>({
     resolver: zodResolver(formScheme),
     defaultValues:{
-      'description':'',
       'isPaidInEth': currency === 'ETH' ? true : false,
       'listingPrice':undefined,
       'nftId':undefined
@@ -119,6 +117,7 @@ const CreateListing = () => {
         onLogs(logs){
           if((logs[0] as any).args.owner === walletAddress && (logs[0] as any).args.approved === marketPlaceAddress){
             setApproved(true);
+            setLoading(false);
             toast.success("Approval commited successfully !");
           }
         }
@@ -205,16 +204,6 @@ const CreateListing = () => {
 </div>
           </div>
          
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-            <Textarea
-            onChange={(e)=>setValue('description', e.target.value)}
-              id="description"
-              placeholder="Describe your asset..."
-              rows={3}
-            />
-          </div>
 
           {/* Pricing */}
           <div className="space-y-2">

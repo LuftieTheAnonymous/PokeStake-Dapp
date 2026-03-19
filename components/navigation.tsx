@@ -60,7 +60,7 @@ export function Navigation() {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                {item.label}
+               <span className="hidden lg:block">{item.label}</span>
               </Link>
             );
           })}

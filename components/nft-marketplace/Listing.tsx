@@ -68,7 +68,7 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
   return (
     <motion.div variants={itemVariants}>
       <Link
-        href={`/marketplace/listing/${Number(nft.saleDetails.nftId)}`}
+        href={`/marketplace/listing/${Number(nft.saleListing.nftId)}`}
         className={cn(
           "group relative block border-2 rounded-xl bg-gradient-to-br bg-card overflow-hidden",
           "transition-all duration-300 cursor-pointer",
@@ -128,8 +128,8 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
         <div className="p-3 space-y-2 bg-background/60 backdrop-blur-sm border-t border-border/20">
           {/* Collection & Name */}
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">{nft.card.attributes.type.map((pokeType)=> `${pokeType}`)}</p>
-            <h3 className="text-sm font-semibold tracking-tight text-foreground truncate">
+            <p className="text-xs text-muted-foreground capitalize">{nft.card.attributes.type.join(" / ")}</p>
+            <h3 className="text-sm capitalize font-semibold tracking-tight text-foreground truncate">
               {nft.card.name}
             </h3>
           </div>
@@ -139,7 +139,7 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
             <div className="flex items-center gap-1.5">
               <Tag className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="font-mono text-sm font-medium tabular-nums tracking-tight text-foreground">
-                {Number(nft.saleDetails.listingPrice / BigInt(1e18))}
+                {(Number(nft.saleDetails.listingPrice) / Number(1e18)).toFixed(4)}
               </span>
               <Badge
                 variant={!nft.saleDetails.isPriceInEth ? "default" : "secondary"}
