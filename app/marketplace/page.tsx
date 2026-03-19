@@ -51,7 +51,6 @@ const Browse = () => {
       const httpsInitial= `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`;
 
       const cid = pokeCard.tokenURI.slice(httpsInitial.length);
-      console.log(cid);
 
       try {
         const pinataFoundElement = await pinata.gateways.public.get(cid);
@@ -63,7 +62,7 @@ const Browse = () => {
           });
         }
       } catch (err) {
-        console.error(`Failed to fetch card ${pokeCard.pinataId}:`, err);
+        console.error(`Failed to fetch card ${pokeCard.listingId}:`, err);
       }
     }
 

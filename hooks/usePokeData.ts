@@ -323,6 +323,25 @@ onSuccess(data, variables, onMutateResult, context) {
   });
 }
 
+function purchasePokeCard(listingId:bigint, amountToPay:bigint, isEthPrice:boolean){
+  writeContract({
+    abi: marketPlaceAbi,
+    address:marketPlaceAddress,
+    functionName:"purchasePokeCard",
+    args:[listingId, isEthPrice ? BigInt(0) : amountToPay],
+    value: isEthPrice ? amountToPay : undefined
+  },{
+    onError(error, variables, onMutateResult, context) {
+      console.log(error, "ERROR");
+      console.log(variables, context);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+           console.log(data, "DATA");
+      console.log(variables, context);
+    },
+  })
+}
+
 
 return {
   drawCard,
@@ -349,6 +368,7 @@ return {
   userTotalGeneratedCards,
   lastBlockGeneratedAt,
   drawRandomNumber,
+  purchasePokeCard,
   mintDrawnPokemon,
   stakeCard,
   unstakeCard,
