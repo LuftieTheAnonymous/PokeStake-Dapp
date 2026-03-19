@@ -25,7 +25,8 @@ export interface PokemonCard {
 export interface SaleListing {
   listingOwner: `0x${string}`;
   nftId:bigint;
-  pinataId:string;
+  listingId:bigint;
+  tokenURI:string;
   listingBlockNumber:bigint;
   expiryBlock:bigint;
   listingPrice:bigint;

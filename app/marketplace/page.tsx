@@ -31,25 +31,29 @@ const Browse = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const {listingsAmount}=usePokeData();
+  const {getListings}=usePokeData();
   const {data, isLoading, error} = useQuery({
     queryKey:["pokeCards-marketplace"],
     queryFn: async ()=>{
  let nftCards: {saleDetails: SaleListing, card:PokemonCard}[] = [];
 
- if(!listingsAmount){
+ if(!getListings){
   return nftCards;
  }
  
-   for (let index = 0; index < Number(listingsAmount); index++) {
-      const pokeCard:SaleListing = await readContract(config, {abi:marketPlaceAbi, address:marketPlaceAddress, functionName:'getListing', args:[BigInt(index + 1)]}) as SaleListing;
+   for (let index = 0; index < getListings.length; index++) {
+      const pokeCard:SaleListing = getListings[index];
 
-      if(!pokeCard || pokeCard.listingPrice === 0){
+      console.log(pokeCard);
+
+      if(!pokeCard || pokeCard.listingPrice === BigInt(0)){
         continue;
       }
 
       try {
-        const pinataFoundElement = await pinata.gateways.public.get(pokeCard.pinataId);
+        const cid = pokeCard.tokenURI.split(`https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`)[1];
+        console.log(cid);
+        const pinataFoundElement = await pinata.gateways.public.get(cid);
         
         if (pinataFoundElement.data) {
           nftCards.push({

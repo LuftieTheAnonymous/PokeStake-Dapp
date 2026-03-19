@@ -1,7 +1,7 @@
 'use client';
 
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
-import { type PokemonCard, type Rarity, pokemonAmountModulator, rarityModulator } from "../lib/types";
+import { type PokemonCard, type Rarity, SaleListing, pokemonAmountModulator, rarityModulator } from "../lib/types";
 import { useAccount, useBlockNumber, useReadContracts, useWriteContract } from 'wagmi'
 import { useMemo } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
@@ -50,7 +50,7 @@ const {data} = useReadContracts({
     // 13
     {abi: marketPlaceAbi, address: marketPlaceAddress, functionName:"getLatestEthUsdPrice"},
     // 14
-    {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListingsAmount"}
+    {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListings"}
   
   ],
   account: address,
@@ -120,8 +120,8 @@ const requestDataArray = useMemo(()=>{
   return data && data[12].result as unknown as bigint[] ? (data[12].result as unknown as bigint[]) : [];
 },[data])
 
-const listingsAmount = useMemo(()=>{
-   return data && data[14].result ? data[14].result as bigint : BigInt(0);
+const getListings = useMemo(()=>{
+   return data && data[14].result ? data[14].result as SaleListing[] : [];
 },[data])
 
 const isElligibleToDraw=useMemo(()=>{
@@ -339,7 +339,7 @@ return {
   isConnecting,
   isElligibleToDraw,
   totalSupply,
-  listingsAmount,
+  getListings,
   userGeneratedCards,
   userStakedPokeCards,
   stakingRewardToClaim,

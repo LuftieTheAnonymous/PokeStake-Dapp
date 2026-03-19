@@ -1,4 +1,4 @@
-export const marketPlaceAddress="0x13B630066013b359e457dAab8A2f2935Bd4180ac";
+export const marketPlaceAddress="0x3ef11BEebB861E14EB45A8d92DF3a140214141F0";
 
 export const marketPlaceAbi=[
     {
@@ -67,6 +67,54 @@ export const marketPlaceAbi=[
               "name": "listingOwner",
               "type": "address",
               "internalType": "address"
+            },
+            {
+              "name": "listingId",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            { "name": "nftId", "type": "uint256", "internalType": "uint256" },
+            { "name": "pinataId", "type": "string", "internalType": "string" },
+            {
+              "name": "listingBlockNumber",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "expiryBlock",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "listingPrice",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            { "name": "isPriceInEth", "type": "bool", "internalType": "bool" }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getListings",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple[]",
+          "internalType": "struct MarketPlace.SaleListing[]",
+          "components": [
+            {
+              "name": "listingOwner",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "listingId",
+              "type": "uint256",
+              "internalType": "uint256"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
             { "name": "pinataId", "type": "string", "internalType": "string" },
