@@ -68,7 +68,7 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
   return (
     <motion.div variants={itemVariants}>
       <Link
-        href={`/marketplace/listing/${Number(nft.saleListing.nftId)}`}
+        href={`/marketplace/listing/${Number(nft.saleDetails.nftId)}`}
         className={cn(
           "group relative block border-2 rounded-xl bg-gradient-to-br bg-card overflow-hidden",
           "transition-all duration-300 cursor-pointer",
