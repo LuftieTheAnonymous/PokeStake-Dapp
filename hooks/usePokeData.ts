@@ -186,6 +186,9 @@ try {
     console.log(getRandomValues);
 
   const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
+
+  console.log(pokemonData, "PokemonRandomly Drawn");
+
   return {card:{
     name: pokemonData.name,
     pokedexIndex: pokemonData.id,
