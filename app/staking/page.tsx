@@ -16,7 +16,8 @@ import {
   Lock, 
   Unlock,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Loader2Icon
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -272,7 +273,7 @@ export default function StakingPage() {
 {selectedTab === "stake" ? (
   /* Available Cards */
   <div>
-    {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) ? (
+ {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) && 
       <div className="text-center py-16 space-y-4">
         <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
         <div className="space-y-2">
@@ -285,6 +286,14 @@ export default function StakingPage() {
             Draw Cards
           </Button>
         </Link>
+      </div>}
+    
+    {isLoading && !error && (!pokemonCards || pokemonCards && (pokemonCards as {card: PokemonCard, isStaked: boolean, stakedAtBlock:bigint}[]).length === 0) ? (
+      <div className="text-center py-16 space-y-4">
+        <Loader2Icon size={64} className="text-primary mx-auto" />
+        <div className="space-y-2">
+          <p className="text-muted-foreground">Loading PokeCard...</p>
+        </div>
       </div>
     ) : (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -307,17 +316,27 @@ export default function StakingPage() {
 ) : (
   /* Staked Cards */
   <div>
-    {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) ? (
+     {!isLoading && !error && (!pokemonCards || pokemonCards.length === 0) && 
       <div className="text-center py-16 space-y-4">
-        <Layers className="h-16 w-16 mx-auto text-muted-foreground" />
+        <Ghost className="h-16 w-16 mx-auto text-muted-foreground" />
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">No Staked Cards</h3>
-          <p className="text-muted-foreground">Stake your cards to start earning rewards</p>
+          <h3 className="text-lg font-semibold">No Cards Available</h3>
+          <p className="text-muted-foreground">Draw some cards first to start staking</p>
         </div>
-        <Button onClick={() => setSelectedTab("stake")} variant="outline">
-          View Available Cards
-          <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
+        <Link href="/draw">
+          <Button className="bg-primary hover:bg-primary/90">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Draw Cards
+          </Button>
+        </Link>
+      </div>}
+
+    {isLoading && !error && (!pokemonCards || pokemonCards.length === 0) ? (
+     <div className="text-center py-16 space-y-4">
+        <Loader2Icon size={64} className="text-primary mx-auto" />
+        <div className="space-y-2">
+          <p className="text-muted-foreground">Loading PokeCard...</p>
+        </div>
       </div>
     ) : (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

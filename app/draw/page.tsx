@@ -11,11 +11,10 @@ import type { PokemonCard as PokemonCardType } from "@/lib/types";;
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PokeCoinIcon } from "@/components/token-balance";
-import { useWatchContractEvent } from "wagmi";
+import { useAccountEffect, useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import { toast } from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
-import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 export default function DrawPage() {
@@ -32,6 +31,15 @@ export default function DrawPage() {
     await drawRandomNumber();
   }
 
+  useEffect(() => {
+    if (walletAddress) {
+      setDrawnCard(null);
+      setIsDrawing(false);
+      setShowCard(false);
+      setError(undefined);
+      // Do your thing here
+    }
+  }, [walletAddress]);
 
 useEffect(()=>{
 if(requestId !== null || requestId !== undefined) {

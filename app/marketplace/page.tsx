@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Package } from "lucide-react";
 import NFTCard from "@/components/nft-marketplace/Listing";
 import FilterSidebar, { type SortOption } from "@/components/nft-marketplace/FIlterSideBar";
-import { type Currency } from "@/data/mockNFTs";
+import { type Currency } from "@/lib/types";
 import usePokeData from "@/hooks/usePokeData";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";

@@ -342,6 +342,63 @@ function purchasePokeCard(listingId:bigint, amountToPay:bigint, isEthPrice:boole
   })
 }
 
+function delistPokeCard(listingId:bigint){
+  writeContract({
+    abi: marketPlaceAbi,
+    address:marketPlaceAddress,
+    functionName:"delistPokemonCard",
+    args:[listingId],
+  },{
+    onError(error, variables, onMutateResult, context) {
+      console.log(error, "ERROR");
+      console.log(variables, context);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+           console.log(data, "DATA");
+      console.log(variables, context);
+    },
+  });
+}
+
+
+function payListingTimeExtensionInEth(listingId:bigint, amount:bigint){
+    writeContract({
+    abi: marketPlaceAbi,
+    address:marketPlaceAddress,
+    functionName:"preLongListingTimeInEth",
+    args:[listingId],
+    value:amount,
+  },{
+    onError(error, variables, onMutateResult, context) {
+      console.log(error, "ERROR");
+      console.log(variables, context);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+           console.log(data, "DATA");
+      console.log(variables, context);
+    },
+  });
+}
+
+function payListingTimeExtensionInSnorlies(listingId:bigint, amount:bigint){
+    writeContract({
+    abi: marketPlaceAbi,
+    address:marketPlaceAddress,
+    functionName:"preLongListingTimeInSnorlie",
+    args:[listingId, amount],
+  },{
+    onError(error, variables, onMutateResult, context) {
+      console.log(error, "ERROR");
+      console.log(variables, context);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+           console.log(data, "DATA");
+      console.log(variables, context);
+    },
+  });
+}
+
+
 
 return {
   drawCard,
@@ -350,8 +407,11 @@ return {
   approveToMarketPlace,
   approveToStakingProtocol,
   listPokeCardOnMarketPlace,
+  payListingTimeExtensionInEth,
+  payListingTimeExtensionInSnorlies,
   requestData,
   getRandomPokemon,
+  delistPokeCard,
   snorliesBalance,
   walletAddress: address,
   isConnected,

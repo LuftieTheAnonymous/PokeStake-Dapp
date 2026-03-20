@@ -1,4 +1,4 @@
-export const marketPlaceAddress="0x1843e9c34D9e6C6Dc061e09B2B9375374714E262";
+export const marketPlaceAddress="0xdEa6b477aBDfa8fb1B0c27fA3845E9189C740f15";
 
 export const marketPlaceAbi=[
     {
@@ -485,6 +485,15 @@ export const marketPlaceAbi=[
       "inputs": [
         { "name": "account", "type": "address", "internalType": "address" },
         { "name": "neededRole", "type": "bytes32", "internalType": "bytes32" }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "CannotBeListingOwner",
+      "inputs": [
+        { "name": "listingId", "type": "uint256", "internalType": "uint256" },
+        { "name": "owner", "type": "address", "internalType": "address" },
+        { "name": "caller", "type": "address", "internalType": "address" }
       ]
     },
     {

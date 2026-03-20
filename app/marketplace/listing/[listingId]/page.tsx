@@ -2,26 +2,26 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Coins, Layers, LoaderIcon, Tag, User } from "lucide-react";
+import { ArrowLeft, Calendar, Coins, Layers, CornerDownLeft, LoaderIcon, Tag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
-import { mockNFTs } from "@/data/mockNFTs";
 import { useQuery } from "@tanstack/react-query";
-import { PokemonCard, SaleListing } from "@/lib/types";
+import { Currency, PokemonCard, SaleListing } from "@/lib/types";
 import { readContract } from '@wagmi/core';
 import { config } from "@/lib/wagmi/wagmiConfig";
 import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
+import {PaymentDialog} from "@/components/nft-marketplace/ListingExtensionDialog";
 import { pinata } from "@/utils/PinataConfig";
 import { useMemo } from "react";
 import usePokeData from "@/hooks/usePokeData";
 
 
 const NFTDetail = () => {
-  const {ethUsdPrice, purchasePokeCard}=usePokeData();
+  const {ethUsdPrice,walletAddress,delistPokeCard,  purchasePokeCard}=usePokeData();
 
   const { listingId } = useParams<{ listingId: string }>();
 
@@ -89,7 +89,7 @@ const NFTDetail = () => {
       <GradientBackground />
       <Navigation />
 
-        <div className="container flex flex-col gap-2 items-center px-4 py-20 text-center">
+        <div className="container mx-auto flex flex-col gap-2 items-center px-4 py-20 text-center">
           <LoaderIcon size={48} className="text-primary text-4xl"/>
           <p className="text-muted-primary text-lg font-bold">Loading...</p>
         </div>
@@ -201,13 +201,28 @@ const NFTDetail = () => {
 
             {/* Action */}
             {data && data.saleDetails && 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-3">
                <Button onClick={()=>{
                 purchasePokeCard((data.saleDetails as SaleListing).listingId as bigint, (data.saleDetails as SaleListing).listingPrice, (data.saleDetails as SaleListing).isPriceInEth)
                }} size="lg" className="bg-gradient-to-r w-full cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg p-6 shadow-lg">
                   <Coins className="h-5 w-5" />
                 Buy Now for {(Number(data.saleDetails.listingPrice) / Number(1e18)).toFixed(5)} {data.saleDetails.isPriceInEth ? 'ETH' : 'SNORLIE'}
                 </Button>
+
+               {walletAddress === data.saleDetails.listingOwner && 
+                <div className="flex flex-col justify-center w-full gap-2 sm:flex-row items-center">
+              
+        <PaymentDialog listingId={(data.saleDetails as SaleListing).listingId} triggerText='Extend Listing-Time' />
+
+                 <Button onClick={()=>{
+                delistPokeCard((data.saleDetails as SaleListing).listingId as bigint);
+               }} size="lg" className="bg-red-500 w-full sm:w-1/2 cursor-pointer from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg p-6 shadow-lg">
+                  <CornerDownLeft size={24} />
+                Delist PokeCard
+                </Button>
+              
+                </div>
+               }
             </div>
             }
         

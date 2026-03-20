@@ -21,6 +21,20 @@ export interface PokemonCard {
   };
 }
 
+export type Currency = "ETH" | "SNORLIE";
+
+
+export interface NFTItem {
+  id: string;
+  name: string;
+  collection: string;
+  rarity: Rarity;
+  image: string;
+  price: number;
+  currency: Currency;
+  creator: string;
+  listedAt: Date;
+}
 
 export interface SaleListing {
   listingOwner: `0x${string}`;
@@ -65,3 +79,17 @@ export const RARITY_CONFIG: Record<Rarity, {
   },
 };
 
+export const snorliesOptions:{timeExtension:"1 day" | "1 week" | "1 month" | "1 year", amountOfTokens:bigint}[]=[
+  {timeExtension:'1 day', amountOfTokens:BigInt(100e18)},
+  {timeExtension:'1 week', amountOfTokens:BigInt(500e18)},
+  {timeExtension:'1 month', amountOfTokens:BigInt(750e18)},
+  {timeExtension:'1 year', amountOfTokens:BigInt(1000e18)}
+];
+
+
+export const ethOptions:{timeExtension:"1 day" | "1 week" | "1 month" | "1 year", amountOfTokens:bigint}[]=[
+  {timeExtension:'1 day', amountOfTokens:BigInt(2e18)},
+  {timeExtension:'1 week', amountOfTokens:BigInt(5e18)},
+  {timeExtension:'1 month', amountOfTokens:BigInt(10e18)},
+  {timeExtension:'1 year', amountOfTokens:BigInt(50e18)}
+];

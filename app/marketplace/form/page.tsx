@@ -6,8 +6,8 @@ import { Upload, Image as ImageIcon, ArrowLeft, ArrowRight, AlertCircleIcon, Spa
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import SnorlieImage from "@/public/snorlie.png"
+import Image from "next/image";
 import {
   Select,
   SelectContent,
@@ -17,11 +17,10 @@ import {
 } from "@/components/ui/select";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
-import { mockNFTs, type Currency } from "@/data/mockNFTs";import Image from "next/image";
 import { NFTCard } from "@/components/nft-marketplace/NftListElement";
 import usePokeData from "@/hooks/usePokeData";
 import { useQuery } from "@tanstack/react-query";
-import { PokemonCard } from "@/lib/types";
+import { Currency, PokemonCard } from "@/lib/types";
 import { pinata } from "@/utils/PinataConfig";
 import { redirect } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -183,7 +182,7 @@ const CreateListing = () => {
 </div>
 
 
-
+{data &&
 <div className="flex mt-5  sm:flex-row flex-col items-center gap-2 justify-center">
 
              <Button disabled={pageStartIndex <= 0 || data?.length === 0 || data && data.length < 3 } onClick={(e)=>{
@@ -194,14 +193,16 @@ const CreateListing = () => {
                   Previous
                 </Button>
 
-             <Button disabled={pageStartIndex >= mockNFTs.length - 3 || data && data.length < 3 } onClick={(e)=>{
+             <Button disabled={pageStartIndex >= data.length - 3 || data && data.length < 3 } onClick={(e)=>{
               e.preventDefault();
-              if(pageStartIndex < mockNFTs.length - 3) setPageStartIndex(pageStartIndex + 3);
+              if(pageStartIndex < data.length - 3) setPageStartIndex(pageStartIndex + 3);
              }} size="lg" className="bg-gradient-to-r cursor-pointer mt-3 from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white text-lg py-6 max-w-32 w-full shadow-lg">
                   Next
                   <ArrowRight className="h-4 w-4 mr-2" />
                 </Button>
 </div>
+}
+
           </div>
          
 

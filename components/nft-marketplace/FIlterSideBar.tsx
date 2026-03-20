@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Currency } from "@/data/mockNFTs";
+import type { Currency } from "@/lib/types";
 import { Button } from "../ui/button";
 import { CirclePlus } from "lucide-react";
 import Link from "next/link";

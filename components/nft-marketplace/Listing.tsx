@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Tag, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { NFTItem } from "@/data/mockNFTs";
 import { cn } from "@/lib/utils";
 import { PokemonCard, SaleListing } from "@/lib/types";
 
