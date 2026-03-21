@@ -22,7 +22,7 @@ const navItems = [
   { href: "/staking", label: "Staking", icon: Layers },
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
   {href:"/marketplace", label:"MarketPlace", icon: ShoppingCart},
-  {href:'/gameplay/lobby', label:'Gameplay', icon:Gamepad2}
+  {href:'/lobby', label:'Gameplay', icon:Gamepad2}
 ];
 
 export function Navigation() {

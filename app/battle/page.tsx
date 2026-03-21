@@ -24,7 +24,7 @@ interface PokemonBattler {
 }
 
 function getFrontSprite(pokedexId: number) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokedexId}.png`;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokedexId}.png`;
 }
 function getBackSprite(pokedexId: number) {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${pokedexId}.png`;
@@ -238,7 +238,7 @@ export default function Battle() {
             <img
               src={getFrontSprite(opponent.pokedexId)}
               alt={opponent.name}
-              className={`w-32 h-32 object-contain drop-shadow-2xl ${opponent.hp <= 0 ? "opacity-30 grayscale" : ""}`}
+              className={`w-40 h-40 object-contain drop-shadow-2xl ${opponent.hp <= 0 ? "opacity-30 grayscale" : ""}`}
             />
           </div>
         </div>

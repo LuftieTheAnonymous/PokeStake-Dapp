@@ -23,7 +23,9 @@ export default function DrawPage() {
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
 
-  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber,requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber, requestId} = usePokeData();
+  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber,requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber,
+    setPokemonAmountToGenerate,
+    requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
@@ -68,7 +70,8 @@ if(requestId !== null || requestId !== undefined) {
 
 
 const handleDraw = async () => {
-  if(!requestId || requestId === BigInt(0)) throw new Error("No Id for Request");
+  setError(undefined);
+  if(!requestId || requestId === BigInt(0)) setError("No Id for Request");
 
   setIsDrawing(true);
   setShowCard(false);

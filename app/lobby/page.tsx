@@ -1,10 +1,12 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {redirect} from "next/navigation";
 import { Swords, Plus, LogIn, GripVertical, Shield, Zap, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
+import usePokeData from "@/hooks/usePokeData";
+import useSocketIo from "@/hooks/useSocketIo";
 
 interface PokemonCard {
   id: number;
@@ -58,7 +60,7 @@ const rarityColors: Record<string, string> = {
 };
 
 function getSpriteUrl(pokedexId: number) {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokedexId}.png`;
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokedexId}.png`;
 }
 
 function NFTCard({
@@ -174,6 +176,8 @@ export default function Lobby() {
   const selectedPokemon = selectedCards.map((id) => MOCK_DECK.find((c) => c.id === id)!);
   const canBattle = selectedCards.length > 0;
 
+
+
   return (
     <div className=" min-h-screen text-foreground">
 <GradientBackground />
@@ -212,7 +216,7 @@ export default function Lobby() {
                 className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm font-mono tracking-widest text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
-                onClick={() => canBattle && roomCode.length >= 4 && redirect(`/battle?room=${roomCode}`)}
+                onClick={() => canBattle && roomCode.length >= 4 && joinRoom(roomCode)}
                 disabled={!canBattle || roomCode.length < 4}
                 className="gap-2"
               >
@@ -224,14 +228,20 @@ export default function Lobby() {
           <div className="glow-box bg-card border border-border rounded-xl p-5 w-full sm:w-80">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Create a Room</h3>
             <Button
-              onClick={() => canBattle && redirect(`/battle?room=NEW&host=true`)}
-              disabled={!canBattle}
+              onClick={() => leaveRoom(roomCode)}
               className="w-full gap-2"
               variant="outline"
             >
-              <Plus className="w-4 h-4" /> Create & Share Code
+              <Plus className="w-4 h-4" /> Leave Room
             </Button>
             <p className="text-xs text-muted-foreground mt-2">You'll get a code to share with your opponent.</p>
+            <Button
+              onClick={() => sendToRoom("213769", {msg:"Message to the room !"})}
+              className="w-full gap-2"
+              variant="outline"
+            >
+              <Plus className="w-4 h-4" /> Send message to room
+            </Button>
           </div>
         </div>
 
@@ -251,7 +261,9 @@ export default function Lobby() {
                       ? "border-primary/40 bg-card glow-box cursor-pointer"
                       : "border-border/40 bg-secondary/30 hover:border-primary/20"
                     }`}
-                  onClick={() => card && removeFromSlot(card.id)}
+                  onClick={() => {
+                    card && removeFromSlot(card.id);
+                  }}
                 >
                   {card ? (
                     <>
@@ -286,7 +298,8 @@ export default function Lobby() {
                   key={card.id}
                   card={card}
                   onDragStart={() => handleDragStart(card.id)}
-                  onClick={() => addToSlot(card.id)}
+                  onClick={() => {
+                    addToSlot(card.id)}}
                   disabled={isSelected}
                 />
               );

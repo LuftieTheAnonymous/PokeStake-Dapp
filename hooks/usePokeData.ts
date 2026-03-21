@@ -401,7 +401,23 @@ function payListingTimeExtensionInSnorlies(listingId:bigint, amount:bigint){
   });
 }
 
-
+function setPokemonAmountToGenerate(newPokemonAmount:bigint){
+    writeContract({
+    abi: pokeCardCollectionAbi,
+    address: pokeCardCollectionAddress,
+    functionName:"setPokemonAmountToGenerate",
+    args:[newPokemonAmount],
+    gas: BigInt(200_000)
+  }, {
+    onError(error){
+      console.log(error);
+      updateApprovedState(false);
+    },
+    onSuccess(data, variables, onMutateResult, context) {
+      console.log(data, variables, onMutateResult, context);
+    },
+  });
+}
 
 return {
   drawCard,
@@ -412,6 +428,7 @@ return {
   listPokeCardOnMarketPlace,
   payListingTimeExtensionInEth,
   payListingTimeExtensionInSnorlies,
+  setPokemonAmountToGenerate,
   requestData,
   getRandomPokemon,
   delistPokeCard,
