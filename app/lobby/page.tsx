@@ -216,7 +216,6 @@ export default function Lobby() {
                 className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm font-mono tracking-widest text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
-                onClick={() => canBattle && roomCode.length >= 4 && joinRoom(roomCode)}
                 disabled={!canBattle || roomCode.length < 4}
                 className="gap-2"
               >
@@ -228,7 +227,6 @@ export default function Lobby() {
           <div className="glow-box bg-card border border-border rounded-xl p-5 w-full sm:w-80">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Create a Room</h3>
             <Button
-              onClick={() => leaveRoom(roomCode)}
               className="w-full gap-2"
               variant="outline"
             >
@@ -236,7 +234,6 @@ export default function Lobby() {
             </Button>
             <p className="text-xs text-muted-foreground mt-2">You'll get a code to share with your opponent.</p>
             <Button
-              onClick={() => sendToRoom("213769", {msg:"Message to the room !"})}
               className="w-full gap-2"
               variant="outline"
             >
