@@ -92,7 +92,7 @@ const calculateRewards = useMemo(() => {
 }, [data]);
 
 const ownedPokeCards = useMemo(() => {
-  return data && data[8].result ? Number((data[8].result as bigint) / BigInt(1e18)) : 0;
+  return data && data[8].result ? Number((data[8].result as bigint)) : 0;
 }, [data]);
 
 const userStakedPokeCards = useMemo(() => {
@@ -411,7 +411,6 @@ function setPokemonAmountToGenerate(newPokemonAmount:bigint){
   }, {
     onError(error){
       console.log(error);
-      updateApprovedState(false);
     },
     onSuccess(data, variables, onMutateResult, context) {
       console.log(data, variables, onMutateResult, context);

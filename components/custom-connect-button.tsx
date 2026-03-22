@@ -56,7 +56,7 @@ export function CustomConnectButton() {
                     size="sm"
                     onClick={openChainModal}
                     variant="outline"
-                    className="border-primary/50 hover:border-primary hover:bg-primary/10"
+                    className="border-primary/50 hidden sm:block hover:border-primary hover:bg-primary/10"
                   >
                     {chain.name}
                   </Button>

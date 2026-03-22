@@ -121,7 +121,7 @@ export function Navigation() {
               )}
             >
               <Icon className="h-5 w-5" />
-              {item.label}
+             <span className="hidden sm:block">{item.label}</span>
             </Link>
           );
         })}

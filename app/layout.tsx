@@ -6,7 +6,9 @@ import './globals.css'
 import '@rainbow-me/rainbowkit/styles.css'
 import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
 import RainbowKitWrapper from '@/lib/rainbow-kit/RainbowKitWrapper'
-import { ToastProvider } from '@/components/ui/toast'
+import { Navigation } from '@/components/navigation'
+import { GradientBackground } from '@/components/gradient-background'
+import { Toaster } from 'sonner'
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ["latin"],
@@ -64,9 +66,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ToastProvider>
+              <GradientBackground />
+                  <Navigation />
             {children}
-          </ToastProvider>  
+         <Toaster className='bg-primary'
+         />  
         </ThemeProvider>
         </RainbowKitWrapper>
         </WagmiWrapper>

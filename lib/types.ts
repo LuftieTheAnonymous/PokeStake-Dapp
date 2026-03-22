@@ -1,3 +1,5 @@
+import { type Log } from "viem";
+
 export const pokemonAmountModulator:bigint = BigInt(151);
 
 export const rarityModulator:bigint = BigInt(4);
@@ -93,3 +95,8 @@ export const ethOptions:{timeExtension:"1 day" | "1 week" | "1 month" | "1 year"
   {timeExtension:'1 month', amountOfTokens:BigInt(10e18)},
   {timeExtension:'1 year', amountOfTokens:BigInt(50e18)}
 ];
+
+
+export interface BlockchainEvent extends Log {
+  args:Record<string,any>
+}

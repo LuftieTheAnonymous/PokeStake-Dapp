@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { Sparkles, Layers, ImageIcon, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Navigation } from "@/components/navigation";
-import { GradientBackground } from "@/components/gradient-background";
 import { RARITY_CONFIG } from "@/lib/types";
 import { PokeCoinIcon } from "@/components/token-balance";
 import Image from "next/image";
@@ -34,8 +32,6 @@ const features = [
 export default function HomePage() {
   return (
     <div className="min-h-screen relative">
-      <GradientBackground />
-      <Navigation />
       
       {/* Hero Section */}
       <main className="relative">
