@@ -23,7 +23,7 @@ import { pinata } from "@/utils/PinataConfig";
 import { useBlockNumber, useWatchContractEvent } from "wagmi";
 import { CustomConnectButton } from "@/components/custom-connect-button";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
-import { pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
+import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/PokemonStaking";
 import { toast } from "sonner";
 
 
@@ -49,6 +49,7 @@ function StakingCardsPanel({}: Props) {
 
   const [selectedTab, setSelectedTab] = useState<"stake" | "staked">("stake");
   const [approved, setApproved]=useState<boolean>();
+  const [approvedTokenId, setApprovedTokenId]=useState<bigint>();
   const {data:blockNumber}=useBlockNumber();
 
   useWatchContractEvent({
@@ -62,7 +63,23 @@ function StakingCardsPanel({}: Props) {
     onLogs(logs){
       if((logs[0] as BlockchainEvent).args.owner === walletAddress && (logs[0] as BlockchainEvent).args.approved === pokemonStakingAddress){
         setApproved(true);
+        console.log((logs[0] as BlockchainEvent).args);
+        setApprovedTokenId((logs[0] as BlockchainEvent).args.tokenId);
         toast.success("Approval commited successfully !");
+      }
+    }
+  });
+
+
+  useWatchContractEvent({
+    abi:pokemonStakingAbi,
+    address:pokemonStakingAddress,
+    eventName:"Staked",
+    onLogs(logs){
+      if((logs[0] as BlockchainEvent).args.user === walletAddress && (logs[0] as BlockchainEvent).args.tokenId === approvedTokenId){
+        toast.success(`Successfully approved token with id of ${Number((logs[0] as BlockchainEvent).args.tokenId)}`);
+        setApproved(false);
+        setApprovedTokenId(undefined);
       }
     }
   });
@@ -154,7 +171,7 @@ function StakingCardsPanel({}: Props) {
               ) : (
                 <div className="space-y-8">
                   {/* Stats Dashboard */}
-                  <div className="grid md:grid-cols-4 gap-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="p-6 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="p-2 rounded-lg bg-primary/10">
@@ -286,12 +303,12 @@ function StakingCardsPanel({}: Props) {
               <div key={card.card.attributes.id} className="space-y-2">
                 <PokeCard card={card.card} showStats={false} />
                 <Button
-                  onClick={() => !approved ? approveToStakingProtocol(BigInt(card.card.attributes.id - 1), setApproved) :  handleStake(BigInt(card.card.attributes.id - 1))}
+                  onClick={() => approved && approvedTokenId === BigInt(card.card.attributes.id - 1) ? handleStake(BigInt(card.card.attributes.id - 1)) : approveToStakingProtocol(BigInt(card.card.attributes.id - 1), setApproved)}
                   className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
                   size="sm"
                 >
                   <Lock className="h-4 w-4 mr-1" />
-                  {!approved ? "Approve" : "Stake"}
+                  {approved && approvedTokenId === BigInt(card.card.attributes.id - 1) ? "Stake" : "Approve"}
                 </Button>
               </div>
             ))}

@@ -51,17 +51,7 @@ export function CustomConnectButton() {
                   </Button>
                 )}
 
-                {!chain.unsupported && (
-                  <Button
-                    size="sm"
-                    onClick={openChainModal}
-                    variant="outline"
-                    className="border-primary/50 hidden sm:block hover:border-primary hover:bg-primary/10"
-                  >
-                    {chain.name}
-                  </Button>
-                )}
-
+          
                 <Button
                   variant="outline"
                   size="sm"

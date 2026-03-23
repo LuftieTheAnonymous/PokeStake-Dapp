@@ -2,8 +2,6 @@ import { Sparkles } from "lucide-react";
 import CardDrawDisplay from "@/components/draw/CardDrawDisplay";
 
 export default function DrawPage() {
-
-
   return (
     <div className="min-h-screen relative">
 

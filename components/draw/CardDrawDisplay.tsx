@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import usePokeData from '@/hooks/usePokeData';
 import Link from "next/link";
 import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
 import { PokeCoinIcon } from "@/components/token-balance";
-import type { PokemonCard as PokemonCardType } from "@/lib/types";
+import type { BlockchainEvent, PokemonCard as PokemonCardType } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {toast} from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
+import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
 
 
 
@@ -24,16 +25,29 @@ function CardDrawDisplay({}: Props) {
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
 
-  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber,requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber,
-    setPokemonAmountToGenerate,
+  const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber, requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber,
     requestId} = usePokeData();
 
 
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
-    await drawRandomNumber();
+    await drawRandomNumber(setIsDrawing);
   }
 
+  useEffect(() => {
+  if (
+    requestId !== null && requestId !== undefined &&
+    recentRequest &&
+    recentRequest.pokedexIndex !== BigInt(0) &&
+    recentRequest.rarityLevel !== BigInt(0) &&
+    !recentRequest.isResolved
+  ) {
+    toast("Successfully drawn random data!");
+    setIsDrawing(false);
+  }
+}, [requestId, recentRequest]);
+
+  
   useEffect(() => {
     if (walletAddress) {
       setDrawnCard(null);
@@ -43,13 +57,6 @@ function CardDrawDisplay({}: Props) {
       // Do your thing here
     }
   }, [walletAddress]);
-
-useEffect(()=>{
-if(requestId !== null || requestId !== undefined) {
-  toast("Successfully drawn random data !");
-  setIsDrawing(false);
-}
-},[requestId]);
 
 
   useWatchContractEvent({
@@ -63,7 +70,7 @@ if(requestId !== null || requestId !== undefined) {
       }
     },
     onError(error){
-       toast(error.message);
+       toast(error.shortMessage);
     }
   });
 
@@ -281,7 +288,7 @@ const handleDraw = async () => {
                  {/* Rarity Table */}
                  <div className="mt-16 max-w-2xl mx-auto">
                    <h3 className="text-lg font-semibold text-center mb-6">Drop Rates</h3>
-                   <div className="grid grid-cols-4 gap-2">
+                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                      {(Object.entries(RARITY_CONFIG) as [string, typeof RARITY_CONFIG.common][]).map(([rarity, config]) => (
                        <div
                          key={rarity}

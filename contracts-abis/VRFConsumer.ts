@@ -1,4 +1,4 @@
-export const VrfConsumerAddress="0xe7a00A98f1D9504dC4df14d12b969C5200dD67A3";
+export const VrfConsumerAddress="0x300a745876079428E0aEcE453876a74a3D131919";
 
 export const VRFConsumerAbi =[
     {
@@ -285,6 +285,18 @@ export const VRFConsumerAbi =[
       "type": "event",
       "name": "ReturnedRandomness",
       "inputs": [
+        {
+          "name": "requestId",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "caller",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
         {
           "name": "randomWords",
           "type": "uint256[]",

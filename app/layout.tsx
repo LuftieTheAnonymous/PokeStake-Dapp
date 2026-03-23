@@ -57,7 +57,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} ${firaCode.variable} font-sans antialiased`}>
+      <body className={`${spaceGrotesk.variable} ${firaCode.variable} overflow-x-hidden font-sans antialiased`}>
         <WagmiWrapper>
           <RainbowKitWrapper>
         <ThemeProvider
@@ -69,8 +69,17 @@ export default function RootLayout({
               <GradientBackground />
                   <Navigation />
             {children}
-         <Toaster className='bg-primary'
-         />  
+            <Toaster toastOptions={{
+    style: {
+        backgroundImage: "linear-gradient(45deg, oklch(0.72 0.18 55) 20%, oklch(0.14 0.01 250) 100%)", // Gradient from orange to dark background
+        borderColor: "oklch(0.72 0.18 55)", 
+        borderWidth: 2,
+        color: "white",
+        fontSize:13,
+        font:'inherit',
+        boxShadow: "0 0 5px oklch(0.72 0.18 55), 0 0 10px oklch(0.72 0.18 55)" // Adjusted shadow for glow effect
+    }
+}} />
         </ThemeProvider>
         </RainbowKitWrapper>
         </WagmiWrapper>

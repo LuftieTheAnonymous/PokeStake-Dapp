@@ -115,7 +115,7 @@ function MarketListingsDisplay() {
 
 
   return (
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 mt-4">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-8 mt-4">
           <FilterSidebar
             currency={currency}
             setCurrency={setCurrency}

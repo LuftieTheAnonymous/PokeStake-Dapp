@@ -12,7 +12,7 @@ import { pokemonStakingAbi, pokemonStakingAddress } from "@/contracts-abis/Pokem
 import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core';
 import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
-import { vrfCoordinatorAddress } from "@/contracts-abis/VRFCoordinator";
+import { toast } from "sonner";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
@@ -46,7 +46,7 @@ const {data} = useReadContracts({
     // [11]
     {abi: VRFConsumerAbi, address:VrfConsumerAddress, functionName:"getRequestData", args:[address, pokemonAmountModulator, rarityModulator]},
     // [12]
-    {abi: VRFConsumerAbi, address: vrfCoordinatorAddress, functionName:"getRequestDataArray", args:[address]},
+    {abi: VRFConsumerAbi, address: VrfConsumerAddress, functionName:"getRequestDataArray", args:[address]},
     // 13
     {abi: marketPlaceAbi, address: marketPlaceAddress, functionName:"getLatestEthUsdPrice"},
     // 14
@@ -131,12 +131,23 @@ const isElligibleToDraw=useMemo(()=>{
 },[lastBlockGeneratedAt, blockNumber]);
 
 
-async function drawRandomNumber(){
+async function drawRandomNumber(setDrawingState:(state:boolean)=>void){
  const result = writeContract({
   abi: VRFConsumerAbi,
   address: VrfConsumerAddress,
   functionName:"requestRandomWords",
   args:[],
+},{
+  onError(error, variables, onMutateResult, context) {
+    console.log("Error of drawing random number");
+    console.log(error, variables, onMutateResult, context);
+    setDrawingState(false);
+    toast.error(`${error.shortMessage}`);
+  },
+  onSettled(data, error, variables, onMutateResult, context) {
+    console.log("Random data drawn settled");
+    console.log(data, error, variables, onMutateResult, context);
+  },
 });
 
 return result as unknown as bigint;
@@ -149,6 +160,10 @@ function stakeCard(tokenId:bigint){
     address:pokemonStakingAddress,
     functionName:"stake",
     args:[tokenId],
+  }, {
+     onError(error){
+      toast.error(`${error.shortMessage}`);
+    }
   })
 }
 
@@ -159,6 +174,10 @@ function unstakeCard(tokenId:bigint){
     functionName:"unstake",
     args:[tokenId],
     gas: BigInt(200000)
+  },{
+     onError(error){
+      toast.error(`${error.shortMessage}`);
+    }
   })
 }
 
@@ -167,6 +186,10 @@ function claimRewards(){
     abi:pokemonStakingAbi,
     address:pokemonStakingAddress,
     functionName:"claimRewards",
+  },{
+    onError(error){
+      toast.error(`${error.shortMessage}`);
+    }
   }) 
 }
 
@@ -183,11 +206,14 @@ try {
     args:[address, pokemonAmountModulator, rarityModulator]   
     }) as [bigint, bigint, boolean];
 
-    console.log(getRandomValues);
 
   const pokemonData = await pokemonClient.getPokemonById(Number(getRandomValues[0]));
 
-  console.log(pokemonData, "PokemonRandomly Drawn");
+  if(!pokemonData){
+    return {card:null, error:'Could not retrieve a pokemon with pokedex-index given'}
+  }
+
+  
 
   return {card:{
     name: pokemonData.name,
@@ -204,6 +230,7 @@ try {
     
   }, error:null}
 } catch (error) {
+  toast.error(error.shortMessage);
   console.log(error);
   return {error, card:null} 
 }
@@ -225,7 +252,7 @@ async function drawCard() {
 
       const rarityBoost =rarityMultiplier[selectedKey as Rarity];
 
-      if(!data || typeof data[1].result === 'undefined') throw new Error("Result not found for new Card");
+      if(!data || typeof data[1].result === 'undefined') return {card:null, error: "Result not found for new Card"}
 
         const newCard: PokemonCard = {
           name: pokemon.card.name,
@@ -257,7 +284,7 @@ async function drawCard() {
   });
 
   if(storeInPinata.cid.trim().length === 0){
-    return {error: "CID cannot be equal 0"};
+    return {error: "CID cannot be equal 0", data:null};
   }
       
         writeContract({
@@ -265,8 +292,13 @@ async function drawCard() {
           address:pokeCardCollectionAddress,
           functionName:"generatePokemon",
           args:[`https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/${storeInPinata.cid}`, storeInPinata.cid]
+        },{
+      onError(error){
+      toast.error(`${error.shortMessage}`);
+    }
         });
   } catch (error) {
+    toast.error("Error while minting occured");
     console.log(error, "error while minting");
   }
 }
@@ -281,7 +313,7 @@ function approveToMarketPlace(tokenId:bigint, updateLoadingState:(state:boolean)
     gas: BigInt(200_000)
   }, {
     onError(error){
-      console.log(error);
+      toast.error(`${error.shortMessage}`);
       updateLoadingState(false);
     },
     onSuccess(data, variables, onMutateResult, context) {
@@ -301,7 +333,8 @@ function approveToStakingProtocol(tokenId:bigint, updateApprovedState:(value:boo
     gas: BigInt(200_000)
   }, {
     onError(error){
-      console.log(error);
+      console.log(error.shortMessage);
+      toast.error(`${error.shortMessage}`);
       updateApprovedState(false);
     },
     onSuccess(data, variables, onMutateResult, context) {
@@ -318,6 +351,7 @@ function listPokeCardOnMarketPlace(tokenId:bigint, listingPrice:bigint, isPriceI
     args:[tokenId, listingPrice, isPriceInEth]
   },{
 onError(error, variables, onMutateResult, context) {
+  toast.error(`${error.shortMessage}`);
   updateLoadingState(false);
 },
 onSuccess(data, variables, onMutateResult, context) {
@@ -335,8 +369,7 @@ function purchasePokeCard(listingId:bigint, amountToPay:bigint, isEthPrice:boole
     value: isEthPrice ? amountToPay : undefined
   },{
     onError(error, variables, onMutateResult, context) {
-      console.log(error, "ERROR");
-      console.log(variables, context);
+      toast.error(`${error.shortMessage}`);
     },
     onSuccess(data, variables, onMutateResult, context) {
            console.log(data, "DATA");
@@ -353,8 +386,7 @@ function delistPokeCard(listingId:bigint){
     args:[listingId],
   },{
     onError(error, variables, onMutateResult, context) {
-      console.log(error, "ERROR");
-      console.log(variables, context);
+      toast.error(`${error.shortMessage}`);
     },
     onSuccess(data, variables, onMutateResult, context) {
            console.log(data, "DATA");
@@ -373,11 +405,12 @@ function payListingTimeExtensionInEth(listingId:bigint, amount:bigint){
     value:amount,
   },{
     onError(error, variables, onMutateResult, context) {
+      toast.error(`${error.shortMessage}`);
       console.log(error, "ERROR");
       console.log(variables, context);
     },
     onSuccess(data, variables, onMutateResult, context) {
-           console.log(data, "DATA");
+        console.log(data, "DATA");
       console.log(variables, context);
     },
   });
@@ -391,6 +424,7 @@ function payListingTimeExtensionInSnorlies(listingId:bigint, amount:bigint){
     args:[listingId, amount],
   },{
     onError(error, variables, onMutateResult, context) {
+      toast.error(`${error.shortMessage}`);
       console.log(error, "ERROR");
       console.log(variables, context);
     },
@@ -410,6 +444,7 @@ function setPokemonAmountToGenerate(newPokemonAmount:bigint){
     gas: BigInt(200_000)
   }, {
     onError(error){
+      toast.error(`${error.shortMessage}`);
       console.log(error);
     },
     onSuccess(data, variables, onMutateResult, context) {
