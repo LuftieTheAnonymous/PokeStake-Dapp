@@ -488,7 +488,8 @@ return {
   unstakeCard,
   blockNumber,
   requestDataArray,
-  ethUsdPrice
+  ethUsdPrice,
+  pokemonClient
 }
 }
 

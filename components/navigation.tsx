@@ -16,25 +16,24 @@ import { cn } from "@/lib/utils";
 import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import usePokeData from "@/hooks/usePokeData";
 import { CustomConnectButton } from "./custom-connect-button";
+import { useBattleRoomState } from "@/lib/state-management/useBattleRoomState";
 
 const navItems = [
   { href: "/draw", label: "Draw Cards", icon: Sparkles },
   { href: "/staking", label: "Staking", icon: Layers },
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
   {href:"/marketplace", label:"MarketPlace", icon: ShoppingCart},
-  {href:'/lobby', label:'Gameplay', icon:Gamepad2}
+  {href:'/gameplay', label:'Gameplay', icon:Gamepad2}
 ];
 
 export function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-
-
-
+  const {roomId} = useBattleRoomState();
   const {walletAddress:address, isConnected, snorliesBalance}=usePokeData();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+  <header className={`sticky ${pathname.includes("/gameplay") && roomId && 'hidden'} top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl`}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative">

@@ -26,7 +26,7 @@ function BattleSlots({
                             key={i}
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDropOnSlot}
-                            className={`w-40 h-56 rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center
+                            className={`w-40 h-56 cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300 flex flex-col items-center justify-center
                                 ${card 
                                     ? "border-primary/40 bg-card glow-box cursor-default opacity-60" 
                                     : "border-border/40 bg-secondary/30 hover:border-primary/20"

@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import usePokeData from "./usePokeData";
+import { toast } from "sonner";
+import { redirect } from "next/navigation";
+import { useBattleRoomState } from "@/lib/state-management/useBattleRoomState";
+import { BattleRoom } from "@/lib/types";
+import { useGameplayLobby } from "@/lib/state-management/useGameplayLobby";
 
 
 
 function useSocketIo(socketUrl="http://localhost:2137") {
 
   const {walletAddress}=usePokeData();
+  const {updateRoomState, clearRoomState}=useBattleRoomState();
+  const {clearPokemonSet}=useGameplayLobby();
     const socketRef = useRef<Socket>(null);
     const isConnectedRef = useRef(false);
 
@@ -27,7 +34,70 @@ function useSocketIo(socketUrl="http://localhost:2137") {
         isConnectedRef.current = true;
         console.log('Socket connected:', (socketRef.current as Socket).id);
       });
-      
+
+      socketRef.current.on("invalid-battle-room", (data)=>{
+        console.error('Invalid battle room:', data);
+        toast.error(`${data.error}`);
+      });
+
+      socketRef.current.on('battle-room-created', (data:{battleRoom:BattleRoom, roomId: string})=>{
+        // implement storage in zustand and change of the state.
+        console.log('Battle room created:', data.battleRoom);
+        updateRoomState(data.battleRoom);
+        toast.success(`Battle room created ! Redirecting...`);
+      });
+
+        socketRef.current.on('not_member', (data:{data:null, error:string})=>{
+        console.error('Not member of the battle room:', data.error);
+        toast.error(`${data.error}`);
+        clearPokemonSet();
+        clearRoomState();
+        });
+
+      socketRef.current.on('join-response', (response:{data:{battleRoomState:BattleRoom, message:string}, error:null})=>{
+        if(response.error){
+          toast.error(response.error);
+          return;
+        }
+        console.log('Join response:', response.data);
+        updateRoomState(response.data.battleRoomState);
+        toast.success(`Joined battle room ! Redirecting...`);
+      });
+
+      socketRef.current.on('player-joined', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
+        console.log(res);
+        console.error('Player join error:', res.error);
+        if(res.error){
+          toast.error(res.error);
+          return;
+        }
+        toast.success(res.data.message);
+        updateRoomState(res.data.battleRoomState);
+      });
+
+      socketRef.current.on('left-room', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
+        console.error('Connection error:', res.error);
+        if(res.error){
+          toast.error(res.error);
+          return;
+        }
+        toast.success(res.data.message);
+        clearRoomState();
+        redirect('/lobby');
+      });
+
+      socketRef.current.on('player-left', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
+        console.error('Player left:', res.error);
+        if(res.error){
+          toast.error(res.error);
+          return;
+        }
+        toast.success(res.data.message);
+        updateRoomState(res.data.battleRoomState);
+      });
+
+
+
       socketRef.current.on('disconnect', () => {
         isConnectedRef.current = false;
       });
@@ -43,9 +113,9 @@ function useSocketIo(socketUrl="http://localhost:2137") {
   }, [socketUrl, walletAddress]);
    
 
-    const emit = useCallback((event:any, data:any) => {
+    const emit = useCallback((event:any, ...data:any[]) => {
     if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit(event, data);
+      socketRef.current.emit(event, ...data);
     } else {
       console.warn('Socket not connected');
     }
@@ -72,24 +142,10 @@ function useSocketIo(socketUrl="http://localhost:2137") {
     }
   }, [socketRef]);
 
-  const joinRoom = useCallback((roomId:string)=>{
-     if (socketRef.current) {
-        socketRef.current.emit("join-room", roomId);
-     }
-  },[socketRef]);
 
-  const leaveRoom = useCallback((roomId:string)=>{
-    if(socketRef.current) socketRef.current.emit("leave-room",roomId);
-  },[socketRef]);
-
-  const sendToRoom = useCallback((roomId:string, message:{msg:string})=>{
-    if(socketRef.current){
-       socketRef.current.emit('send-to-room', roomId, message); 
-    }
-  },[socketRef]);
   
   
-    return {socket:socketRef.current, emit, joinRoom, leaveRoom, sendToRoom, on,once, off};
+    return {socket:socketRef.current, emit, on, once, off};
 }
 
 export default useSocketIo

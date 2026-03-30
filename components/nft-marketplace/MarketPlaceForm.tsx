@@ -28,6 +28,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import { marketPlaceAddress } from "@/contracts-abis/MarketPlace";
+import { PokemonClient } from "pokenode-ts";
 type Props = {}
 
 function MarketPlaceForm({}: Props) {
@@ -36,7 +37,7 @@ function MarketPlaceForm({}: Props) {
   const [approved, setApproved]=useState<boolean>(false);
   const [loading, setLoading]= useState<boolean>(false);
 
-  const {ethUsdPrice,walletAddress, userGeneratedCards, approveToMarketPlace, listPokeCardOnMarketPlace
+  const {ethUsdPrice,walletAddress, pokemonClient, userGeneratedCards, approveToMarketPlace, listPokeCardOnMarketPlace
   }=usePokeData();
 
   const formScheme= z.object({
@@ -120,6 +121,13 @@ function MarketPlaceForm({}: Props) {
           }
         }
       });
+
+
+      const getThePokemonDetails = async()=>{
+        const pokemon = await pokemonClient.getPokemonById(1);
+
+        console.log(pokemon);
+      }
       
 
     return (
@@ -133,6 +141,8 @@ function MarketPlaceForm({}: Props) {
         })
 
         } className="space-y-6">
+
+          <button onClick={getThePokemonDetails}>Get Pokemon Details</button>
           {/* Dropzone */}
 <div className="space-y-2">
             <Label className="text-sm font-medium">PokeCards Owned</Label>
