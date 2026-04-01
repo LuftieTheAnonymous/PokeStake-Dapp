@@ -36,8 +36,12 @@ function useSocketIo(socketUrl="http://localhost:2137") {
       });
 
       socketRef.current.on("invalid-battle-room", (data)=>{
-        console.error('Invalid battle room:', data);
+        console.log('Invalid battle room:', data);
         toast.error(`${data.error}`);
+      });
+
+      socketRef.current.on("in-game-message", ({message, messageType, sentBy}:{message:string, sentBy:`0x${string}`, messageType: 'success' | 'error' | 'info' | 'warning' | null})=>{
+        toast[messageType || 'info'](`${sentBy ? `${sentBy}: ` : ''}${message}`);
       });
 
       socketRef.current.on('battle-room-created', (data:{battleRoom:BattleRoom, roomId: string})=>{
@@ -48,54 +52,53 @@ function useSocketIo(socketUrl="http://localhost:2137") {
       });
 
         socketRef.current.on('not_member', (data:{data:null, error:string})=>{
-        console.error('Not member of the battle room:', data.error);
+        console.log('Not member of the battle room:', data.error);
         toast.error(`${data.error}`);
         clearPokemonSet();
         clearRoomState();
         });
 
-      socketRef.current.on('join-response', (response:{data:{battleRoomState:BattleRoom, message:string}, error:null})=>{
+      socketRef.current.on('join-response', (response:{data:{battleRoom:BattleRoom, message:string}, error:null})=>{
         if(response.error){
           toast.error(response.error);
           return;
         }
         console.log('Join response:', response.data);
-        updateRoomState(response.data.battleRoomState);
+        updateRoomState(response.data.battleRoom);
         toast.success(`Joined battle room ! Redirecting...`);
       });
 
-      socketRef.current.on('player-joined', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
+      socketRef.current.on('player-joined', (res:{data:{message:string, battleRoom:BattleRoom}, error:string | null}) => {
         console.log(res);
-        console.error('Player join error:', res.error);
+        console.log('Player join error:', res.error);
         if(res.error){
           toast.error(res.error);
           return;
         }
         toast.success(res.data.message);
-        updateRoomState(res.data.battleRoomState);
+        updateRoomState(res.data.battleRoom);
       });
 
-      socketRef.current.on('left-room', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
-        console.error('Connection error:', res.error);
+      socketRef.current.on('left-room', (res:{data:{message:string, battleRoom:BattleRoom}, error:string | null}) => {
+        console.log('Connection error:', res.error);
         if(res.error){
           toast.error(res.error);
           return;
         }
         toast.success(res.data.message);
         clearRoomState();
-        redirect('/lobby');
+        clearPokemonSet();
       });
 
-      socketRef.current.on('player-left', (res:{data:{message:string, battleRoomState:BattleRoom}, error:string | null}) => {
-        console.error('Player left:', res.error);
+      socketRef.current.on('player-left', (res:{data:{message:string, battleRoom:BattleRoom}, error:string | null}) => {
+        console.log('Player left:', res.error);
         if(res.error){
           toast.error(res.error);
           return;
         }
         toast.success(res.data.message);
-        updateRoomState(res.data.battleRoomState);
+        updateRoomState(res.data.battleRoom);
       });
-
 
 
       socketRef.current.on('disconnect', () => {

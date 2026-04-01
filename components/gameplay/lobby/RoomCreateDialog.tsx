@@ -106,9 +106,9 @@ const generateRandomRoomId=()=>{
 
           <DialogFooter className='mt-5'>
             <DialogClose onClick={()=>reset()} asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button className='cursor-pointer' variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type='submit' disabled={!isPokemonBattleReady}>Join Room</Button>
+            <Button className='cursor-pointer' type='submit' disabled={!isPokemonBattleReady}>Join Room</Button>
           </DialogFooter>
           </form>
         </DialogContent>

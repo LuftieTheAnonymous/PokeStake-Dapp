@@ -8,10 +8,13 @@ type Props = {}
 
 function GameplayDisplay({}: Props) {
     const {roomId}=useBattleRoomState();
-    const {emit}=useSocketIo();
+    const {emit, socket
+
+    }=useSocketIo();
   return (
    <>
-   {!roomId ? (  <div className=" min-h-screen text-foreground">
+   {!roomId 
+   ? (  <div className=" min-h-screen text-foreground">
 
       {/* Floating blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -24,7 +27,11 @@ function GameplayDisplay({}: Props) {
     
     </div>): (
           <div className="dark min-h-screen flex flex-col">
-      <BatlleFieldContainer emit={emit} />
+            {socket && emit &&
+      <BatlleFieldContainer
+      socket={socket}
+      emit={emit} />
+            }
     </div>
     )}
    </>

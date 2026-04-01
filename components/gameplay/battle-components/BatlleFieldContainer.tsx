@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,21 +10,23 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import HpBar from "@/components/gameplay/battle-components/HpBar";
-import { PokemonBattler } from '@/lib/types';
+import { BattleRoom, PokemonBattler } from '@/lib/types';
 import { redirect, useSearchParams } from 'next/navigation';
 import EnemyPokemonView from './EnemyPokemonView';
 import PlayerPokemonView from './PlayerPokemonView';
 import TopBar from './TopBar';
 import { ArrowLeft, RefreshCw, Trophy } from 'lucide-react';
-import { useBattleRoomState } from '@/lib/state-management/useBattleRoomState';
+import { MAX_TURN_DURATION, useBattleRoomState } from '@/lib/state-management/useBattleRoomState';
 import usePokeData from '@/hooks/usePokeData';
+import { Socket } from 'socket.io-client';
+import { toast } from 'sonner';
+import { se } from 'date-fns/locale';
 
 
 
-function BatlleFieldContainer({emit}:{emit:(event:string, ...args:any[])=>void}) {
+function BatlleFieldContainer({emit, socket}:{emit:(event:string, ...args:any[])=>void, socket:Socket}) {
  const battleRoomState =useBattleRoomState(); 
   // Build player team from URL params or use default
-
   const {walletAddress}=usePokeData();
   const [message, setMessage] = useState("");
   const [isAnimating, setIsAnimating] = useState(false);
@@ -54,69 +56,103 @@ const opponentPokemonData = useMemo(()=>{
     }
 },[battleRoomState, walletAddress]);
 
-
-  useEffect(() => {
-    if (battleRoomState.currentTurn) setMessage(`What will ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} do?`);
-  }, [battleRoomState.currentTurn, battleRoomState.host, battleRoomState.inviteePlayer]);
-
   const allOpponentsDefeated = walletAddress === battleRoomState.host ? battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0);
   const allPlayersDefeated = walletAddress === battleRoomState.host ? battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0);
 
   useEffect(() => {
-    if (allOpponentsDefeated && !showVictory) setShowVictory(true);
-    if (allPlayersDefeated && !showDefeat) setShowDefeat(true);
+    if ((allOpponentsDefeated && !showVictory) || (allPlayersDefeated && !showDefeat)){
+      socket.emit('finish-battle', battleRoomState.roomId);
+    }  
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
-  const calcDamage = (attacker: PokemonBattler, defender: PokemonBattler) => {
-    const base = Math.floor(((2 * attacker.rarityLevel / 5 + 2) * attacker.attack / defender.defense) / 10) + 2;
-    const variance = 0.85 + Math.random() * 0.15;
-    return Math.max(1, Math.floor(base * variance));
-  };
-
-  const advanceOpponent = () => {
-    const nextAlive = opponentPokemonData.pokemonDeck.findIndex((p) => p.pokemonId !== opponentPokemonData.currentPlayerPokemon?.pokemonId && p.hp > 0);
-    if (nextAlive !== -1) {
-      setMessage(`Opponent sent out ${opponentPokemonData.pokemonDeck[nextAlive].name}!`);
-    } else {
-      const anyAlive = opponentPokemonData.pokemonDeck.findIndex((p) => p.hp > 0);
-      if (anyAlive !== -1) {
-        setMessage(`Opponent sent out ${opponentPokemonData.pokemonDeck[anyAlive].name}!`);
-      }
+  useEffect(() => {
+    if(battleRoomState.turnChangedAt && new Date().getTime() - battleRoomState.turnChangedAt > MAX_TURN_DURATION){
+      setMessage(`Turn timed out! ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} took too long to play. Advancing turn...`);
+      socket.emit('handle-timeout', battleRoomState.roomId);
     }
-  };
+  },[battleRoomState.turnChangedAt]);
 
-  const handleFight = () => {
-    if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
+
+  useEffect(() => {
+  socket.on('battle-started', ({message, battleRoom}:{message:string, battleRoom:BattleRoom}) => {
+    setMessage(message);
+    battleRoomState.updateRoomState(battleRoom);
+  });
+
+
+  socket.on('battle-finished', ({data}:{data: {
+    winnerAddress: `0x${string}` | undefined;
+    message: string;
+    battleRoom: BattleRoom;}}) => {
+
+    setMessage(data.message);
+    battleRoomState.updateRoomState(data.battleRoom);
+    if(data.winnerAddress === walletAddress){
+      setShowVictory(true);
+    } else {
+      setShowDefeat(true);
+    }
+    });
+
+    socket.on('pokemon-change', ({data, error}:{data: {
+    battleRoom: BattleRoom;
+    selectedPokemon: PokemonBattler;
+    message: string;},
+    error: string | null})=>{
+      if(error){
+        toast.error(error);
+        return;
+      }
+    setMessage(`Go, ${data.selectedPokemon.name}!`);
+
+    setTimeout(() => {
+      setMessage(data.message);
+      battleRoomState.updateRoomState(data.battleRoom);
+    }, 500);
+
+    setTimeout(() => {
+      setMessage(`What will ${data.selectedPokemon.name} do?`);
+      setIsAnimating(false);
+    }, 800);
+    });
+
+
+    socket.on('move-performed', ({data, error}:{data:{
+    battleRoom: BattleRoom;
+    damage: number;
+    message: string;
+  }, error:string | null})=>{
+      if(error){
+        toast.error(error);
+        return;
+      }
+         if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
     setIsAnimating(true);
 
-    const playerDmg = calcDamage(playerPokemonData.currentPlayerPokemon, opponentPokemonData.currentPlayerPokemon);
-    setMessage(`${playerPokemonData.currentPlayerPokemon.name} caused a damage to ${opponentPokemonData.currentPlayerPokemon.name} (-${playerDmg.toFixed(1)} HP)!`);
+    setMessage(`${playerPokemonData.currentPlayerPokemon.name} caused a damage to ${opponentPokemonData.currentPlayerPokemon.name} (-${data.damage.toFixed(1)} HP)!`);
     setOpponentShake(true);
 
     setTimeout(() => {
       setOpponentShake(false);
-      const newOpHp = Math.max(0, (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp - playerDmg);
-      // setOpponentTeam((prev) => prev.map((p, i) => i === activeOpponentIdx ? { ...p, hp: newOpHp } : p));
+      const newOpHp = Math.max(0, (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
 
       if (newOpHp <= 0) {
         setMessage(`${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
         setTimeout(() => {
-          advanceOpponent();
+          // advanceOpponent();
           setIsAnimating(false);
         }, 1200);
         return;
       }
 
       setTimeout(() => {
-        const opDmg = calcDamage((opponentPokemonData.currentPlayerPokemon as PokemonBattler), playerPokemonData.currentPlayerPokemon as PokemonBattler);
-        setMessage(`${opponentPokemonData.currentPlayerPokemon?.name} has caused a damage to ${playerPokemonData.currentPlayerPokemon?.name} (-${opDmg.toFixed(1)} HP) !`);
+        setMessage(`${opponentPokemonData.currentPlayerPokemon?.name} has caused a damage to ${playerPokemonData.currentPlayerPokemon?.name} (-${data.damage.toFixed(1)} HP) !`);
         setPlayerShake(true);
 
         setTimeout(() => {
           setPlayerShake(false);
-          const newPlHp = Math.max(0, (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp - opDmg);
+          const newPlHp = Math.max(0, (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
          
-
           if (newPlHp <= 0) {
             setMessage(`${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
             setTimeout(() => {
@@ -135,19 +171,41 @@ const opponentPokemonData = useMemo(()=>{
         }, 400);
       }, 800);
     }, 600);
+
+    battleRoomState.updateRoomState(data.battleRoom);
+    });
+    
+
+  return () => {
+    socket.off('battle-started');
+    socket.off('battle-finished');
+    socket.off('pokemon-change');
+    socket.off('move-performed');
+  };
+},[socket, battleRoomState]);
+
+
+
+
+  const handleFight = () => {
+ emit('perform-move', battleRoomState.roomId);
   };
 
   const handleSwap = (idx: number) => {
     const selectedPokemon = playerPokemonData.pokemonDeck.find((p)=> p.pokemonId  === idx && p.hp > 0);
 
     if (!selectedPokemon || idx === playerPokemonData.currentPlayerPokemon?.pokemonId) return;
+    emit('swap-pokemon', {roomId: battleRoomState.roomId, });
     setShowSwapMenu(false);
-    setMessage(`Go, ${selectedPokemon.name}!`);
-    setTimeout(() => {
-      setMessage(`What will ${selectedPokemon.name} do?`);
-      setIsAnimating(false);
-    }, 800);
   };
+
+
+
+  useEffect(() => {
+  if (battleRoomState.currentTurn) setMessage(`What will ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} do?`);
+  }, [battleRoomState.currentTurn, battleRoomState.host, battleRoomState.inviteePlayer]);
+
+
 
   return (
   <>

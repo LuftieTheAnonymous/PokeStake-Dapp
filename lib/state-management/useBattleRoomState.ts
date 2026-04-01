@@ -1,7 +1,7 @@
 'use client';
 import {create} from 'zustand';
 import {persist} from 'zustand/middleware';
-import { BattleRoom, PokemonBattler } from '../types';
+import { BattleRoom} from '../types';
 
 
 
@@ -10,7 +10,9 @@ type Actions = {
     clearRoomState:()=>void,
 }
 
-export const MAX_BATTLE_DURATION_TIME= 600_000; // 10 minutes 
+export const MAX_BATTLE_DURATION_TIME= 1_800_000; // 30 minutes 
+
+export const MAX_TURN_DURATION = 30_000; // 30 seconds
 
 export const useBattleRoomState = create<BattleRoom & Actions>()(
      persist((set)=>({
