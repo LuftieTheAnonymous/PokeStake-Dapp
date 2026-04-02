@@ -1,13 +1,21 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BattleRoom } from '@/lib/types';
+import { ArrowLeft, PlayCircleIcon } from 'lucide-react';
 import { useRef, useState } from 'react'
 import { FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
 import { toast } from 'sonner';
 
-type Props = {areAllPlayersInRoom:boolean, roomId:string | null, leaveBattle:()=>void};
+type Props = {
+  areAllPlayersInRoom:boolean,  
+  walletAddress:`0x${string}`,
+  roomDetails:BattleRoom,
+  leaveBattle:()=>void,
+  startBattle?:()=>void
+};
 
-function TopBar({areAllPlayersInRoom, roomId, leaveBattle}: Props) {
+function TopBar({areAllPlayersInRoom, walletAddress, roomDetails, leaveBattle, startBattle}: Props) {
  const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted]=useState<boolean>(false);
   return (
@@ -45,6 +53,11 @@ function TopBar({areAllPlayersInRoom, roomId, leaveBattle}: Props) {
         {!muted ? 
         <FaVolumeUp className="w-5 h-5" /> : <FaVolumeMute className="w-5 h-5"/>}
       </button>
+      
+      {!roomDetails.startTime && roomDetails.host === walletAddress &&
+      <Button onClick={startBattle} disabled={!roomDetails.hostPlayer || !roomDetails.inviteePlayer} className='bg-green-600 hover:bg-green-700 cursor-pointer border-2 px-4 py-3 border-amber-900 '>Start Battle <PlayCircleIcon /> </Button>
+      }
+      
       </div>
 </>
   )

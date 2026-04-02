@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import HpBar from "@/components/gameplay/battle-components/HpBar";
 import { BattleRoom, PokemonBattler } from '@/lib/types';
-import { redirect, useSearchParams } from 'next/navigation';
 import EnemyPokemonView from './EnemyPokemonView';
 import PlayerPokemonView from './PlayerPokemonView';
 import TopBar from './TopBar';
@@ -20,11 +19,12 @@ import { MAX_TURN_DURATION, useBattleRoomState } from '@/lib/state-management/us
 import usePokeData from '@/hooks/usePokeData';
 import { Socket } from 'socket.io-client';
 import { toast } from 'sonner';
-import { se } from 'date-fns/locale';
+import { redirect } from 'next/navigation';
 
 
-
-function BatlleFieldContainer({emit, socket}:{emit:(event:string, ...args:any[])=>void, socket:Socket}) {
+function BatlleFieldContainer({emit, off, on, socket}:{emit:(event:string, ...args:any[])=>void, on:(event: any, handler: any) => void, 
+  off:(event: any, handler?: any) => void,
+ socket:Socket}) {
  const battleRoomState =useBattleRoomState(); 
   // Build player team from URL params or use default
   const {walletAddress}=usePokeData();
@@ -36,51 +36,53 @@ function BatlleFieldContainer({emit, socket}:{emit:(event:string, ...args:any[])
   const [playerShake, setPlayerShake] = useState(false);
   const [opponentShake, setOpponentShake] = useState(false);    
 
-  const playerPokemonData = useMemo(()=>{
- return   battleRoomState.host === walletAddress ? {
+  const playerPokemonData =   battleRoomState.host === walletAddress ? {
         pokemonDeck: battleRoomState.hostPlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.hostPlayer?.currentPokemon   
     } : {
         pokemonDeck: battleRoomState.inviteePlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.inviteePlayer?.currentPokemon
     };
-  },[walletAddress, battleRoomState]);
 
-const opponentPokemonData = useMemo(()=>{
-    return battleRoomState.host !==  walletAddress ? {
+const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
         pokemonDeck: battleRoomState.hostPlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.hostPlayer?.currentPokemon   
     }: {
         pokemonDeck: battleRoomState.inviteePlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.inviteePlayer?.currentPokemon
     }
-},[battleRoomState, walletAddress]);
 
-  const allOpponentsDefeated = walletAddress === battleRoomState.host ? battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0);
-  const allPlayersDefeated = walletAddress === battleRoomState.host ? battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0);
+
+  const allOpponentsDefeated =  walletAddress === battleRoomState.host ? battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0);
+  
+
+  const allPlayersDefeated =  walletAddress === battleRoomState.host ? battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0);
+
+
+  const isYourTurn = battleRoomState.currentTurn ===  'host' && walletAddress === battleRoomState.host ? true : battleRoomState.currentTurn === 'invitee' && walletAddress !== battleRoomState.host && walletAddress && battleRoomState.participantsAllowed.find((el)=>el === walletAddress) ? true : false;
 
   useEffect(() => {
     if ((allOpponentsDefeated && !showVictory) || (allPlayersDefeated && !showDefeat)){
-      socket.emit('finish-battle', battleRoomState.roomId);
+      emit('finish-battle', battleRoomState.roomId);
     }  
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
   useEffect(() => {
     if(battleRoomState.turnChangedAt && new Date().getTime() - battleRoomState.turnChangedAt > MAX_TURN_DURATION){
       setMessage(`Turn timed out! ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} took too long to play. Advancing turn...`);
-      socket.emit('handle-timeout', battleRoomState.roomId);
+      emit('handle-timeout', battleRoomState.roomId);
     }
   },[battleRoomState.turnChangedAt]);
 
 
   useEffect(() => {
-  socket.on('battle-started', ({message, battleRoom}:{message:string, battleRoom:BattleRoom}) => {
+  on('battle-started', ({message, battleRoom}:{message:string, battleRoom:BattleRoom}) => {
     setMessage(message);
     battleRoomState.updateRoomState(battleRoom);
   });
 
 
-  socket.on('battle-finished', ({data}:{data: {
+  on('battle-finished', ({data}:{data: {
     winnerAddress: `0x${string}` | undefined;
     message: string;
     battleRoom: BattleRoom;}}) => {
@@ -94,7 +96,7 @@ const opponentPokemonData = useMemo(()=>{
     }
     });
 
-    socket.on('pokemon-change', ({data, error}:{data: {
+    on('pokemon-change', ({data, error}:{data: {
     battleRoom: BattleRoom;
     selectedPokemon: PokemonBattler;
     message: string;},
@@ -117,7 +119,7 @@ const opponentPokemonData = useMemo(()=>{
     });
 
 
-    socket.on('move-performed', ({data, error}:{data:{
+    on('move-performed', ({data, error}:{data:{
     battleRoom: BattleRoom;
     damage: number;
     message: string;
@@ -142,6 +144,7 @@ const opponentPokemonData = useMemo(()=>{
           // advanceOpponent();
           setIsAnimating(false);
         }, 1200);
+         battleRoomState.updateRoomState(data.battleRoom);
         return;
       }
 
@@ -168,20 +171,19 @@ const opponentPokemonData = useMemo(()=>{
               setIsAnimating(false);
             }, 500);
           }
+           battleRoomState.updateRoomState(data.battleRoom);
         }, 400);
       }, 800);
     }, 600);
-
-    battleRoomState.updateRoomState(data.battleRoom);
     });
-    
 
-  return () => {
-    socket.off('battle-started');
-    socket.off('battle-finished');
-    socket.off('pokemon-change');
-    socket.off('move-performed');
-  };
+    return () => {      
+      off('battle-started');
+      off('battle-finished');
+      off('move-performed');
+      off('pokemon-change');
+    }
+
 },[socket, battleRoomState]);
 
 
@@ -199,6 +201,13 @@ const opponentPokemonData = useMemo(()=>{
     setShowSwapMenu(false);
   };
 
+  const startBattle=()=>{
+    if(!battleRoomState.hostPlayer || !battleRoomState.inviteePlayer){
+      toast.error("Both players need to be in the room to start the battle.");
+      return;
+    }
+    emit('start-battle', battleRoomState.roomId);
+  };
 
 
   useEffect(() => {
@@ -211,12 +220,15 @@ const opponentPokemonData = useMemo(()=>{
   <>
   {/* Battlefield */}
       <div className="flex-1 relative overflow-hidden">
-        <TopBar leaveBattle={()=>emit('leave-battle-room', battleRoomState.roomId)}  roomId={battleRoomState.roomId} areAllPlayersInRoom={battleRoomState.inviteePlayer !== null && battleRoomState.hostPlayer !== null} />
+      
+        <TopBar walletAddress={walletAddress as `0x${string}`} startBattle={startBattle} roomDetails={battleRoomState} leaveBattle={()=>emit('leave-battle-room', battleRoomState.roomId)} areAllPlayersInRoom={battleRoomState.inviteePlayer !== null && battleRoomState.hostPlayer !== null} />
         {/* Sky gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(200,60%,70%)] via-[hsl(120,30%,65%)] to-[hsl(100,35%,50%)]" />
+        <div className="absolute h-screen inset-0 bg-gradient-to-b from-[hsl(200,60%,70%)] via-[hsl(120,30%,65%)] to-[hsl(100,35%,50%)]" />
+
+
 
         {/* Ground plane */}
-        <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-gradient-to-t from-[hsl(100,30%,40%)] to-[hsl(100,35%,50%)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-[hsl(100,30%,40%)] to-[hsl(100,35%,50%)]" />
 
         {/* Opponent Pokemon - top right area */}
         {opponentPokemonData.currentPlayerPokemon &&
@@ -243,27 +255,27 @@ const opponentPokemonData = useMemo(()=>{
             <div className="grid grid-cols-2 gap-2 w-full sm:w-56">
               <button
                 onClick={handleFight}
-                disabled={isAnimating || playerPokemonData.currentPlayerPokemon && playerPokemonData.currentPlayerPokemon.hp <= 0}
+                disabled={isAnimating || !isYourTurn || playerPokemonData.currentPlayerPokemon && playerPokemonData.currentPlayerPokemon.hp <= 0}
                 className="btn-fight rounded-xl px-4 py-3 text-sm transition-all duration-150 hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 FIGHT
               </button>
               <button
-                disabled={isAnimating}
+                disabled={isAnimating || !isYourTurn}
                 className="btn-bag rounded-xl px-4 py-3 text-sm transition-all duration-150 hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 BAG
               </button>
               <button
                 onClick={() => !isAnimating && setShowSwapMenu(true)}
-                disabled={isAnimating}
+                disabled={isAnimating || !isYourTurn}
                 className="btn-pokemon rounded-xl px-4 py-3 text-sm transition-all duration-150 hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 POKéMON
               </button>
               <button
                 onClick={() => redirect("/lobby")}
-                disabled={isAnimating}
+                disabled={isAnimating || !isYourTurn}
                 className="btn-run rounded-xl px-4 py-3 text-sm transition-all duration-150 hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 RUN
