@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -200,54 +200,78 @@ useEffect(()=>{
         toast.error(error);
         return;
       }
-      console.log('Move performed data:', data);
 
-  if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
-    setIsAnimating(true);
-
-    setMessage(`${playerPokemonData.currentPlayerPokemon.name} caused a damage to ${opponentPokemonData.currentPlayerPokemon.name} (-${data.damage.toFixed(1)} HP)!`);
-    setOpponentShake(true);
-
-    setTimeout(() => {
+      if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
+      
+      setIsAnimating(true);
+      // RESET shakes immediately
+      setPlayerShake(false);
       setOpponentShake(false);
-      const newOpHp = Math.max(0, (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
+      
+      const hasDodged = data.damage > 0;
+      const lastMoveCommiter = data.battleRoom.moveHistory[data.battleRoom.moveHistory.length - 1].player;
+      const youAttacked = (lastMoveCommiter === 'host' && walletAddress === battleRoomState.host) || (lastMoveCommiter === 'invitee' && walletAddress !== battleRoomState.host);
 
-      if (newOpHp <= 0) {
-        setMessage(`${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
+      if(youAttacked){
+        // You attacked, opponent shakes
+        const newOpHp = Math.max(0, (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
+        
         setTimeout(() => {
-          // advanceOpponent();
-          setIsAnimating(false);
-        }, 1200);
-        battleRoomState.updateRoomState(data.battleRoom);
-        return;
-      }
-
-      setTimeout(() => {
-        setMessage(`${opponentPokemonData.currentPlayerPokemon?.name} has caused a damage to ${playerPokemonData.currentPlayerPokemon?.name} (-${data.damage.toFixed(1)} HP) !`);
-        setPlayerShake(true);
-
+          setOpponentShake(true);
+        }, 0);
+        
         setTimeout(() => {
-          setPlayerShake(false);
-          const newPlHp = Math.max(0, (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
-          if (newPlHp <= 0) {
-            setMessage(`${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
+          setOpponentShake(false);
+          
+          if (newOpHp <= 0) {
+            setMessage(`${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
             setTimeout(() => {
-              const nextAlive = playerPokemonData.pokemonDeck.findIndex((p) => p.pokemonId !== playerPokemonData.currentPlayerPokemon?.pokemonId && p.hp > 0);
-              if (nextAlive !== -1) {
-                setShowSwapMenu(true);
-              }
+              battleRoomState.updateRoomState(data.battleRoom);
               setIsAnimating(false);
-            }, 1000);
+            }, 1200);
           } else {
             setTimeout(() => {
-              setMessage(`What will ${walletAddress} do?`);
-              setIsAnimating(false);
-            }, 500);
-          }
+              setMessage(data.message);
               battleRoomState.updateRoomState(data.battleRoom);
-        }, 400);
-      }, 800);
-    }, 600);
+              setIsAnimating(false);
+            }, 400);
+          }
+        }, 500);
+      }
+      else{
+        // Opponent attacked, you shake
+        const newPlHp = Math.max(0, (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
+        
+        setTimeout(() => {
+          setMessage(data.message);
+          
+          setTimeout(() => {
+            setPlayerShake(true);
+          }, 0);
+
+          setTimeout(() => {
+            setPlayerShake(false);
+            
+            if (newPlHp <= 0) {
+              setMessage(`${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
+              setTimeout(() => {
+                const nextAlive = playerPokemonData.pokemonDeck.findIndex((p) => p.pokemonId !== playerPokemonData.currentPlayerPokemon?.pokemonId && p.hp > 0);
+                if (nextAlive !== -1) {
+                  setShowSwapMenu(true);
+                }
+                battleRoomState.updateRoomState(data.battleRoom);
+                setIsAnimating(false);
+              }, 1000);
+            } else {
+              setTimeout(() => {
+                setMessage(`What will ${walletAddress} do?`);
+                battleRoomState.updateRoomState(data.battleRoom);
+                setIsAnimating(false);
+              }, 500);
+            }
+          }, 400);
+        }, 800);
+      }
     });
 },[showDefeat, showVictory, playerPokemonData, opponentPokemonData, battleRoomState, socket]);
 
