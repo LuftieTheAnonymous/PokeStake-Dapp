@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +20,7 @@ import usePokeData from '@/hooks/usePokeData';
 import { Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { redirect } from 'next/navigation';
+import BattleHook from './BattleHook';
 
 
 function BatlleFieldContainer({emit, off, on, socket}:{emit:(event:string, ...args:any[])=>void, on:(event: any, handler: any) => void, 
@@ -34,7 +35,11 @@ function BatlleFieldContainer({emit, off, on, socket}:{emit:(event:string, ...ar
   const [showVictory, setShowVictory] = useState(false);
   const [showDefeat, setShowDefeat] = useState(false);
   const [playerShake, setPlayerShake] = useState(false);
-  const [opponentShake, setOpponentShake] = useState(false);    
+  const [opponentShake, setOpponentShake] = useState(false);
+  
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [showFightIntro, setShowFightIntro] = useState(false);
+  
 
   const playerPokemonData =   battleRoomState.host === walletAddress ? {
         pokemonDeck: battleRoomState.hostPlayer?.pokemonDeck || [],
@@ -43,8 +48,8 @@ function BatlleFieldContainer({emit, off, on, socket}:{emit:(event:string, ...ar
         pokemonDeck: battleRoomState.inviteePlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.inviteePlayer?.currentPokemon
     };
-
-const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
+    
+  const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
         pokemonDeck: battleRoomState.hostPlayer?.pokemonDeck || [],
         currentPlayerPokemon: battleRoomState.hostPlayer?.currentPokemon   
     }: {
@@ -54,10 +59,8 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
 
 
   const allOpponentsDefeated =  walletAddress === battleRoomState.host ? battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0);
-  
 
   const allPlayersDefeated =  walletAddress === battleRoomState.host ? battleRoomState.hostPlayer?.pokemonDeck.every((p) => p.hp <= 0) : battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0);
-
 
   const isYourTurn = battleRoomState.currentTurn ===  'host' && walletAddress === battleRoomState.host ? true : battleRoomState.currentTurn === 'invitee' && walletAddress !== battleRoomState.host && walletAddress && battleRoomState.participantsAllowed.find((el)=>el === walletAddress) ? true : false;
 
@@ -67,6 +70,7 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
     }  
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
+  
   useEffect(() => {
     if(battleRoomState.turnChangedAt && new Date().getTime() - battleRoomState.turnChangedAt > MAX_TURN_DURATION){
       setMessage(`Turn timed out! ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} took too long to play. Advancing turn...`);
@@ -76,13 +80,65 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
 
 
   useEffect(() => {
-  on('battle-started', ({message, battleRoom}:{message:string, battleRoom:BattleRoom}) => {
+    on('player-joined', (res: {data: {
+    message: string;
+    battleRoom: BattleRoom;
+}, error:null}) => {
+        console.log(res);
+        console.log('Player join error:', res.error);
+        if(res.error){
+          toast.error(res.error);
+          return;
+        }
+        toast.success(res.data.message);
+        battleRoomState.updateRoomState(res.data.battleRoom);
+
+        if(res.data.battleRoom.hostPlayer && res.data.battleRoom.inviteePlayer && walletAddress === res.data.battleRoom.host){
+          emit('start-battle', res.data.battleRoom.roomId);
+          setCountdown(5);
+        }
+      });
+
+      return () => {        
+      off('player-joined');
+      };
+  },[emit, on, off, battleRoomState, walletAddress]);
+
+useEffect(() => {
+  on('battle-started', ({ message, battleRoom }: { message: string; battleRoom: BattleRoom }) => {
+    setShowFightIntro(true);
     setMessage(message);
     battleRoomState.updateRoomState(battleRoom);
+
+    const introTimeout = setTimeout(() => {
+      setShowFightIntro(false);
+    }, 5000);
+
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev && prev <= 1) {
+          clearInterval(countdownInterval);
+          return 0;
+        }
+        return prev ? prev - 1 : null;
+      });
+    }, 1000);
+
+    return () => {
+      clearTimeout(introTimeout);
+      clearInterval(countdownInterval);
+    };
   });
 
+  return () => {
+    off('battle-started');
+  };
+}, [socket, battleRoomState]);
 
-  on('battle-finished', ({data}:{data: {
+
+
+useEffect(()=>{
+   on('battle-finished', ({data}:{data: {
     winnerAddress: `0x${string}` | undefined;
     message: string;
     battleRoom: BattleRoom;}}) => {
@@ -95,8 +151,16 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
       setShowDefeat(true);
     }
     });
+    
+    return () => {
+      off('battle-finished');
+    }
 
-    on('pokemon-change', ({data, error}:{data: {
+},[socket, battleRoomState, walletAddress]);
+
+
+useEffect(()=>{
+      on('pokemon-change', ({data, error}:{data: {
     battleRoom: BattleRoom;
     selectedPokemon: PokemonBattler;
     message: string;},
@@ -119,6 +183,14 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
     });
 
 
+    return () => {
+      off('pokemon-change');
+    }
+
+},[battleRoomState, socket]);
+
+
+useEffect(()=>{
     on('move-performed', ({data, error}:{data:{
     battleRoom: BattleRoom;
     damage: number;
@@ -128,7 +200,9 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
         toast.error(error);
         return;
       }
-         if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
+      console.log('Move performed data:', data);
+
+  if (isAnimating || !playerPokemonData || !opponentPokemonData || !playerPokemonData.currentPlayerPokemon || !opponentPokemonData.currentPlayerPokemon || playerPokemonData.currentPlayerPokemon.hp <= 0 || opponentPokemonData.currentPlayerPokemon.hp <= 0) return;
     setIsAnimating(true);
 
     setMessage(`${playerPokemonData.currentPlayerPokemon.name} caused a damage to ${opponentPokemonData.currentPlayerPokemon.name} (-${data.damage.toFixed(1)} HP)!`);
@@ -144,7 +218,7 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
           // advanceOpponent();
           setIsAnimating(false);
         }, 1200);
-         battleRoomState.updateRoomState(data.battleRoom);
+        battleRoomState.updateRoomState(data.battleRoom);
         return;
       }
 
@@ -155,7 +229,6 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
         setTimeout(() => {
           setPlayerShake(false);
           const newPlHp = Math.max(0, (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
-         
           if (newPlHp <= 0) {
             setMessage(`${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
             setTimeout(() => {
@@ -171,23 +244,12 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
               setIsAnimating(false);
             }, 500);
           }
-           battleRoomState.updateRoomState(data.battleRoom);
+              battleRoomState.updateRoomState(data.battleRoom);
         }, 400);
       }, 800);
     }, 600);
     });
-
-    return () => {      
-      off('battle-started');
-      off('battle-finished');
-      off('move-performed');
-      off('pokemon-change');
-    }
-
-},[socket, battleRoomState]);
-
-
-
+},[showDefeat, showVictory, playerPokemonData, opponentPokemonData, battleRoomState, socket]);
 
   const handleFight = () => {
  emit('perform-move', battleRoomState.roomId);
@@ -201,15 +263,6 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
     setShowSwapMenu(false);
   };
 
-  const startBattle=()=>{
-    if(!battleRoomState.hostPlayer || !battleRoomState.inviteePlayer){
-      toast.error("Both players need to be in the room to start the battle.");
-      return;
-    }
-    emit('start-battle', battleRoomState.roomId);
-  };
-
-
   useEffect(() => {
   if (battleRoomState.currentTurn) setMessage(`What will ${battleRoomState.currentTurn === 'host' ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} do?`);
   }, [battleRoomState.currentTurn, battleRoomState.host, battleRoomState.inviteePlayer]);
@@ -219,13 +272,13 @@ const opponentPokemonData =  battleRoomState.host !==  walletAddress ? {
   return (
   <>
   {/* Battlefield */}
+{showFightIntro && <BattleHook countdown={countdown} showFightIntro={showFightIntro} /> }
+    
       <div className="flex-1 relative overflow-hidden">
       
-        <TopBar walletAddress={walletAddress as `0x${string}`} startBattle={startBattle} roomDetails={battleRoomState} leaveBattle={()=>emit('leave-battle-room', battleRoomState.roomId)} areAllPlayersInRoom={battleRoomState.inviteePlayer !== null && battleRoomState.hostPlayer !== null} />
+        <TopBar walletAddress={walletAddress as `0x${string}`} roomDetails={battleRoomState} leaveBattle={()=>emit('leave-battle-room', battleRoomState.roomId)} areAllPlayersInRoom={battleRoomState.inviteePlayer !== null && battleRoomState.hostPlayer !== null} />
         {/* Sky gradient */}
         <div className="absolute h-screen inset-0 bg-gradient-to-b from-[hsl(200,60%,70%)] via-[hsl(120,30%,65%)] to-[hsl(100,35%,50%)]" />
-
-
 
         {/* Ground plane */}
         <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-[hsl(100,30%,40%)] to-[hsl(100,35%,50%)]" />

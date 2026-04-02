@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { BattleRoom } from '@/lib/types';
 import { ArrowLeft, PlayCircleIcon } from 'lucide-react';
 import { useRef, useState } from 'react'
@@ -11,11 +10,10 @@ type Props = {
   areAllPlayersInRoom:boolean,  
   walletAddress:`0x${string}`,
   roomDetails:BattleRoom,
-  leaveBattle:()=>void,
-  startBattle?:()=>void
+  leaveBattle:()=>void
 };
 
-function TopBar({areAllPlayersInRoom, walletAddress, roomDetails, leaveBattle, startBattle}: Props) {
+function TopBar({areAllPlayersInRoom, walletAddress, roomDetails, leaveBattle}: Props) {
  const audioRef = useRef<HTMLAudioElement>(null);
   const [muted, setMuted]=useState<boolean>(false);
   return (
@@ -53,10 +51,7 @@ function TopBar({areAllPlayersInRoom, walletAddress, roomDetails, leaveBattle, s
         {!muted ? 
         <FaVolumeUp className="w-5 h-5" /> : <FaVolumeMute className="w-5 h-5"/>}
       </button>
-      
-      {!roomDetails.startTime && roomDetails.host === walletAddress &&
-      <Button onClick={startBattle} disabled={!roomDetails.hostPlayer || !roomDetails.inviteePlayer} className='bg-green-600 hover:bg-green-700 cursor-pointer border-2 px-4 py-3 border-amber-900 '>Start Battle <PlayCircleIcon /> </Button>
-      }
+    
       
       </div>
 </>

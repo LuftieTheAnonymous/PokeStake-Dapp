@@ -1,6 +1,7 @@
 import React from 'react'
 import PokemonInfoBox from './PokemonInfoBox'
 import { PokemonBattler } from '@/lib/types';
+import '@/components/components-styles.css';
 
 type Props = {
   opponent: PokemonBattler;

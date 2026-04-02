@@ -1,4 +1,7 @@
 'use client';
+
+import '@/components/components-styles.css';
+
 import { useBattleRoomState } from '@/lib/state-management/useBattleRoomState'
 import LobbyPanel from './lobby/LobbyPanel'
 import BatlleFieldContainer from './battle-components/BatlleFieldContainer'
@@ -9,9 +12,9 @@ import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 import { BattleRoom } from '@/lib/types';
 
-type Props = {}
 
-function GameplayDisplay({}: Props) {
+
+function GameplayDisplay() {
 
   const {walletAddress}=usePokeData();
   const {updateRoomState, clearRoomState, roomId}=useBattleRoomState();
@@ -67,20 +70,6 @@ function GameplayDisplay({}: Props) {
         console.log('Join response:', response.data.battleRoom.inviteePlayer);
         updateRoomState(response.data.battleRoom);
         toast.success(`Joined battle room ! Redirecting...`);
-      });
-
-      socketRef.current.on('player-joined', (res: {data: {
-    message: string;
-    battleRoom: BattleRoom;
-}, error:null}) => {
-        console.log(res);
-        console.log('Player join error:', res.error);
-        if(res.error){
-          toast.error(res.error);
-          return;
-        }
-        toast.success(res.data.message);
-        updateRoomState(res.data.battleRoom);
       });
 
       socketRef.current.on('left-room', (res:{data:{message:string, battleRoom:BattleRoom}, error:string | null}) => {
