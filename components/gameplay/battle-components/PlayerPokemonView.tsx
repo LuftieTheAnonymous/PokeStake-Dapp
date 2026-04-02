@@ -19,7 +19,7 @@ function PlayerPokemonView({ player, playerShake }: Props) {
              {/* Platform */}
              <div className="w-44 h-10 bg-[hsl(100,25%,42%)] rounded-[50%] shadow-lg mt-2" />
              {/* Sprite */}
-             <div className={`text-8xl -mt-20 animate-battle-entrance ${playerShake ? "animate-[shake_0.3s_ease-in-out]" : ""}`} style={{ "--enter-x": "-120px" } as React.CSSProperties}>
+             <div className={`text-8xl -mt-20 animate-battle-entrance ${playerShake ? "animate-pokemon-damaged" : ""}`} style={{ "--enter-x": "-120px" } as React.CSSProperties}>
                  <img
            src={player.sprites.back}
            alt={player.name}

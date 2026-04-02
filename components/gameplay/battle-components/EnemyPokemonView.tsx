@@ -18,7 +18,7 @@ function EnemyPokemonView({ opponent, opponentShake }: Props) {
           {/* Platform */}
           <div className="w-32 h-8 bg-[hsl(100,25%,45%)] rounded-[50%] shadow-lg mt-2" />
           {/* Sprite */}
-          <div className={`text-7xl -mt-16 animate-battle-entrance ${opponentShake ? "animate-[shake_0.3s_ease-in-out]" : ""}`} style={{ "--enter-x": "120px" } as React.CSSProperties}>
+          <div className={`text-7xl -mt-16 animate-battle-entrance ${opponentShake ? "animate-pokemon-damaged" : ""}`} style={{ "--enter-x": "120px" } as React.CSSProperties}>
    <img
         src={opponent.sprites.front}
         alt={opponent.name}
