@@ -34,8 +34,7 @@ function BatlleFieldContainer({emit, off, on, socket}:{emit:(event:string, ...ar
   const [showSwapMenu, setShowSwapMenu] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   const [showDefeat, setShowDefeat] = useState(false);
-  const [playerShake, setPlayerShake] = useState(false);
-  const [opponentShake, setOpponentShake] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
   
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showFightIntro, setShowFightIntro] = useState(false);
@@ -205,8 +204,7 @@ useEffect(()=>{
       
       setIsAnimating(true);
       // RESET shakes immediately
-      setPlayerShake(false);
-      setOpponentShake(false);
+      setPlayerHit(false);
       
       const hasDodged = data.damage > 0;
       const lastMoveCommiter = data.battleRoom.moveHistory[data.battleRoom.moveHistory.length - 1].player;
@@ -217,11 +215,11 @@ useEffect(()=>{
         const newOpHp = Math.max(0, (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp - data.damage);
         
         setTimeout(() => {
-          setOpponentShake(true);
+          setPlayerHit(true);
         }, 0);
         
         setTimeout(() => {
-          setOpponentShake(false);
+          setPlayerHit(false);
           
           if (newOpHp <= 0) {
             setMessage(`${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
@@ -246,11 +244,11 @@ useEffect(()=>{
           setMessage(data.message);
           
           setTimeout(() => {
-            setPlayerShake(true);
+            setPlayerHit(true);
           }, 0);
 
           setTimeout(() => {
-            setPlayerShake(false);
+            setPlayerHit(false);
             
             if (newPlHp <= 0) {
               setMessage(`${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`);
@@ -309,12 +307,12 @@ useEffect(()=>{
 
         {/* Opponent Pokemon - top right area */}
         {opponentPokemonData.currentPlayerPokemon &&
-   <EnemyPokemonView opponent={opponentPokemonData.currentPlayerPokemon} opponentShake={opponentShake}/>
+   <EnemyPokemonView opponent={opponentPokemonData.currentPlayerPokemon} opponentShake={isYourTurn && playerHit}/>
    }
    
         {/* Player Pokemon - bottom left area */}
         {playerPokemonData.currentPlayerPokemon &&
-        <PlayerPokemonView player={playerPokemonData.currentPlayerPokemon} playerShake={playerShake} />
+        <PlayerPokemonView player={playerPokemonData.currentPlayerPokemon} playerShake={!isYourTurn && playerHit} />
         }
       </div>
 

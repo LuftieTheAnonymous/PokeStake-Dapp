@@ -30,6 +30,7 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
             for (const pokeCard of userGeneratedCards) {
                 try {
                     const response = await pinata.gateways.public.get(pokeCard.pinataId);
+                    console.log(response, "response lobby");
                     if (response.data) {
                         nftCards.push(response.data as unknown as PokemonCard);
                     }
