@@ -74,8 +74,6 @@ function BatlleFieldContainer({
           currentPlayerPokemon: battleRoomState.inviteePlayer?.currentPokemon,
         };
 
-  const turnChangeTimestamp = battleRoomState.turnChangedAt;
-
   const allOpponentsDefeated =
     walletAddress === battleRoomState.host
       ? battleRoomState.inviteePlayer?.pokemonDeck.every((p) => p.hp <= 0)
@@ -154,14 +152,24 @@ const playerBattleStarted = useEffectEvent(({
         };
       });
       
-const timeoutEventHandler = useEffectEvent((elapsedTime:number) => {
-if (MAX_TURN_DURATION >= elapsedTime) {
-        let msg = `Turn timed out! ${battleRoomState.currentTurn === "host" ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} took too long to play. Advancing turn...`;
-        setMessage(msg);
+const timeoutEventHandler = useEffectEvent(() => {
 
-        emit("send-in-battle-message", battleRoomState.roomId, msg);
-        emit("handle-timeout", battleRoomState.roomId);
+   if (!battleRoomState) {
+    toast.error("no battle yet");
+    return;
+  }
+
+  let interval = setInterval(() => {
+    if (battleRoomState.turnChangedAt && battleRoomState.isBattleStarted && !battleRoomState.isBattleFinished) {
+      const timeoutSeconds = new Date().getTime() - battleRoomState.turnChangedAt;
+      if (timeoutSeconds >= MAX_TURN_DURATION) {
+      console.log(battleRoomState.turnChangedAt, 'change time');
+      console.log(timeoutSeconds, 'Time to be timed out');
+        clearInterval(interval);
       }
+    }
+  }, 1000);
+
   });
 
   const updateTheBattleResult = useEffectEvent(
@@ -213,7 +221,7 @@ if (MAX_TURN_DURATION >= elapsedTime) {
       });
   
   
-      const movePerformedHandler=useEffectEvent(({
+  const movePerformedHandler=useEffectEvent(({
         data,
         error,
       }: {
@@ -332,6 +340,14 @@ if (MAX_TURN_DURATION >= elapsedTime) {
         setMovePerformed(false);
       });
 
+  
+  const timeoutHandler = useEffectEvent((res:{data: {
+    message: string;
+    battleRoom: BattleRoom;
+}, error:null})=>{
+  setMessage(res.data.message);
+  battleRoomState.updateRoomState(res.data.battleRoom);
+  })
 
   useEffect(() => {
     if (
@@ -342,25 +358,17 @@ if (MAX_TURN_DURATION >= elapsedTime) {
     }
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
-  useEffect(() => {
-    let timeoutSeconds: number = 0;
-    if (!battleRoomState) {
-      toast.error("no battle yet");
-      return;
-    }
+useEffect(() => {
+ timeoutEventHandler();
+}, []); 
 
-    let interval = setInterval(() => {
-      if (turnChangeTimestamp)
-        timeoutSeconds = new Date().getTime() - turnChangeTimestamp;
-      console.log(timeoutSeconds, 'Time to be timed out');
-    }, 1000);
+useEffect(()=>{
+  on('turn-timeout', timeoutHandler);
 
-    if (timeoutSeconds >= MAX_TURN_DURATION) {
-      timeoutEventHandler(timeoutSeconds);
-    }
-
-    return () => clearInterval(interval);
-  }, [turnChangeTimestamp]);
+  return ()=>{
+    off('turn-timeout');
+  }
+},[])
 
   useEffect(() => {
     on(
