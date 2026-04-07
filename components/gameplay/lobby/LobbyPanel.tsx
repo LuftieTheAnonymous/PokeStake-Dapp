@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Swords, Plus, LogIn } from "lucide-react";
+import { Swords, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import usePokeData from "@/hooks/usePokeData";
 import { Player, PokemonBattler, PokemonCard, RARITY_CONFIG } from "@/lib/types";
@@ -20,7 +20,7 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
     const [ playerNickname, setPlayerNickname ] = useState("");
     const {pokemonBattlersSelected, addPokemon, removePokemon, clearPokemonSet} =useGameplayLobby();
     const [draggedCard, setDraggedCard] = useState<PokemonCard | null>(null);
-    const MAX_SELECTED = 1;
+    const MAX_SELECTED = 2;
     const { userGeneratedCards } = usePokeData();
 
     const { data: pokemonCards = [], isLoading, isError, refetch } = useQuery({

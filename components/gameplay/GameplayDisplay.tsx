@@ -78,7 +78,7 @@ function GameplayDisplay() {
       });
 
       socketRef.current.on("invalid-battle-room", (data) => {
-        console.log("Invalid battl`e room:", data);
+        console.log("Invalid battle room:", data);
         toast.error(`${data.error}`);
       });
 
@@ -186,6 +186,7 @@ function GameplayDisplay() {
       }
     };
   }, [walletAddress]);
+
 
   return (
     <div className="min-h-screen text-foreground">

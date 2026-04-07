@@ -24,6 +24,7 @@ import { Socket } from "socket.io-client";
 import { toast } from "sonner";
 import { redirect } from "next/navigation";
 import BattleHook from "./BattleHook";
+import { useInterval } from "@/hooks/useInterval";
 
 function BatlleFieldContainer({
   emit,
@@ -159,16 +160,14 @@ const timeoutEventHandler = useEffectEvent(() => {
     return;
   }
 
-  let interval = setInterval(() => {
     if (battleRoomState.turnChangedAt && battleRoomState.isBattleStarted && !battleRoomState.isBattleFinished) {
       const timeoutSeconds = new Date().getTime() - battleRoomState.turnChangedAt;
       if (timeoutSeconds >= MAX_TURN_DURATION) {
       console.log(battleRoomState.turnChangedAt, 'change time');
       console.log(timeoutSeconds, 'Time to be timed out');
-        clearInterval(interval);
       }
     }
-  }, 1000);
+
 
   });
 
@@ -207,8 +206,11 @@ const timeoutEventHandler = useEffectEvent(() => {
           toast.error(error);
           return;
         }
-        setMessage(`Go, ${data.selectedPokemon.name}!`);
 
+        console.log(data);
+
+        setMessage(`Go, ${data.selectedPokemon.name}!`);
+        
         setTimeout(() => {
           setMessage(data.message);
           battleRoomState.updateRoomState(data.battleRoom);
@@ -358,9 +360,9 @@ const timeoutEventHandler = useEffectEvent(() => {
     }
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
-useEffect(() => {
- timeoutEventHandler();
-}, []); 
+useInterval(()=>{
+  timeoutEventHandler();
+}, 1000);
 
 useEffect(()=>{
   on('turn-timeout', timeoutHandler);
@@ -449,7 +451,7 @@ useEffect(()=>{
       idx === playerPokemonData.currentPlayerPokemon?.pokemonId
     )
       return;
-    emit("swap-pokemon", { roomId: battleRoomState.roomId });
+    emit("swap-pokemon", battleRoomState.roomId, selectedPokemon);
     setShowSwapMenu(false);
   };
 
