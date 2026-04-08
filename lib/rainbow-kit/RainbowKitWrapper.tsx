@@ -10,7 +10,7 @@ import {
 function RainbowKitWrapper({children}: {children:React.ReactNode}) {
   return (
 
-        <RainbowKitProvider>
+        <RainbowKitProvider coolMode>
         {children}
         </RainbowKitProvider>
      

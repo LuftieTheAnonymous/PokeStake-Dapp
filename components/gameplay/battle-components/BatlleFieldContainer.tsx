@@ -162,9 +162,9 @@ const timeoutEventHandler = useEffectEvent(() => {
 
     if (battleRoomState.turnChangedAt && battleRoomState.isBattleStarted && !battleRoomState.isBattleFinished) {
       const timeoutSeconds = new Date().getTime() - battleRoomState.turnChangedAt;
-      if (timeoutSeconds >= MAX_TURN_DURATION) {
-      console.log(battleRoomState.turnChangedAt, 'change time');
-      console.log(timeoutSeconds, 'Time to be timed out');
+      console.log(timeoutSeconds);
+      if (timeoutSeconds >= MAX_TURN_DURATION && isYourTurn) {
+      emit("handle-timeout", battleRoomState.roomId);
       }
     }
 
@@ -625,17 +625,12 @@ useEffect(()=>{
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => redirect("/lobby")}
+                onClick={() => emit('leave-battle-room', battleRoomState.roomId)}
                 className="gap-2"
               >
                 <ArrowLeft className="w-4 h-4" /> Lobby
               </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" /> Rematch
-              </Button>
+           
             </div>
           </div>
         </DialogContent>
@@ -655,17 +650,12 @@ useEffect(()=>{
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => redirect("/lobby")}
+                onClick={() => emit('leave-battle-room', battleRoomState.roomId)}
                 className="gap-2"
               >
                 <ArrowLeft className="w-4 h-4" /> Lobby
               </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" /> Retry
-              </Button>
+              
             </div>
           </div>
         </DialogContent>
