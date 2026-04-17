@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk, Fira_Code } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 import '@rainbow-me/rainbowkit/styles.css'
@@ -9,6 +8,8 @@ import RainbowKitWrapper from '@/lib/rainbow-kit/RainbowKitWrapper'
 import { Navigation } from '@/components/navigation'
 import { GradientBackground } from '@/components/gradient-background'
 import { Toaster } from 'sonner'
+import Web3AuthProvider from '@/lib/web3Auth/Web3AuthProvider'
+
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ["latin"],
@@ -58,6 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${firaCode.variable} overflow-x-hidden font-sans antialiased`}>
+
         <WagmiWrapper>
           <RainbowKitWrapper>
         <ThemeProvider
@@ -83,7 +85,6 @@ export default function RootLayout({
         </ThemeProvider>
         </RainbowKitWrapper>
         </WagmiWrapper>
-        <Analytics />
       </body>
     </html>
   )
