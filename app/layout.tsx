@@ -8,7 +8,6 @@ import RainbowKitWrapper from '@/lib/rainbow-kit/RainbowKitWrapper'
 import { Navigation } from '@/components/navigation'
 import { GradientBackground } from '@/components/gradient-background'
 import { Toaster } from 'sonner'
-import Web3AuthProvider from '@/lib/web3Auth/Web3AuthProvider'
 
 
 const spaceGrotesk = Space_Grotesk({ 

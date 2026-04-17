@@ -6,14 +6,14 @@ import Link from "next/link";
 import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
 import { PokeCoinIcon } from "@/components/token-balance";
-import type { BlockchainEvent, PokemonCard as PokemonCardType } from "@/lib/types";
+import type { PokemonCard as PokemonCardType } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {toast} from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
-import { VRFConsumerAbi, VrfConsumerAddress } from "@/contracts-abis/VRFConsumer";
+
 
 
 
@@ -34,8 +34,10 @@ function CardDrawDisplay({}: Props) {
     await drawRandomNumber(setIsDrawing);
   }
 
+
+
   useEffect(() => {
-  if (
+    if (
     requestId !== null && requestId !== undefined &&
     recentRequest &&
     recentRequest.pokedexIndex !== BigInt(0) &&
@@ -45,7 +47,7 @@ function CardDrawDisplay({}: Props) {
     toast("Successfully drawn random data!");
     setIsDrawing(false);
   }
-}, [requestId, recentRequest]);
+}, [recentRequest, requestId]);
 
   
   useEffect(() => {
@@ -221,8 +223,9 @@ const handleDraw = async () => {
                          <>
                          <PokeCoinIcon className="mr-2 animate-spin"/>
                          {(requestId !== null && requestId !== undefined && Number(requestId) === 0) || 
-    (requestId !== null && requestId !== undefined && recentRequest && Number(requestId) !== 0 && recentRequest.isResolved) 
-   ? "Requesting..."  : "Drawing..."}
+                         (requestId !== BigInt(0) && recentRequest && recentRequest.pokedexIndex !== BigInt(0) &&
+    recentRequest.rarityLevel !== BigInt(0) && !recentRequest.isResolved) 
+   ?  "Drawing..." : "Requesting..."}
    
    
                          </>
