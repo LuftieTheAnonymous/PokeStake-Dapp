@@ -8,6 +8,7 @@ import { PokeCoinIcon } from "@/components/token-balance";
 import Image from "next/image";
 import Snorlie from "@/public/snorlie.png"
 
+
 const features = [
   {
     icon: Sparkles,
@@ -138,6 +139,25 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+
+        <div className="max-w-5xl w-full px-4 py-10 flex  flex-wrap justify-center gap-24 mx-auto">
+
+<div className="flex flex-col gap-4 max-w-lg mt-6 w-full">
+  <p className="text-5xl font-extrabold bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 bg-clip-text text-transparent">Support</p>
+  <p className="text-lg">Unfortunately, due to Pokemon Company IP and Policies Restrictions and discrepancies between my project and the interests of Pokemon Company. Thus, if you appreciate my work, you can make a donation using the widget. You can send any type of cryptocurrency available by NOWPayments.</p>
+</div>
+  <iframe className="max-w-xs w-full min-h-[40rem] rounded-2xl" src={`https://nowpayments.io/embeds/donation-widget?api_key=${process.env.NEXT_PUBLIC_WEB3_DONATIONS_SECTION}`} frameBorder="0" scrolling="no">
+   Can't load widget
+</iframe>
+
+
+
+</div>
+
+
+
+
 
         {/* Footer */}
         <footer className="border-t border-border/50 py-8 mt-16">

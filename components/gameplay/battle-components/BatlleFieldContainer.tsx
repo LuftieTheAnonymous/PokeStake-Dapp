@@ -456,6 +456,16 @@ useEffect(()=>{
   };
 
 
+  const generateProof = useCallback(async () => {
+    // This is where you'd integrate with your zk proof generation logic
+    // For demonstration, we'll just simulate a delay and return a mock proof
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve("mock-proof");
+      }, 2000);
+    });
+  }, []);
+
 
   return (
     <>
@@ -620,15 +630,15 @@ useEffect(()=>{
             </div>
             <DialogTitle className="text-2xl">You Won!</DialogTitle>
             <DialogDescription>
-              All opponent Pokémon have been defeated.
+              {`Congratulations! You defeated ${battleRoomState.currentTurn === "host" ? battleRoomState.inviteePlayer?.playerNickname : battleRoomState.hostPlayer?.playerNickname}.`}
             </DialogDescription>
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => emit('leave-battle-room', battleRoomState.roomId)}
+                onClick={generateProof}
                 className="gap-2"
               >
-                <ArrowLeft className="w-4 h-4" /> Lobby
+                Claim Reward
               </Button>
            
             </div>
