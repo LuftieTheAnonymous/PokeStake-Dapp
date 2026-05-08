@@ -7,6 +7,9 @@ import { RARITY_CONFIG } from "@/lib/types";
 import { PokeCoinIcon } from "@/components/token-balance";
 import Image from "next/image";
 import Snorlie from "@/public/snorlie.png"
+import { FaUserFriends } from "react-icons/fa";
+import { RiExchange2Fill } from "react-icons/ri";
+import { TbSpyOff } from "react-icons/tb";
 
 
 const features = [
@@ -28,6 +31,24 @@ const features = [
     description: "View and manage your entire NFT collection",
     href: "/gallery",
   },
+   {
+    icon: TbSpyOff,
+    title: "Claim Rewards Privately",
+    description: "Fight Battles, Win Battles, Claim Rewards without anyone knowing about it.",
+    href: '/gameplay',
+  },
+  {
+    icon: RiExchange2Fill,
+    title: "Trade Pokemon Privately",
+    description: "Experience the real Zero Knowledge Proofs implementation in Gaming and cherish your trade privately.",
+    href:"/trades"
+  },
+  {
+    icon: FaUserFriends,
+    title: "Form Alliances",
+    description: "Meet Trainers, Chat with them privately using PokeStake",
+    href: "/trainers"
+  }
 ];
 
 export default function HomePage() {
@@ -111,7 +132,7 @@ export default function HomePage() {
               <div className="grid grid-cols-3 gap-4 p-4 border-b border-border/50 bg-secondary/30 text-sm font-medium text-muted-foreground">
                 <div>Rarity</div>
                 <div className="text-center">Daily Reward</div>
-                <div className="text-center">APY</div>
+                <div className="text-center">One Year of Staking</div>
               </div>
               {(Object.entries(RARITY_CONFIG) as [string, typeof RARITY_CONFIG.common][]).map(([rarity, config]) => (
                 <div

@@ -2,12 +2,11 @@ import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk, Fira_Code } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
-import '@rainbow-me/rainbowkit/styles.css'
 import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
-import RainbowKitWrapper from '@/lib/rainbow-kit/RainbowKitWrapper'
 import { Navigation } from '@/components/navigation'
 import { GradientBackground } from '@/components/gradient-background'
 import { Toaster } from 'sonner'
+
 
 
 const spaceGrotesk = Space_Grotesk({ 
@@ -59,14 +58,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${firaCode.variable} overflow-x-hidden font-sans antialiased`}>
 
-        <WagmiWrapper>
-          <RainbowKitWrapper>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+        <WagmiWrapper>
               <GradientBackground />
                   <Navigation />
             {children}
@@ -81,9 +79,9 @@ export default function RootLayout({
         boxShadow: "0 0 5px oklch(0.72 0.18 55), 0 0 10px oklch(0.72 0.18 55)" // Adjusted shadow for glow effect
     }
 }} />
-        </ThemeProvider>
-        </RainbowKitWrapper>
         </WagmiWrapper>
+        </ThemeProvider>
+
       </body>
     </html>
   )

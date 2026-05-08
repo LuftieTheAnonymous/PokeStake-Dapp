@@ -25,9 +25,13 @@ export interface PokemonCard {
 
 export type Currency = "ETH" | "SNORLIE";
 
+export type PokemonType = "fire" | "grass" | "water" | "electric" | "flying" | "poison" | "bug" |"ghost" |"ground" |"rock" |"steel" |"ice" |"fighting" |"fairy" |"psychic" |"normal" |"dark" |"dragon"
+
+
 export type PokemonBattler= {
   name: string;
   rarityLevel: number;
+  types: PokemonType[];
   hp: number;
   pokemonId: number;
   pokedexId: number;

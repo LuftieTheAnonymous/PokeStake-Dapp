@@ -1,75 +1,139 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { Button } from './ui/button';
-import { Wallet } from 'lucide-react';
+'use client';
 
+import { useExportWallet, useLogin, usePrivy } from '@privy-io/react-auth';
+import { Button } from './ui/button';
+import { Wallet, LogOut } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"
+import { DialogHeader, DialogFooter } from './ui/dialog';
+import { RiExportFill } from 'react-icons/ri';
+import { useQuery } from 'wagmi/query';
+;
 
 export function CustomConnectButton() {
+  const { login } = useLogin({
+    onComplete: ({ user, isNewUser, wasAlreadyAuthenticated, loginMethod, loginAccount }) => {
+      console.log('User logged in successfully', user);
+      console.log('Is new user:', isNewUser);
+      console.log('Was already authenticated:', wasAlreadyAuthenticated);
+      console.log('Login method:', loginMethod);
+      console.log('Login account:', loginAccount);
+    },
+    onError: (error) => {
+      console.error('Login failed', error);
+    }
+  });
+const {exportWallet} = useExportWallet();
+
+  const { user, logout, ready:isReady} = usePrivy();
+
+  const {data}= useQuery({
+    queryKey:["wallet-balance"],
+    queryFn:async()=>{
+      try {
+
+
+
+const dataFetch = await fetch(`https://api.privy.io/v1/accounts/${user?.id}/balance`,{
+  method: 'GET',
+  headers: {'privy-app-id': process.env.NEXT_PUBLIC_PRIVY_APP_ID as string, 
+    Authorization: `Basic ${process.env.NEXT_PUBLIC_PRIVY_APP_SECRET as string}`}
+});
+
+const data = await dataFetch.json();
+
+return data;
+
+      } catch (error) {
+        return null
+      }
+    }
+  });
+  
+  console.log(data);
+
+
+  const isAuthenticated = !!user;
+
+  // Extract wallet address (handles both embedded and connected wallets)
+  const walletAddress = user && user.wallet && user.wallet.address;
+
+  const displayAddress = walletAddress
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+    : user?.email || 'User';
+
+  if (!isReady) {
+    return (
+      <Button size="sm" disabled>
+        Loading...
+      </Button>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Button
+        size="sm"
+        onClick={login}
+        className="bg-primary hover:bg-primary/90 cursor-pointer"
+      >
+        <Wallet className="h-4 w-4 mr-2" />
+        Connect Wallet
+      </Button>
+    );
+  }
+
+  // User is logged in
   return (
-    <ConnectButton.Custom>{({account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        authenticationStatus,
-        mounted,
-})=>{
-    const ready = mounted && authenticationStatus !== 'loading';
-        const connected =
-          ready &&
-          account &&
-          chain &&
-          (!authenticationStatus ||
-            authenticationStatus === 'authenticated');
-   return (
-          <div>
-            {!ready && (
-              <Button size="sm" disabled>
-                Loading...
-              </Button>
-            )}
+    <div className="flex gap-2 items-center">
+    <Dialog>
+        <DialogTrigger asChild>
+      <Button
+        variant="outline"
+        size="sm"
+        className="border-primary/50 bg-primary/5 cursor-default"
+      >
+        <Wallet className="h-4 w-4 mr-2" />
+        <span className="font-mono text-xs">{displayAddress && displayAddress.toString()}</span>
+      </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-sm
+        h-96 flex flex-col justify-between
+        ">
+          <DialogHeader>
+            <DialogTitle> Logged In As
+            </DialogTitle>
+            <DialogDescription>
+              {walletAddress && `${walletAddress.slice(0,15)}...${walletAddress.slice(-6)}`}
+            </DialogDescription>
+          </DialogHeader>
 
-            {ready && !connected && (
-              <Button
-                size="sm"
-                onClick={openConnectModal}
-                className="bg-primary hover:bg-primary/90 cursor-pointer"
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Connect Wallet
-              </Button>
-            )}
 
-            {connected && (
-              <div className="flex gap-2">
-                {chain.unsupported && (
-                  <Button
-                    size="sm"
-                    onClick={openChainModal}
-                    className="bg-red-500/20 border border-red-500 hover:bg-red-500/30"
-                  >
-                    Wrong Network
-                  </Button>
-                )}
+          <div className="w-full flex flex-col gap-2">
 
-          
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openAccountModal}
-                  className="border-primary/50 hover:border-primary hover:bg-primary/10 cursor-pointer"
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  <span className="font-mono text-xs">
-                    {account.displayName}
-                  </span>
-                </Button>
-              </div>
-            )}
-          </div>
-        );
+<Button
+className='flex items-center gap-2 bg-(--pokemon-blue)
+        hover:bg-(--pokemon-blue)/75
+        cursor-pointer'
+        onClick={exportWallet}>
+          Export Your Wallet <RiExportFill/>
+        </Button>
+            </div>       
     
-    }}    
-    </ConnectButton.Custom>
-  )
-}
+       
+               <DialogFooter>
+           <Button 
+              className='w-full p-2 cursor-pointer'
+              onClick={logout}
+              >
+                Log out <LogOut/>
+              </Button>
+        </DialogFooter>
+        </DialogContent>
+    </Dialog>
 
+
+
+    
+    </div>
+  );
+}

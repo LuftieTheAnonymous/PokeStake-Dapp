@@ -1,7 +1,5 @@
 "use client";
 
-import "@/components/components-styles.css";
-
 import { useBattleRoomState } from "@/lib/state-management/useBattleRoomState";
 import LobbyPanel from "./lobby/LobbyPanel";
 import BatlleFieldContainer from "./battle-components/BatlleFieldContainer";

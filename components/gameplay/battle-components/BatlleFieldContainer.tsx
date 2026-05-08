@@ -14,7 +14,7 @@ import { BattleRoom, PokemonBattler } from "@/lib/types";
 import EnemyPokemonView from "./EnemyPokemonView";
 import PlayerPokemonView from "./PlayerPokemonView";
 import TopBar from "./TopBar";
-import { ArrowLeft, RefreshCw, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy } from "lucide-react";
 import {
   MAX_TURN_DURATION,
   useBattleRoomState,
@@ -52,6 +52,8 @@ function BatlleFieldContainer({
 
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showFightIntro, setShowFightIntro] = useState(false);
+
+  const [moveTimeoutCounter, setMoveTimeoutCounter]=useState<number>(30);
 
   const playerPokemonData =
     battleRoomState.host === walletAddress
@@ -131,10 +133,10 @@ const playerBattleStarted = useEffectEvent(({
       }) => {
         setShowFightIntro(true);
         setMessage(message);
-        battleRoomState.updateRoomState(battleRoom);
 
         const introTimeout = setTimeout(() => {
           setShowFightIntro(false);
+          battleRoomState.updateRoomState(battleRoom);
         }, 5000);
 
         const countdownInterval = setInterval(() => {
@@ -161,8 +163,8 @@ const timeoutEventHandler = useEffectEvent(() => {
   }
 
     if (battleRoomState.turnChangedAt && battleRoomState.isBattleStarted && !battleRoomState.isBattleFinished) {
-      const timeoutSeconds = new Date().getTime() - battleRoomState.turnChangedAt;
-      console.log(timeoutSeconds);
+      const timeoutSeconds = Math.floor(new Date().getTime() - battleRoomState.turnChangedAt);
+      setMoveTimeoutCounter(Math.floor(timeoutSeconds / 1000));
       if (timeoutSeconds >= MAX_TURN_DURATION && isYourTurn) {
       emit("handle-timeout", battleRoomState.roomId);
       }
@@ -469,12 +471,18 @@ useEffect(()=>{
 
   return (
     <>
-      {/* Battlefield */}
+    <div className="flex-1 relative overflow-hidden">
+    {/* Battlefield */}
+
+
+    
       {showFightIntro && (
         <BattleHook countdown={countdown} showFightIntro={showFightIntro} />
       )}
 
-      <div className="flex-1 relative overflow-hidden">
+
+
+      
         <TopBar
           walletAddress={walletAddress as `0x${string}`}
           roomDetails={battleRoomState}
@@ -484,6 +492,11 @@ useEffect(()=>{
             battleRoomState.hostPlayer !== null
           }
         />
+        <div className="absolute top-0 text-xl font-bold flex items-center justify-center right-0 z-50 m-2 w-12 h-12 rounded-lg bg-black/80 border-2 border-(--pokemon-blue)">
+          <p>{moveTimeoutCounter}</p>
+        </div>
+        
+
         {/* Sky gradient */}
         <div className="absolute h-screen inset-0 bg-gradient-to-b from-[hsl(200,60%,70%)] via-[hsl(120,30%,65%)] to-[hsl(100,35%,50%)]" />
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import usePokeData from '@/hooks/usePokeData';
 import Link from "next/link";
 import { PokeCard } from "@/components/pokemon-card";
@@ -9,17 +9,13 @@ import { PokeCoinIcon } from "@/components/token-balance";
 import type { PokemonCard as PokemonCardType } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
-import { useWatchContractEvent } from "wagmi";
+import { useChainId, useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {toast} from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
 
 
-
-
-type Props = {}
-
-function CardDrawDisplay({}: Props) {
+function CardDrawDisplay() {
   const [drawnCard, setDrawnCard] = useState<PokemonCardType | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -28,12 +24,12 @@ function CardDrawDisplay({}: Props) {
   const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber, requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber,
     requestId} = usePokeData();
 
+    const chainId=useChainId();
 
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
     await drawRandomNumber(setIsDrawing);
   }
-
 
 
   useEffect(() => {
@@ -67,12 +63,13 @@ function CardDrawDisplay({}: Props) {
     'eventName':"PokemonCardGenerated",
     'onLogs': async (logs)=>{
       console.log(logs);
-      if(drawnCard && (logs[0] as any).args.user === walletAddress){
+      if(drawnCard && walletAddress && (logs[0] as any).args.user === walletAddress){
           toast(`Your PokeCard of ${drawnCard.name} (ID: #${Number((logs[0] as any).args.nftId).toString().padStart(4, "0")}) has been minted !`);
       }
     },
     onError(error){
-       toast(error.shortMessage);
+      console.log(error);
+       toast(`Event Error: ${error.shortMessage}`);
     }
   });
 

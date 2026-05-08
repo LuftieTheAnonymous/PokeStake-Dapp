@@ -1,9 +1,10 @@
-import { createConfig, http } from 'wagmi'
+import { createConfig } from '@privy-io/wagmi'
+import { http } from 'wagmi'
 import { sepolia } from 'wagmi/chains'
 
 export const config = createConfig({
   chains: [sepolia],
   transports: {
-    [sepolia.id]: http("https://1rpc.io/sepolia"),
+    [sepolia.id]: http("https://0xrpc.io/sep"),
   },
 })

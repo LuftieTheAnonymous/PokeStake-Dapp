@@ -40,11 +40,11 @@
   --sidebar-ring: oklch(0.58 0.24 28);
   
   /* Pokemon vivid colors */
-  --pokemon-red: oklch(0.58 0.24 28);
+  --pokemon-red: oklch(58.115% 0.23784 28.383);
   --pokemon-blue: oklch(0.55 0.2 250);
   --pokemon-yellow: oklch(0.88 0.16 90);
   --pokemon-green: oklch(0.62 0.2 145);
-  --pokemon-orange: oklch(0.72 0.18 55);
+  --pokemon-orange: oklch(71.505% 0.17822 54.424);
 }
 
 /* Dark Mode */
