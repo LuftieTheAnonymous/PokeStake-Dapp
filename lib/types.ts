@@ -14,7 +14,7 @@ export interface PokemonCard {
   id: number;
   pokedexIndex: number;
   rarity: Rarity;
-  type: string[];
+  type: PokemonType[];
   sprites:(string | null)[],
   hp: number;
   attack: number;

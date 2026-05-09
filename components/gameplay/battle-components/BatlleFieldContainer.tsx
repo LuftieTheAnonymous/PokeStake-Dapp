@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { redirect } from "next/navigation";
 import BattleHook from "./BattleHook";
 import { useInterval } from "@/hooks/useInterval";
+import { count } from "console";
 
 function BatlleFieldContainer({
   emit,
@@ -99,61 +100,67 @@ function BatlleFieldContainer({
         : false;
 
 const playerJoinHandler = useEffectEvent((res: {
-        data: {   
-          message: string;
-          battleRoom: BattleRoom;
-        };
-        error: null;
-      }) => {
-        console.log(res);
-        console.log("Player join error:", res.error);
-        if (res.error) {
-          toast.error(res.error);
-          return;
-        }
-        toast.success(res.data.message);
-        battleRoomState.updateRoomState(res.data.battleRoom);
+  data: {   
+    message: string;
+    battleRoom: BattleRoom;
+  };
+  error: null;
+}) => {
+  console.log(res);
+  if (res.error) {
+    toast.error(res.error);
+    return;
+  }
+  toast.success(res.data.message);
+  battleRoomState.updateRoomState(res.data.battleRoom);
 
-        if (
-          res.data.battleRoom.hostPlayer &&
-          res.data.battleRoom.inviteePlayer &&
-          walletAddress === res.data.battleRoom.host
-        ) {
-          emit("start-battle", res.data.battleRoom.roomId);
-          setCountdown(5);
-        }
-      });
+  // Only host emits, but server broadcasts to both
+  if (
+    res.data.battleRoom.hostPlayer &&
+    res.data.battleRoom.inviteePlayer &&
+    walletAddress === res.data.battleRoom.host
+  ) {
+    emit("start-battle", res.data.battleRoom.roomId); // ← Keep this
+  }
+});
 
 const playerBattleStarted = useEffectEvent(({
-        message,
-        battleRoom,
-      }: {
-        message: string;
-        battleRoom: BattleRoom;
-      }) => {
-        setShowFightIntro(true);
-        setMessage(message);
+  message,
+  battleRoom,
+  startTime,
+}: {
+  message: string;
+  battleRoom: BattleRoom;
+  startTime: number;
+}) => {
+  setShowFightIntro(false); // Don't show ball yet
+  setMessage(message);
+  setCountdown(5);
 
-        const introTimeout = setTimeout(() => {
-          setShowFightIntro(false);
-          battleRoomState.updateRoomState(battleRoom);
-        }, 5000);
+  // Use server time for sync, check every 100ms
+  const countdownInterval = setInterval(() => {
+    const now = Date.now();
+    const remaining = Math.ceil(((startTime) - now) / 1000);
 
-        const countdownInterval = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev && prev <= 1) {
-              clearInterval(countdownInterval);
-              return 0;
-            }
-            return prev ? prev - 1 : null;
-          });
-        }, 1000);
+    if (remaining > 0) {
+      setCountdown(remaining); // 5, 4, 3, 2, 1
+    } else {
+      setCountdown(0);
+      clearInterval(countdownInterval);
+      setShowFightIntro(true); // Show ball AFTER countdown
 
-        return () => {
-          clearTimeout(introTimeout);
-          clearInterval(countdownInterval);
-        };
-      });
+      setTimeout(() => {
+        setShowFightIntro(false);
+        setCountdown(null);
+        battleRoomState.updateRoomState(battleRoom);
+      }, 2500);
+    }
+  }, 100); // Check more frequently for smooth sync
+
+  return () => {
+    clearInterval(countdownInterval);
+  };
+});
       
 const timeoutEventHandler = useEffectEvent(() => {
 
@@ -428,7 +435,7 @@ useEffect(()=>{
   }, []);
 
     useEffect(() => {
-    if (battleRoomState.currentTurn)
+    if (!!battleRoomState.currentTurn)
       setMessage(
         `What will ${battleRoomState.currentTurn === "host" ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} do?`,
       );
@@ -476,13 +483,10 @@ useEffect(()=>{
 
 
     
-      {showFightIntro && (
+      {countdown !== null  && (
         <BattleHook countdown={countdown} showFightIntro={showFightIntro} />
       )}
 
-
-
-      
         <TopBar
           walletAddress={walletAddress as `0x${string}`}
           roomDetails={battleRoomState}
@@ -492,9 +496,12 @@ useEffect(()=>{
             battleRoomState.hostPlayer !== null
           }
         />
+        {battleRoomState.isBattleStarted &&
         <div className="absolute top-0 text-xl font-bold flex items-center justify-center right-0 z-50 m-2 w-12 h-12 rounded-lg bg-black/80 border-2 border-(--pokemon-blue)">
           <p>{moveTimeoutCounter}</p>
-        </div>
+        </div> 
+        }
+       
         
 
         {/* Sky gradient */}

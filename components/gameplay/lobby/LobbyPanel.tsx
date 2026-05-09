@@ -82,7 +82,7 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
   }, [walletAddress]);
 
 const joinBattleRoom = ()=>{
-const convertedSelectedPokemon:PokemonBattler[] = sSelected.map((card)=> ({
+const convertedSelectedPokemon:PokemonBattler[] = pokemonBattlersSelected.map((card)=> ({
         pokemonId: card.attributes.id,
         pokedexIndex: card.attributes.pokedexIndex,
         rarityLevel: RARITY_CONFIG[card.attributes.rarity].dailyReward,
@@ -90,7 +90,7 @@ const convertedSelectedPokemon:PokemonBattler[] = sSelected.map((card)=> ({
         hp: card.attributes.hp,
         maxHp: card.attributes.hp,
         attack: card.attributes.attack,
-        defense: card.attributes.defense,
+        defense: card.attributes.defense,   
         sprites:{front: card.attributes.sprites[0], back: card.attributes.sprites[1]},
         name: card.name,
         cries: card.attributes.cries

@@ -7,8 +7,8 @@ type Props = {
 
 function BattleHook({countdown, showFightIntro}: Props) {
   return (
-  <>
-  {(countdown !== null || showFightIntro) && (
+     <>
+  {(countdown !== null || !showFightIntro) && (
          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           {/* Semi-transparent backdrop blur — lets the battlefield show through */}
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
@@ -41,8 +41,8 @@ function BattleHook({countdown, showFightIntro}: Props) {
        
 
             {/* Phase 2: "FIGHT!" intro with Pokéball SVG */}
-     
-              <div className="flex flex-col items-center gap-6 animate-fight-intro">
+     {showFightIntro &&
+            <div className="flex flex-col items-center gap-6 animate-fight-intro">
            
                 <div className="relative w-32 h-32">
                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_30px_oklch(0.18 0.01 250)/0.6)]">
@@ -62,13 +62,16 @@ function BattleHook({countdown, showFightIntro}: Props) {
                   FIGHT!
                 </h1>
               </div>
+     }
+       
     
           </div>
         </div>
 
       )}
   </>
-  )
+  );
 }
+
 
 export default BattleHook

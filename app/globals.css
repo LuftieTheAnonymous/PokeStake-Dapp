@@ -316,3 +316,23 @@
 }
 
 
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px oklch(0.72 0.18 55 / 0.4),
+      0 0 40px oklch(0.72 0.18 55 / 0.2),
+      inset 0 0 20px oklch(0.72 0.18 55 / 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px oklch(0.72 0.18 55 / 0.6),
+      0 0 60px oklch(0.72 0.18 55 / 0.3),
+      inset 0 0 30px oklch(0.72 0.18 55 / 0.15);
+  }
+}
+
+.wallet-dialog-glow {
+  background: linear-gradient(135deg, oklch(0.16 0.01 250) 0%, oklch(0.14 0.01 250) 100%);
+  animation: glow-pulse 3s ease-in-out infinite;
+  border: 1px solid oklch(0.72 0.18 55 / 0.3);
+}
