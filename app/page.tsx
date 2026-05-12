@@ -171,9 +171,6 @@ export default function HomePage() {
   <iframe className="max-w-xs w-full min-h-[40rem] rounded-2xl" src={`https://nowpayments.io/embeds/donation-widget?api_key=${process.env.NEXT_PUBLIC_WEB3_DONATIONS_SECTION}`} frameBorder="0" scrolling="no">
    Can't load widget
 </iframe>
-
-
-
 </div>
 
 

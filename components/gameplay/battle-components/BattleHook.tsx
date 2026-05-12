@@ -8,18 +8,13 @@ type Props = {
 function BattleHook({countdown, showFightIntro}: Props) {
   return (
      <>
-  {(countdown !== null || !showFightIntro) && (
+  {(countdown && countdown > 0 || !showFightIntro) && (
          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           {/* Semi-transparent backdrop blur — lets the battlefield show through */}
           <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
           <div className="relative flex flex-col items-center gap-6">
-
-            {/* Phase 1: Countdown numbers (5, 4, 3, 2, 1) */}
-   
-   
                 <p className="text-muted-foreground text-lg font-medium tracking-wider uppercase animate-pulse">Get Ready</p>
-                {/* key={countdown} forces React to remount this div each tick,
-                    which re-triggers the .animate-countdown CSS animation */}
+              
                 <div
                   key={countdown}
                   className="text-[120px] text-(--pokemon-yellow) font-black leading-none animate-countdown"

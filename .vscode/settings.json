@@ -1,3 +1,5 @@
 {
-    "wake.compiler.solc.remappings": []
+    "wake.compiler.solc.remappings": [
+        "poseidon-solidity/=node_modules/poseidon-solidity/"
+    ]
 }
