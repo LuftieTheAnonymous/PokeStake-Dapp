@@ -6,23 +6,34 @@ import { Wallet, LogOut } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog"
 import { DialogHeader, DialogFooter } from './ui/dialog';
 import { RiExportFill } from 'react-icons/ri';
-import { useAccount } from 'wagmi';
 import { FaEthereum, FaUser } from 'react-icons/fa';
 import { getBalance } from 'viem/actions';
 import { config } from '@/lib/wagmi/wagmiConfig';
-import { Client } from 'viem';
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 ;
 
 export function CustomConnectButton() {
   const { login } = useLogin({
-    onComplete: ({ user, isNewUser, wasAlreadyAuthenticated, loginMethod, loginAccount }) => {
+    onComplete: async ({ user, isNewUser, wasAlreadyAuthenticated, loginMethod, loginAccount }) => {
       console.log('User logged in successfully', user);
       console.log('Is new user:', isNewUser);
       console.log('Was already authenticated:', wasAlreadyAuthenticated);
       console.log('Login method:', loginMethod);
       console.log('Login account:', loginAccount);
+    
+      if(isNewUser && !wasAlreadyAuthenticated){
+        const dataFetch = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/users/create`, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          body:JSON.stringify({
+            walletAddress: user.wallet?.address,
+            email: user.email?.address
+          }),
+        }
+        });
+      }
+    
     },
     onError: (error) => {
       console.error('Login failed', error);

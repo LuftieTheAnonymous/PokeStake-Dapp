@@ -6,6 +6,7 @@ import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
 import { Navigation } from '@/components/navigation'
 import { GradientBackground } from '@/components/gradient-background'
 import { Toaster } from 'sonner'
+import { SupabaseProvider } from '@/lib/supabase/SupabaseProvider'
 
 
 
@@ -57,7 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} ${firaCode.variable} overflow-x-hidden font-sans antialiased`}>
-
+          <SupabaseProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -80,8 +81,8 @@ export default function RootLayout({
     }
 }} />
         </WagmiWrapper>
-        </ThemeProvider>
-
+        </ThemeProvider>         
+          </SupabaseProvider> 
       </body>
     </html>
   )

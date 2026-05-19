@@ -5,6 +5,6 @@ import { sepolia } from 'wagmi/chains'
 export const config = createConfig({
   chains: [sepolia],
   transports: {
-    [sepolia.id]: http("https://0xrpc.io/sep"),
+    [sepolia.id]: http("https://ethereum-sepolia-rpc.publicnode.com"),
   },
 })

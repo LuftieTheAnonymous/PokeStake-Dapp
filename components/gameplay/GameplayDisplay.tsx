@@ -60,7 +60,7 @@ function GameplayDisplay() {
   useEffect(() => {
     // Only create socket once
     if (!socketRef.current) {
-      socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+      socketRef.current = io(process.env.NEXT_PUBLIC_SERVER_URL, {
         auth: {
           walletAddress,
         },
