@@ -169,7 +169,7 @@ export default function HomePage() {
   <p className="text-lg">Unfortunately, due to Pokemon Company IP and Policies Restrictions and discrepancies between my project and the interests of Pokemon Company. Thus, if you appreciate my work, you can make a donation using the widget. You can send any type of cryptocurrency available by NOWPayments.</p>
 </div>
   <iframe className="max-w-xs w-full min-h-[40rem] rounded-2xl" src={`https://nowpayments.io/embeds/donation-widget?api_key=${process.env.NEXT_PUBLIC_WEB3_DONATIONS_SECTION}`} frameBorder="0" scrolling="no">
-   Can't load widget
+  Cannot load widget
 </iframe>
 </div>
 

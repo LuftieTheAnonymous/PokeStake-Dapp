@@ -10,6 +10,8 @@ import { FaEthereum, FaUser } from 'react-icons/fa';
 import { getBalance } from 'viem/actions';
 import { config } from '@/lib/wagmi/wagmiConfig';
 import { useQuery } from '@tanstack/react-query';
+import { generateRandomName } from '@/lib/generateRandomName';
+import { toast } from 'sonner';
 ;
 
 export function CustomConnectButton() {
@@ -20,18 +22,33 @@ export function CustomConnectButton() {
       console.log('Was already authenticated:', wasAlreadyAuthenticated);
       console.log('Login method:', loginMethod);
       console.log('Login account:', loginAccount);
+
+      const randomName = generateRandomName();
     
-      if(isNewUser && !wasAlreadyAuthenticated){
+      if(isNewUser && user.wallet &&!wasAlreadyAuthenticated){
         const dataFetch = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/users/create`, {
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          body:JSON.stringify({
-            walletAddress: user.wallet?.address,
-            email: user.email?.address
+          "authorization": `${user.wallet.address}`,
+        },  
+        body:JSON.stringify({
+            data:{
+            walletAddress: user.wallet.address,
+            nickname: randomName,
+            email: user.email?.address,
+            joinedAt: user.createdAt,
+          }
           }),
-        }
         });
+        
+        const response = await dataFetch.json();
+        console.log('User created on server:', response);
+
+        if(!response.error){
+          toast.success(`Welcome, ${randomName} ! Your account has been created.`);
+        }
+
       }
     
     },

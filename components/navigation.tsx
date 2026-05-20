@@ -17,7 +17,6 @@ import { TokenBalance, PokeCoinIcon } from "@/components/token-balance";
 import usePokeData from "@/hooks/usePokeData";
 import { CustomConnectButton } from "./custom-connect-button";
 import { useBattleRoomState } from "@/lib/state-management/useBattleRoomState";
-import { useChainId } from "wagmi";
 
 
 const navItems = [
