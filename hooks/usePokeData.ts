@@ -137,6 +137,7 @@ async function drawRandomNumber(setDrawingState:(state:boolean)=>void){
   address: VrfConsumerAddress,
   functionName:"requestRandomWords",
   args:[],
+  gas: BigInt(200_000),
 },{
   onError(error, variables, onMutateResult, context) {
     console.log("Error of drawing random number");

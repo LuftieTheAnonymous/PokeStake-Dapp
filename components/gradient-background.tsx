@@ -10,7 +10,7 @@ export function GradientBackground() {
       <div 
         className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-30 dark:opacity-20 animate-blob"
         style={{ 
-          background: 'linear-gradient(135deg, #ef4444, #f97316)',
+          background: `linear-gradient(135deg, var(--particle-1))`,
           top: '10%',
           left: '15%',
         }}
@@ -18,7 +18,7 @@ export function GradientBackground() {
       <div 
         className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-25 dark:opacity-15 animate-blob animation-delay-2000"
         style={{ 
-          background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+          background: `linear-gradient(135deg, var(--particle-2))`,
           top: '50%',
           right: '10%',
         }}
@@ -26,7 +26,7 @@ export function GradientBackground() {
       <div 
         className="absolute w-[450px] h-[450px] rounded-full blur-[110px] opacity-25 dark:opacity-15 animate-blob animation-delay-4000"
         style={{ 
-          background: 'linear-gradient(135deg, #22c55e, #84cc16)',
+          background: `linear-gradient(135deg, var(--particle-3))`,
           bottom: '10%',
           left: '25%',
         }}
@@ -34,7 +34,7 @@ export function GradientBackground() {
       <div 
         className="absolute w-[350px] h-[350px] rounded-full blur-[90px] opacity-30 dark:opacity-20 animate-blob animation-delay-3000"
         style={{ 
-          background: 'linear-gradient(135deg, #f59e0b, #eab308)',
+          background: `linear-gradient(135deg, var(--particle-4))`,
           top: '30%',
           right: '30%',
         }}
@@ -42,7 +42,7 @@ export function GradientBackground() {
       <div 
         className="absolute w-[300px] h-[300px] rounded-full blur-[80px] opacity-20 dark:opacity-10 animate-blob animation-delay-5000"
         style={{ 
-          background: 'linear-gradient(135deg, #ef4444, #ec4899)',
+          background: `linear-gradient(135deg, var(--particle-5))`,
           bottom: '30%',
           right: '20%',
         }}

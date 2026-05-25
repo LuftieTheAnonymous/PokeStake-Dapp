@@ -24,55 +24,60 @@ export function CustomConnectButton() {
       console.log('Login account:', loginAccount);
 
       const randomName = generateRandomName();
-    
-      if(isNewUser && user.wallet &&!wasAlreadyAuthenticated){
+
+      if (isNewUser && user.wallet && !wasAlreadyAuthenticated) {
+        const data: any = {
+          walletAddress: user.wallet.address,
+          nickname: randomName,
+          joinedAt: Date.now(),
+        };
+
+        if (user.email) data.email = user.email.address;
+
+        console.log(data);
+
         const dataFetch = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/users/create`, {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "authorization": `${user.wallet.address}`,
-        },  
-        body:JSON.stringify({
-            data:{
-            walletAddress: user.wallet.address,
-            nickname: randomName,
-            email: user.email?.address,
-            joinedAt: user.createdAt,
-          }
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "authorization": `${user.wallet.address}`,
+          },
+          body: JSON.stringify({
+            data
           }),
         });
-        
+
         const response = await dataFetch.json();
         console.log('User created on server:', response);
 
-        if(!response.error){
+        if (!response.error) {
           toast.success(`Welcome, ${randomName} ! Your account has been created.`);
         }
 
       }
-    
+
     },
     onError: (error) => {
       console.error('Login failed', error);
     }
   });
-const {exportWallet} = useExportWallet();
+  const { exportWallet } = useExportWallet();
 
-  const { user, logout, ready:isReady} = usePrivy();
+  const { user, logout, ready: isReady } = usePrivy();
 
-const { data: balance, isLoading, error } = useQuery({
-  queryKey: ['balance', user?.wallet?.address],
-  queryFn: async () => {
-    if (!user?.wallet?.address) throw new Error('Address required');
-    return await getBalance(config.getClient(), {
-      address: user.wallet.address as `0x${string}`,
-    });
-  },
-  enabled: !!user?.wallet?.address,
-  staleTime: 30000,
-  gcTime: 5 * 60 * 1000,
-  refetchOnWindowFocus: false,
-});
+  const { data: balance, isLoading, error } = useQuery({
+    queryKey: ['balance', user?.wallet?.address],
+    queryFn: async () => {
+      if (!user?.wallet?.address) throw new Error('Address required');
+      return await getBalance(config.getClient(), {
+        address: user.wallet.address as `0x${string}`,
+      });
+    },
+    enabled: !!user?.wallet?.address,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
 
   const isAuthenticated = !!user;
@@ -108,68 +113,68 @@ const { data: balance, isLoading, error } = useQuery({
   // User is logged in
   return (
     <div className="flex gap-2 items-center">
-<Dialog>
-  <DialogTrigger asChild>
-    <Button
-      variant="outline"
-      size="sm"
-      className="border-primary/50 bg-primary/5 cursor-default"
-    >
-      <Wallet className="h-4 w-4 mr-2" />
-      <span className="font-mono text-xs">{displayAddress && displayAddress.toString()}</span>
-    </Button>
-  </DialogTrigger>
-  <DialogContent className="wallet-dialog-glow sm:max-w-sm h-96 flex flex-col justify-between">
-    <DialogHeader>
-      <DialogTitle>Logged In As</DialogTitle>
-      <DialogDescription>
-        {walletAddress && `${walletAddress.slice(0, 15)}...${walletAddress.slice(-6)}`}
-      </DialogDescription>
-    </DialogHeader>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-primary/50 bg-primary/5 cursor-default"
+          >
+            <Wallet className="h-4 w-4 mr-2" />
+            <span className="font-mono text-xs">{displayAddress && displayAddress.toString()}</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="wallet-dialog-glow sm:max-w-sm h-96 flex flex-col justify-between">
+          <DialogHeader>
+            <DialogTitle>Logged In As</DialogTitle>
+            <DialogDescription>
+              {walletAddress && `${walletAddress.slice(0, 15)}...${walletAddress.slice(-6)}`}
+            </DialogDescription>
+          </DialogHeader>
 
-    <div className="w-full flex flex-col gap-5">
-        <Button
-        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 cursor-pointer"
-        onClick={exportWallet}
-      >
-        View Profile <FaUser/>
-      </Button>
-      
-      <Button
-        className="flex items-center gap-2 bg-[var(--pokemon-orange)] hover:bg-[var(--pokemon-orange)]/85 cursor-pointer"
-        onClick={exportWallet}
-      >
-        Export Your Wallet <RiExportFill />
-      </Button>
-    </div>
+          <div className="w-full flex flex-col gap-5">
+            <Button
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 cursor-pointer"
+              onClick={exportWallet}
+            >
+              View Profile <FaUser />
+            </Button>
 
-
-        {balance
-         &&
-         <div className='flex items-center gap-2 justify-between'>
-          <p className='font-bold text-lg'>Balance</p>
-           <div className='flex items-center gap-3'>
-          <p>
-        {
-        Number(Number(balance)/1e18).toFixed(5)
-        }
-          </p>
-          <FaEthereum />
+            <Button
+              className="flex items-center gap-2 bg-[var(--pokemon-orange)] hover:bg-[var(--pokemon-orange)]/85 cursor-pointer"
+              onClick={exportWallet}
+            >
+              Export Your Wallet <RiExportFill />
+            </Button>
           </div>
-         </div>
-         }
-  
 
-    <DialogFooter>
-      <Button
-        className="w-full p-2 cursor-pointer"
-        onClick={logout}
-      >
-        Log out <LogOut />
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+
+          {balance
+            &&
+            <div className='flex items-center gap-2 justify-between'>
+              <p className='font-bold text-lg'>Balance</p>
+              <div className='flex items-center gap-3'>
+                <p>
+                  {
+                    Number(Number(balance) / 1e18).toFixed(5)
+                  }
+                </p>
+                <FaEthereum />
+              </div>
+            </div>
+          }
+
+
+          <DialogFooter>
+            <Button
+              className="w-full p-2 cursor-pointer"
+              onClick={logout}
+            >
+              Log out <LogOut />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import usePokeData from '@/hooks/usePokeData';
 import Link from "next/link";
 import { PokeCard } from "@/components/pokemon-card";
@@ -24,16 +24,14 @@ function CardDrawDisplay() {
   const { drawCard, walletAddress, mintDrawnPokemon, lastBlockGeneratedAt, blockNumber, requestDataArray, requestData:recentRequest, isConnected, isElligibleToDraw, drawRandomNumber,
     requestId} = usePokeData();
 
-    const chainId=useChainId();
-
   const requestRandomNumber = async ()=>{
     setIsDrawing(true);
     await drawRandomNumber(setIsDrawing);
   }
 
 
-  useEffect(() => {
-    if (
+  const successfullRandomRequest = useEffectEvent((request:BigInt | null | undefined)=>{
+  if (
     requestId !== null && requestId !== undefined &&
     recentRequest &&
     recentRequest.pokedexIndex !== BigInt(0) &&
@@ -43,7 +41,14 @@ function CardDrawDisplay() {
     toast("Successfully drawn random data!");
     setIsDrawing(false);
   }
-}, [recentRequest, requestId]);
+  })
+
+
+  useEffect(() => {
+    successfullRandomRequest(requestId);
+
+  return ()=> successfullRandomRequest(requestId);
+}, [requestId]);
 
   
   useEffect(() => {
