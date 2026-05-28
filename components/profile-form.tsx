@@ -9,13 +9,13 @@ import { X, Plus } from "lucide-react";
 
 interface SocialLink {
   type: SocialMediaType;
-  handle: string;
+  link: string;
 }
 
 interface ProfileFormData {
   username: string;
   description: string;
-  socialLinks: SocialLink[];
+  socialMedias: SocialLink[];
 }
 
 interface ProfileFormProps {
@@ -27,16 +27,16 @@ interface ProfileFormProps {
 export function ProfileForm({ data, onSave, isEditing = false }: ProfileFormProps) {
   const [formData, setFormData] = useState<ProfileFormData>(data);
   const availableSocials = ALL_SOCIAL_MEDIA.filter(
-    (type) => !data.socialLinks.some((link) => link.type === type)
+    (type) => !data.socialMedias.some((link) => link.type === type)
   );
   const [newSocialType, setNewSocialType] = useState<SocialMediaType>(availableSocials[0] || 'twitter');
 
   const handleAddSocial = () => {
-    const isDuplicate = formData.socialLinks.some((link) => link.type === newSocialType);
+    const isDuplicate = formData.socialMedias.some((link) => link.type === newSocialType);
     if (!isDuplicate && availableSocials.includes(newSocialType)) {
       setFormData({
         ...formData,
-        socialLinks: [...formData.socialLinks, { type: newSocialType, handle: '' }],
+        socialMedias: [...formData.socialMedias, { type: newSocialType, link: '' }],
       });
       const updatedAvailable = availableSocials.filter((type) => type !== newSocialType);
       if (updatedAvailable.length > 0) {
@@ -48,14 +48,14 @@ export function ProfileForm({ data, onSave, isEditing = false }: ProfileFormProp
   const handleRemoveSocial = (type: SocialMediaType) => {
     setFormData({
       ...formData,
-      socialLinks: formData.socialLinks.filter((link) => link.type !== type),
+      socialMedias: formData.socialMedias.filter((link) => link.type !== type),
     });
   };
 
   const handleUpdateSocial = (type: SocialMediaType, handle: string) => {
     setFormData({
       ...formData,
-      socialLinks: formData.socialLinks.map((link) =>
+      socialMedias: formData.socialMedias.map((link) =>
         link.type === type ? { ...link, handle } : link
       ),
     });
@@ -93,7 +93,7 @@ export function ProfileForm({ data, onSave, isEditing = false }: ProfileFormProp
       <div>
         <label className="block text-sm font-semibold mb-4">Social Links</label>
         <div className="space-y-3 mb-4">
-          {formData.socialLinks.map((link) => {
+          {formData.socialMedias.map((link) => {
             const config = SOCIAL_MEDIA_OPTIONS[link.type];
             if (!config) return null;
             const Icon = config.icon;
@@ -102,7 +102,7 @@ export function ProfileForm({ data, onSave, isEditing = false }: ProfileFormProp
                 <div className="flex items-center gap-2 flex-1">
                   <Icon className="h-5 w-5 text-muted-foreground" />
                   <Input
-                    value={link.handle}
+                    value={link.link}
                     onChange={(e) => handleUpdateSocial(link.type, e.target.value)}
                     placeholder={config.placeholder}
                     className="flex-1"

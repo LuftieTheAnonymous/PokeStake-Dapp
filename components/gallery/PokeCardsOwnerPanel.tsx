@@ -47,40 +47,12 @@ function PokeCardsOwnerPanel() {
 const { data: pokemonCards, isLoading, isError, error } = useQuery({
   queryKey: ["NFT-gallery", walletAddress, showStaked],
   queryFn: async () => {
-    const nftCards: {card:PokemonCard, isStaked:boolean}[] = [];
 
-      const cards: {card:{
-      nftId:bigint,
-      pinataId:string,
-      pokedexId:bigint,
-      rarityLevel:number,
-      tokenURI:string
-    }, isStaked:boolean}[] = [
-    ...userGeneratedCards.map((card) => ({ card, isStaked: false })),
-    ...(showStaked ? userStakedPokeCards.map((card) => ({ card, isStaked: true })) : []),
-  ];
-
-  console.log(cards, "pokemon cards");
+    const usersAllCards = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/pokemon-cards?owner=${walletAddress}`);
+    const fetchedCards= await usersAllCards.json();
 
 
-    for (const pokeCard of cards) {
-      try {
-        const pinataFoundElement = await pinata.gateways.public.get(
-          pokeCard.card.pinataId
-        );
-
-        if (pinataFoundElement.data) {
-          nftCards.push({
-            card: pinataFoundElement.data as unknown as PokemonCard,
-            isStaked: pokeCard.isStaked,
-          });
-        }
-      } catch (error) {
-        console.error(`Failed to fetch card ${pokeCard.card.pinataId}`, error);
-      }
-    }
-
-    return nftCards;
+    return fetchedCards;
   },
   enabled: walletAddress && walletAddress.length > 0,
   retry: 5,

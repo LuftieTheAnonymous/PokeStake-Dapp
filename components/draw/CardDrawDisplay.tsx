@@ -9,7 +9,7 @@ import { PokeCoinIcon } from "@/components/token-balance";
 import type { PokemonCard as PokemonCardType } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
-import { useChainId, useWatchContractEvent } from "wagmi";
+import { useWatchContractEvent } from "wagmi";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
 import {toast} from "sonner";
 import { CustomConnectButton } from "@/components/custom-connect-button";
@@ -30,7 +30,11 @@ function CardDrawDisplay() {
   }
 
 
-  const successfullRandomRequest = useEffectEvent((request:BigInt | null | undefined)=>{
+  const successfullRandomRequest = useEffectEvent((request:BigInt | null | undefined, recentRequest?:{
+    pokedexIndex: bigint;
+    rarityLevel: bigint;
+    isResolved: boolean;
+})=>{
   if (
     requestId !== null && requestId !== undefined &&
     recentRequest &&
@@ -45,9 +49,9 @@ function CardDrawDisplay() {
 
 
   useEffect(() => {
-    successfullRandomRequest(requestId);
+    successfullRandomRequest(requestId, recentRequest);
 
-  return ()=> successfullRandomRequest(requestId);
+    return ()=> successfullRandomRequest(requestId, recentRequest);
 }, [requestId]);
 
   
@@ -74,10 +78,9 @@ function CardDrawDisplay() {
     },
     onError(error){
       console.log(error);
-       toast(`Event Error: ${error.shortMessage}`);
+      //  toast(`Event Error: ${error.shortMessage}`);
     }
   });
-
 
 
 

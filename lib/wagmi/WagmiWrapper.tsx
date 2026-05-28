@@ -9,9 +9,9 @@ import { sepolia } from 'viem/chains';
 type Props = {
     children:React.ReactNode
 }
+export const queryClient = new QueryClient();
 
 function WagmiWrapper({children}: Props) {
-    const queryClient = new QueryClient();
 
   return (
     <PrivyProvider appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}

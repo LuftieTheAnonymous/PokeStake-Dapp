@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sparkles, Layers, ImageIcon, Sun, Moon, Monitor, ShoppingCart, Gamepad2 } from "lucide-react";
+import { Sparkles, Layers, ImageIcon, Sun, Moon, ShoppingCart, Gamepad2, User2Icon, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,7 +24,8 @@ const navItems = [
   { href: "/staking", label: "Staking", icon: Layers },
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
   {href:"/marketplace", label:"MarketPlace", icon: ShoppingCart},
-  {href:'/gameplay', label:'Gameplay', icon:Gamepad2}
+  {href:'/gameplay', label:'Gameplay', icon:Gamepad2},
+  {href:'/profile', label:'Profile', icon: User2Icon}
 ];
 
 export function Navigation() {
@@ -46,7 +47,6 @@ export function Navigation() {
             Poke<span className="text-primary">Stake</span>
           </span>
         </Link>
-
 
 
         <nav className="hidden md:flex items-center gap-1">

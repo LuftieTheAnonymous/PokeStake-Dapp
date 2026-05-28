@@ -36,7 +36,7 @@ export function CustomConnectButton() {
 
         console.log(data);
 
-        const dataFetch = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/users/create`, {
+        const dataFetch = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/trainers/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

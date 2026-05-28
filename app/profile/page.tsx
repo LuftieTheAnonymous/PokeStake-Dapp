@@ -7,29 +7,84 @@ import { ProfileForm } from "@/components/profile-form";
 import { ThemeSelector } from "@/components/theme-selector";
 import { Button } from "@/components/ui/button";
 import { SOCIAL_MEDIA_OPTIONS } from "@/lib/social-media";
-import { useThemeColors, useThemeInitializer } from "@/hooks/use-theme-colors";
+import { useThemeColors } from "@/hooks/use-theme-colors";
 import type { SocialMediaType } from "@/lib/social-media";
 import type { PokemonTheme } from "@/lib/themes";
 import { Edit2, Save, Upload } from "lucide-react";
 import Link from "next/link";
 import Avatar from "boring-avatars";
+import { useThemeStore } from "@/lib/state-management/useTheme";
+import { useAccount } from "wagmi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
+import { formatDistance } from "date-fns";
+import { queryClient } from "@/lib/wagmi/WagmiWrapper";
 
-interface UserProfile {
-  username: string;
-  description: string;
-  socialLinks: Array<{ type: SocialMediaType; handle: string }>;
-  theme: PokemonTheme;
-}
 
 export default function ProfilePage() {
-  const selectedTheme = useThemeColors();
+  const { setTheme } = useThemeStore.getState();
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = usePrivy();
+  const {login} = useLogin();
+  const address = user?.wallet?.address;
 
-  const handleSaveProfile = (data: UserProfile) => {
-    setProfile({
-      ...data,
-      theme: profile.theme,
-    });
+  const { data: profile } = useQuery({
+    queryKey: ["userProfile", address],
+    queryFn: async () => {
+      if (!address) return null;
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/trainers/${address}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `${address}`,
+          },
+          body: JSON.stringify({
+            include: {
+              socialMedias: true,
+              pokemons: true,
+              pokemonCardListings: true,
+            },
+          }),
+        });
+
+        const {data} = await response.json();
+
+        return data;
+      } catch (error) {
+        console.error("Error fetching user profile:", String(error));
+        return null;
+      }
+    },
+    enabled: Boolean(address),
+  });
+
+  const { mutate: saveProfile } = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trainers/update/${address}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("Profile updated successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Error updating profile:", String(error));
+    },
+    onSettled: async () => {
+      // Invalidate or refetch profile data if needed
+      await queryClient.invalidateQueries({queryKey: ["userProfile", address]});
+      await queryClient.refetchQueries({queryKey: ["trainers"]});
+    }
+  });
+
+  const handleSaveProfile = (data: any) => {
+    saveProfile(data);
     setIsEditing(false);
   };
 
@@ -43,17 +98,17 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
-        setAvatar(dataUrl);
+        // to be added - upload the image to IPFS or your server and get the URL
+        console.log("Avatar uploaded:", dataUrl);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  if (!walletConnected) {
+
+  if (!address) {
     return (
       <div className="min-h-screen relative">
-        <GradientBackground />
-        <Navigation />
         <main className="relative">
           <div className="max-w-7xl mx-auto px-4 py-20">
             <div className="text-center space-y-4">
@@ -62,7 +117,7 @@ export default function ProfilePage() {
                 Connect your wallet to view and customize your profile
               </p>
               <Button
-                onClick={connectWallet}
+                onClick={login}
                 className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white mx-auto mt-4"
                 size="lg"
               >
@@ -85,11 +140,10 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className="relative group">
                 <Avatar
-                username={profile.username}
-                variant="pixel"
-                width={128}
-                height={128} 
-                className="w-32 h-32 rounded-full border-4 border-primary/50 object-cover"
+                  name={profile.nickname as string}
+                  variant="pixel"
+                  size={128}
+                  className="w-32 h-32 rounded-full border-4 border-primary/50 object-cover"
                 />
 
 
@@ -106,8 +160,8 @@ export default function ProfilePage() {
                 )}
               </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-2">{profile.username}</h1>
-                <p className="text-muted-foreground font-mono">{walletAddress}</p>
+                <h1 className="text-2xl md:text-4xl font-bold mb-2">{profile.nickname}</h1>
+                <p className="text-muted-foreground text-sm font-mono">{address}</p>
               </div>
             </div>
             <Button
@@ -139,11 +193,11 @@ export default function ProfilePage() {
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <p className="text-xs text-muted-foreground uppercase mb-1">Pokemon Collected</p>
-                  <p className="text-3xl font-bold">{ownedCards.length}</p>
+                  <p className="text-3xl font-bold">{profile.pokemons && profile.pokemons.length}</p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <p className="text-xs text-muted-foreground uppercase mb-1">Member Since</p>
-                  <p className="text-2xl font-bold">245 days</p>
+                  <p className="text-2xl font-bold">{profile.joinedAt && formatDistance(new Date(profile.joinedAt), new Date())}</p>
                 </div>
                 <Link href="/gallery" className="block">
                   <Button variant="outline" className="w-full">
@@ -159,14 +213,14 @@ export default function ProfilePage() {
               {!isEditing && (
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <h2 className="text-xl font-bold mb-4">About Me</h2>
-                  <p className="text-muted-foreground">{profile.description}</p>
+                  <p className="text-muted-foreground">{profile.description ? profile.description : "No description available."}</p>
 
                   {/* Social Links */}
-                  {profile.socialLinks && profile.socialLinks.length > 0 && (
+                  {profile.socialMedias && profile.socialMedias.length > 0 && (
                     <div className="mt-6 pt-6 border-t border-border/30">
                       <h3 className="font-semibold mb-4">Social Links</h3>
                       <div className="space-y-2">
-                        {profile.socialLinks.map((link) => {
+                        {profile.socialMedias.map((link: { type: SocialMediaType, link: string, id:string, belongTo:string}) => {
                           const config = SOCIAL_MEDIA_OPTIONS[link.type];
                           if (!config) return null;
                           const Icon = config.icon;
@@ -174,9 +228,9 @@ export default function ProfilePage() {
                             <div key={link.type} className="flex items-center gap-3">
                               <Icon className="h-5 w-5 text-muted-foreground" />
                               <span className="text-sm">{config.label}</span>
-                              <span className="text-sm font-mono text-muted-foreground ml-auto">
-                                {link.handle}
-                              </span>
+                              <Link href={link.link} target="_blank" rel="noopener noreferrer" className="text-sm font-mono text-muted-foreground ml-auto">
+                                {link.type}
+                              </Link>
                             </div>
                           );
                         })}

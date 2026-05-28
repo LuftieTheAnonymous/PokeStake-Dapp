@@ -6,8 +6,7 @@ import WagmiWrapper from '@/lib/wagmi/WagmiWrapper'
 import { Navigation } from '@/components/navigation'
 import { GradientBackground } from '@/components/gradient-background'
 import { Toaster } from 'sonner'
-
-
+import {ThemeInitializer} from '@/components/theme-initializer'
 
 
 const spaceGrotesk = Space_Grotesk({ 
@@ -65,7 +64,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
         <WagmiWrapper>
-              <GradientBackground />
+          <ThemeInitializer/>
+          <GradientBackground />
                   <Navigation />
             {children}
             <Toaster toastOptions={{

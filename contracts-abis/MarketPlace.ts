@@ -1,4 +1,4 @@
-export const marketPlaceAddress="0xf9BD9c14a2Fb781d2eD4475A6A459c228677AE04";
+export const marketPlaceAddress="0x0596c79013C72996780844Cd3066b4bac582d172";
 
 export const marketPlaceAbi=[
     {
@@ -74,7 +74,6 @@ export const marketPlaceAbi=[
               "internalType": "uint256"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "tokenURI", "type": "string", "internalType": "string" },
             {
               "name": "listingBlockNumber",
               "type": "uint256",
@@ -117,7 +116,6 @@ export const marketPlaceAbi=[
               "internalType": "uint256"
             },
             { "name": "nftId", "type": "uint256", "internalType": "uint256" },
-            { "name": "tokenURI", "type": "string", "internalType": "string" },
             {
               "name": "listingBlockNumber",
               "type": "uint256",
@@ -323,6 +321,12 @@ export const marketPlaceAbi=[
           "type": "uint256",
           "indexed": false,
           "internalType": "uint256"
+        },
+        {
+          "name": "listingId",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         }
       ],
       "anonymous": false
@@ -342,6 +346,12 @@ export const marketPlaceAbi=[
           "type": "address",
           "indexed": false,
           "internalType": "address"
+        },
+        {
+          "name": "prelongedUntilBlock",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         }
       ],
       "anonymous": false
@@ -374,6 +384,12 @@ export const marketPlaceAbi=[
           "type": "address",
           "indexed": false,
           "internalType": "address"
+        },
+        {
+          "name": "tokenId",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         },
         {
           "name": "blockNumber",
