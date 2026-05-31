@@ -12,6 +12,7 @@ import { config } from '@/lib/wagmi/wagmiConfig';
 import { useQuery } from '@tanstack/react-query';
 import { generateRandomName } from '@/lib/generateRandomName';
 import { toast } from 'sonner';
+import Link from 'next/link';
 ;
 
 export function CustomConnectButton() {
@@ -40,7 +41,7 @@ export function CustomConnectButton() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "authorization": `${user.wallet.address}`,
+            "authorization": `${data.walletAddress}`,
           },
           body: JSON.stringify({
             data
@@ -133,11 +134,12 @@ export function CustomConnectButton() {
           </DialogHeader>
 
           <div className="w-full flex flex-col gap-5">
-            <Button
+                <Button
               className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 cursor-pointer"
-              onClick={exportWallet}
             >
-              View Profile <FaUser />
+                       <Link href={'/profile'} className='w-full flex items-center gap-2 justify-center'>
+                                     View Profile <FaUser />
+                       </Link>
             </Button>
 
             <Button

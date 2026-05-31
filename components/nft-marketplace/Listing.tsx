@@ -4,10 +4,10 @@ import { Tag, Coins } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PokemonCard, SaleListing } from "@/lib/types";
+import { SaleListing } from "@/lib/types";
 
 interface ListingProps {
-  nft: {saleDetails: SaleListing, card:PokemonCard};
+  nft: SaleListing;
   index?: number;
 }
 
@@ -62,12 +62,12 @@ const getRarityClass = (rarity?: string) => {
 };
 
 const Listing = ({ nft, index = 0 }: ListingProps) => {
-  const rarity = getRarityClass(nft.card.attributes.rarity);
+  const rarity = getRarityClass(nft.pokemonListed.rarity);
 
   return (
     <motion.div variants={itemVariants}>
       <Link
-        href={`/marketplace/listing/${Number(nft.saleDetails.listingId)}`}
+        href={`/marketplace/listing/${Number(nft.listingId)}`}
         className={cn(
           "group relative block border-2 rounded-xl bg-gradient-to-br bg-card overflow-hidden",
           "transition-all duration-300 cursor-pointer",
@@ -86,8 +86,8 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
         {/* Image Container */}
         <div className="aspect-square overflow-hidden bg-muted relative">
           <img
-            src={nft.card.image}
-            alt={nft.card.name}
+            src={nft.pokemonListed.image}
+            alt={nft.pokemonListed.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
@@ -127,9 +127,9 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
         <div className="p-3 space-y-2 bg-background/60 backdrop-blur-sm border-t border-border/20">
           {/* Collection & Name */}
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground capitalize">{nft.card.attributes.type.join(" / ")}</p>
+            <p className="text-xs text-muted-foreground capitalize">{nft.pokemonListed.types.join(" / ")}</p>
             <h3 className="text-sm capitalize font-semibold tracking-tight text-foreground truncate">
-              {nft.card.name}
+              {nft.pokemonListed.name}
             </h3>
           </div>
 
@@ -138,17 +138,17 @@ const Listing = ({ nft, index = 0 }: ListingProps) => {
             <div className="flex items-center gap-1.5">
               <Tag className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="font-mono text-sm font-medium tabular-nums tracking-tight text-foreground">
-                {(Number(nft.saleDetails.listingPrice) / Number(1e18)).toFixed(4)}
+                {(Number(nft.listingPrice) / Number(1e18)).toFixed(4)}
               </span>
               <Badge
-                variant={!nft.saleDetails.isPriceInEth ? "default" : "secondary"}
+                variant={!nft.isPriceInETH ? "default" : "secondary"}
                 className={cn(
                   "text-[10px] px-1.5 py-0 h-5 font-mono",
-                  !nft.saleDetails.isPriceInEth &&
+                  !nft.isPriceInETH &&
                     "bg-accent text-accent-foreground"
                 )}
               >
-                {nft.saleDetails.isPriceInEth ? "ETH" : "SNORLIE"}
+                {nft.isPriceInETH ? "ETH" : "SNORLIE"}
               </Badge>
             </div>
           </div>

@@ -9,11 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {  PokemonCard, SaleListing } from "@/lib/types";
-import { readContract } from '@wagmi/core';
-import { config } from "@/lib/wagmi/wagmiConfig";
-import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
 import {PaymentDialog} from "@/components/nft-marketplace/ListingExtensionDialog";
-import { pinata } from "@/utils/PinataConfig";
 import { useMemo } from "react";
 import usePokeData from "@/hooks/usePokeData";
 
@@ -25,40 +21,30 @@ const {ethUsdPrice,walletAddress,delistPokeCard,  purchasePokeCard}=usePokeData(
   const { listingId } = useParams<{ listingId: string }>();
 
   const {data, isLoading, error} = useQuery({queryKey:["listing", listingId], queryFn:async()=>{
-   
-    let nftCard: {saleDetails?: SaleListing, card?:PokemonCard}={saleDetails:undefined, card:undefined};
-   
-  const pokeCard:SaleListing = await readContract(config, {abi:marketPlaceAbi, address:marketPlaceAddress, functionName:"getListing", args:[listingId]}) as SaleListing;
-   
-  if(!pokeCard){
-    return undefined;
-  }
-   
-         const httpsInitial= `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`;
-   
-         const cid = pokeCard.tokenURI.slice(httpsInitial.length);
-   
+  
          try {
-           const pinataFoundElement = await pinata.gateways.public.get(cid);
+           const pokeCard = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/lisitings/${listingId}`);
+
+            if (!pokeCard.ok) {
+              throw new Error(`Failed to fetch listing with ID ${listingId}`);
+            }
+
+            const pokeCardDataListing = await pokeCard.json();
+
            
-           if (pinataFoundElement.data) {
-             nftCard = {
-               saleDetails: {...pokeCard, tokenURI:cid},
-               card: pinataFoundElement.data as unknown as PokemonCard,
-             };
-           }
+           if (pokeCardDataListing.data) return pokeCardDataListing.data;
+           
+           
          } catch (err) {
-           console.error(`Failed to fetch card ${pokeCard.listingId}:`, err);
+           console.error(`Failed to fetch card ${listingId}:`, err);
          }
 
-         console.log(nftCard)
-
-         return nftCard;
        
   }});
 
     const usdPrice = useMemo(()=>{
-    return data && data.saleDetails && data.card ? ((Number(data.saleDetails.listingPrice) / Number(1e18)) * (data.saleDetails.isPriceInEth ? ethUsdPrice : 0.5)).toFixed(2) : 0;
+    return data && data.pokemonListed
+     ? ((Number(data.listingPrice) / Number(1e18)) * (data.isPriceInEth ? ethUsdPrice : 0.5)).toFixed(2) : 0;
   },[data]);
 
 
@@ -97,7 +83,8 @@ const {ethUsdPrice,walletAddress,delistPokeCard,  purchasePokeCard}=usePokeData(
 
   return (
     <div className="min-h-screen">
-    {data && data.card && data.saleDetails &&
+    {data && data.pokemonListed
+     && data.saleDetails &&
       <div className="container px-4 py-6 max-w-5xl mx-auto">
         <Link
           href="/marketplace"
@@ -117,8 +104,8 @@ const {ethUsdPrice,walletAddress,delistPokeCard,  purchasePokeCard}=usePokeData(
           <div className="rounded-xl bg-card p-2 shadow-card">
             <div className="aspect-square overflow-hidden rounded-lg bg-muted">
               <img
-                src={data.card.image}
-                alt={data.card.name}
+                src={data.pokemonListed.image}
+                alt={data.pokemonListed.name}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -130,10 +117,12 @@ const {ethUsdPrice,walletAddress,delistPokeCard,  purchasePokeCard}=usePokeData(
               <div>
                 <p className="text-sm capitalize text-muted-foreground flex items-center gap-1.5">
                   <Layers className="h-3.5 w-3.5" />
-                  {data.card.attributes.type.join(" / ")}
+                  {data.
+             pokemonListedtes.type.join(" / ")}
                 </p>
                 <h1 className="text-2xl capitalize font-semibold tracking-tight text-foreground mt-1">
-                  {data.card.name}
+                  {data.pokemonListed.name
+}
                 </h1>
               </div>
 

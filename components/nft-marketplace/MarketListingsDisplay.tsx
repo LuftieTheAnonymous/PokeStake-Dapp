@@ -5,12 +5,8 @@ import { motion } from "framer-motion";
 import { AlertCircleIcon, Loader2, Package } from "lucide-react";
 import NFTCard from "@/components/nft-marketplace/Listing";
 import FilterSidebar, { type SortOption } from "@/components/nft-marketplace/FIlterSideBar";
-import { type Currency } from "@/lib/types";
-import usePokeData from "@/hooks/usePokeData";
+import { SaleListing, type Currency } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { PokemonCard, SaleListing } from "@/lib/types";
-import { pinata } from "@/utils/PinataConfig";
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -27,45 +23,34 @@ function MarketListingsDisplay() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const {getListings}=usePokeData();
+  const [skipIndex, setSkipIndex] = useState<number>(0);
   
   const {data, isLoading, error} = useQuery({
     queryKey:["pokeCards-marketplace"],
     queryFn: async ()=>{
- let nftCards: {saleDetails: SaleListing, card:PokemonCard}[] = [];
+      const requestPokeListings = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/listings/find-all`, {
+        method:'POST',
+        headers:{
+          'Content-Type':"application/json"
+        },
+        body:JSON.stringify({
+          where:undefined,
+          take:10,
+          skip:skipIndex,
+        })
+      });
 
- if(!getListings){
-  return nftCards;
- }
- 
-   for (let index = 0; index < getListings.length; index++) {
-      const pokeCard:SaleListing = getListings[index];
-
-      if(!pokeCard || pokeCard.listingPrice === BigInt(0)){
-        continue;
+      if(!requestPokeListings.ok){
+        throw new Error("Failed to fetch pokecards for marketplace");
       }
 
-      const httpsInitial= `https://${process.env.NEXT_PUBLIC_API_ENDPOINT}/ipfs/`;
+      const {data, error }= await requestPokeListings.json();
 
-      const cid = pokeCard.tokenURI.slice(httpsInitial.length);
-
-      try {
-        const pinataFoundElement = await pinata.gateways.public.get(cid);
-        
-        if (pinataFoundElement.data) {
-          nftCards.push({
-            saleDetails: {...pokeCard, tokenURI:cid},
-            card: pinataFoundElement.data as unknown as PokemonCard,
-          });
-        }
-      } catch (err) {
-        console.error(`Failed to fetch card ${pokeCard.listingId}:`, err);
+      if(error){
+        throw new Error(error);
       }
-    }
-
-    return nftCards;
       
+      return data;
     }
   });
 
@@ -76,37 +61,36 @@ function MarketListingsDisplay() {
     // Search filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (nft) =>
-          nft.card.name.toLowerCase().includes(q) ||
-          nft.card.name.toLowerCase().includes(q)
+      result = result.filter((nft:SaleListing) =>
+          nft.pokemonListed.name.toLowerCase().includes(q) ||
+          nft.pokemonListed.name.toLowerCase().includes(q)
       );
     }
 
     // Currency filter
     if (currency !== "ALL") {
-      result = result.filter((nft) => currency === 'ETH' ? nft.saleDetails.isPriceInEth : !nft.saleDetails.isPriceInEth);
+      result = result.filter((nft:SaleListing) => currency === 'ETH' ? nft.isPriceInETH : !nft.isPriceInETH);
     }
 
     // Price range
     if (minPrice) {
-      result = result.filter((nft) => Number(nft.saleDetails.isPriceInEth) >= parseFloat(minPrice));
+      result = result.filter((nft:SaleListing) => Number(nft.isPriceInETH) >= parseFloat(minPrice));
     }
     if (maxPrice) {
-      result = result.filter((nft) => Number(nft.saleDetails.isPriceInEth) <= parseFloat(maxPrice));
+      result = result.filter((nft:SaleListing) => Number(nft.isPriceInETH) <= parseFloat(maxPrice));
     }
 
     // Sort
     switch (sort) {
       case "price-asc":
-        result.sort((a, b) => Number(a.saleDetails.isPriceInEth) - Number(b.saleDetails.isPriceInEth));
+        result.sort((a:SaleListing, b:SaleListing) => Number(a.isPriceInETH) - Number(b.isPriceInETH));
         break;
       case "price-desc":
-        result.sort((a, b) => Number(b.saleDetails.isPriceInEth) - Number(a.saleDetails.isPriceInEth));
+        result.sort((a:SaleListing, b:SaleListing) => Number(b.isPriceInETH) - Number(a.isPriceInETH));
         break;
       case "recent":
       default:
-        result.sort((a, b) => Number(b.saleDetails.listingBlockNumber) - Number(a.saleDetails.listingBlockNumber));
+        result.sort((a:SaleListing, b:SaleListing) => Number(b.listedAtBlock) - Number(a.listedAtBlock));
         break;
     }
 
@@ -164,8 +148,8 @@ function MarketListingsDisplay() {
                 animate="visible"
                 className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-4 gap-4"
               >
-                {filteredNFTs.map((nft, i) => (
-                  <NFTCard key={Number(nft.saleDetails.nftId)} nft={nft} index={i} />
+                {filteredNFTs.map((nft:SaleListing, i:number) => (
+                  <NFTCard key={Number(nft.pokeCardNftId)} nft={nft} index={i} />
                 ))}
               </motion.div>}
           </div>

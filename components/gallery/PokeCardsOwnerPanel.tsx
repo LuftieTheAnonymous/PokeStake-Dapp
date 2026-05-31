@@ -43,18 +43,38 @@ function PokeCardsOwnerPanel() {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [showStaked, setShowStaked] = useState(true);
   const [gridSize, setGridSize] = useState<"small" | "large">("large");
+  const [currentPage, setCurrentPage] = useState<number>(0);
 
 const { data: pokemonCards, isLoading, isError, error } = useQuery({
   queryKey: ["NFT-gallery", walletAddress, showStaked],
   queryFn: async () => {
+    try{
+      const usersAllCards = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/pokemon-cards/find-all/${walletAddress}`,{
+      method:"POST",
+      headers:{
+        'Content-Type':'application/json',
+        authorization: walletAddress as string,
+      },
+      body:JSON.stringify({
+        skip: currentPage, 
+        take:10,
+      })
+    });
 
-    const usersAllCards = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/pokemon-cards?owner=${walletAddress}`);
-    const fetchedCards= await usersAllCards.json();
+    const {data, error} = await usersAllCards.json();
 
+    if(error){
+      throw new Error(error);
+    }
 
-    return fetchedCards;
+    return data as PokemonCard[];
+    }catch(err){
+      console.log(`${String(err)}`)
+      console.log(err);
+      return [];
+    }
   },
-  enabled: walletAddress && walletAddress.length > 0,
+  enabled: !!walletAddress && walletAddress.length > 0,
   retry: 5,
   refetchInterval: 100000,
   refetchIntervalInBackground: true,
@@ -63,30 +83,32 @@ const { data: pokemonCards, isLoading, isError, error } = useQuery({
 });
 
 const filteredAndSortedCards = useMemo(() => {
+
 if(!pokemonCards || (pokemonCards && pokemonCards.length === 0)) return [];
 
   const filtered = filterRarity === "all" 
     ? pokemonCards 
-    : pokemonCards.filter((c) => c.card.attributes.rarity === filterRarity);
+    : pokemonCards.filter((c:PokemonCard) => c.rarity === filterRarity);
 
-  const sorted = [...filtered].sort((a, b) => {
+  const sorted:PokemonCard[] = filtered.sort((a:PokemonCard, b:PokemonCard) => {
     switch (sortBy) {
       case "newest":
-        return b.card.attributes.id - a.card.attributes.id
+        return Number(b.nftId) - Number(a.nftId)
       case "rarity": {
         const rarityOrder: Rarity[] = ["ultra rare", "rare", "uncommon", "common"];
-        return rarityOrder.indexOf(a.card.attributes.rarity) - rarityOrder.indexOf(b.card.attributes.rarity);
+        return rarityOrder.indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
       }
       case "pokedex":
-        return a.card.attributes.pokedexIndex - b.card.attributes.pokedexIndex;
+        return a.pokedexId - b.pokedexId;
       case "name":
-        return a.card.name.localeCompare(b.card.name);
+        return a.name.localeCompare(b.name);
       default:
         return 0;
     }
   });
 
   return sorted;
+
 }, [pokemonCards, filterRarity, sortBy, showStaked]);
 
 
@@ -114,8 +136,8 @@ const stats = useMemo(() => {
     "ultra rare": 0,
   };
 
-  filteredAndSortedCards.forEach(({ card }) => {
-    const rarity = (card.attributes.rarity) as Rarity;
+  filteredAndSortedCards.forEach((card) => {
+    const rarity = (card.rarity) as Rarity;
     if (rarity in byRarity) {
       byRarity[rarity]++;
     }
@@ -320,14 +342,14 @@ const stats = useMemo(() => {
         : "grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
     )}
   >
-    {filteredAndSortedCards.map(({ card, isStaked }) => (
-      <div key={card.attributes.id} className="relative">
+    {filteredAndSortedCards.map((card) => (
+      <div key={card.id} className="relative">
         <PokeCard 
           card={card} 
           showStats={gridSize === "large"}
-          isStaked={isStaked}
+          isStaked={card.isStaked}
         />
-        {isStaked && (
+        {card.isStaked && (
           <div className="absolute top-2 right-2 p-1.5 rounded-full bg-accent/90 text-accent-foreground">
             <Lock className="h-3 w-3" />
           </div>

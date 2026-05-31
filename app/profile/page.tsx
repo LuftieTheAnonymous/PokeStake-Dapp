@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Navigation } from "@/components/navigation";
-import { GradientBackground } from "@/components/gradient-background";
 import { ProfileForm } from "@/components/profile-form";
 import { ThemeSelector } from "@/components/theme-selector";
 import { Button } from "@/components/ui/button";
@@ -14,7 +12,6 @@ import { Edit2, Save, Upload } from "lucide-react";
 import Link from "next/link";
 import Avatar from "boring-avatars";
 import { useThemeStore } from "@/lib/state-management/useTheme";
-import { useAccount } from "wagmi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLogin, usePrivy } from "@privy-io/react-auth";
 import { formatDistance } from "date-fns";

@@ -14,7 +14,7 @@ export const queryClient = new QueryClient();
 function WagmiWrapper({children}: Props) {
 
   return (
-    <PrivyProvider appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
+    <PrivyProvider key={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string} appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID as string}
       clientId={process.env.NEXT_PUBLIC_PRIVY_CLIENT_ID as string}
       config={{
         defaultChain: sepolia,

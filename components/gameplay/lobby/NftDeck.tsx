@@ -38,7 +38,7 @@ function NftDeck({
                     const isSelected = selectedCards.includes(card);
                     return (
                         <DeckCard
-                            key={card.attributes.id}
+                            key={card.nftId}
                             card={card}
                             onDragStart={() => handleDragStart(card)}
                             onClick={() => !isSelected && addToSlot(card)}

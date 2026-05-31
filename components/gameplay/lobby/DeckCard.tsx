@@ -50,9 +50,9 @@ function DeckCard({
       onClick={() => !disabled && onClick()}
       className={`group relative rounded-xl border-2 overflow-hidden transition-all duration-300
         bg-gradient-to-br bg-card
-        ${rarityGradients[card.attributes.rarity]}
-        ${rarityBorders[card.attributes.rarity]}
-        ${rarityGlow[card.attributes.rarity]}
+        ${rarityGradients[card.rarity]}
+        ${rarityBorders[card.rarity]}
+        ${rarityGlow[card.rarity]}
         ${disabled ? "opacity-40 grayscale cursor-not-allowed" : "cursor-grab active:cursor-grabbing hover:scale-[1.03] hover:shadow-xl"}
       `}
     >
@@ -61,7 +61,7 @@ function DeckCard({
         <span className="font-bold text-sm truncate capitalize">{card.name}</span>
         <div className="flex items-center gap-1 text-xs">
           <Heart className="h-3 w-3 text-red-400" />
-          <span>{card.attributes.hp}</span>
+          <span>{card.hp}</span>
         </div>
       </div>
 
@@ -74,40 +74,40 @@ function DeckCard({
           loading="lazy"
         />
         {/* Glow behind sprite */}
-        <div className={`absolute inset-0 opacity-20 blur-2xl bg-gradient-to-br ${rarityGradients[card.attributes.rarity]}`} />
+        <div className={`absolute inset-0 opacity-20 blur-2xl bg-gradient-to-br ${rarityGradients[card.rarity]}`} />
       </div>
 
       {/* Info */}
       <div className="p-3 space-y-2 bg-background/50">
         <div className="flex items-center justify-between">
-          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${rarityColors[card.attributes.rarity]}`}>
-            {card.attributes.rarity}
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider ${rarityColors[card.rarity]}`}>
+            {card.rarity}
           </span>
-          <span className="text-xs text-muted-foreground font-mono">{card.attributes.id}</span>
+          <span className="text-xs text-muted-foreground font-mono">#{card.nftId.toString().padStart(3, "0")}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
           <div className="flex items-center gap-1 text-xs">
             <Zap className="h-3 w-3 text-amber-400" />
             <span className="text-muted-foreground">ATK</span>
-            <span className="font-medium">{card.attributes.attack
+            <span className="font-medium">{card.attack
         }</span>
           </div>
           <div className="flex items-center gap-1 text-xs">
             <Shield className="h-3 w-3 text-blue-400" />
             <span className="text-muted-foreground">DEF</span>
-            <span className="font-medium">{card.attributes.defense}</span>
+            <span className="font-medium">{card.defense}</span>
           </div>
         </div>
 
         <div className="text-xs text-center text-muted-foreground pt-1">
-          <span className="font-medium text-primary">+{RARITY_CONFIG[card.attributes.rarity].dailyReward} Boost
+          <span className="font-medium text-primary">+{RARITY_CONFIG[card.rarity].dailyReward} Boost
           </span>
         </div>
       </div>
 
       {/* Ultra Rare shimmer */}
-      {card.attributes.rarity === "ultra rare" && (
+      {card.rarity === "ultra rare" && (
         <div className="absolute inset-0 pointer-events-none animate-shimmer" />
       )}
     </div>

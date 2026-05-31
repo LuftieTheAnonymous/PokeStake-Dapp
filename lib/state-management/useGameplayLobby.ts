@@ -9,7 +9,7 @@ type BattleState = {
 }
 
 type Actions = {
-    removePokemon:(id:number)=>void,
+    removePokemon:(id:bigint)=>void,
     addPokemon: (pokemon:PokemonCard)=>void,
     clearPokemonSet:()=>void,
     initiatePokemonSet:(array:PokemonCard[])=>void,
@@ -26,7 +26,7 @@ export const useGameplayLobby = create<BattleState & Actions>()(
         })
     },
     removePokemon(id) {
-        set((state)=> ({pokemonBattlersSelected:state.pokemonBattlersSelected.filter((pokemon)=> pokemon.attributes.id !== id)}) )
+        set((state)=> ({pokemonBattlersSelected:state.pokemonBattlersSelected.filter((pokemon)=> pokemon.nftId !== id)}) )
     },
     clearPokemonSet() {
         set((state)=> ({pokemonBattlersSelected:[]}))

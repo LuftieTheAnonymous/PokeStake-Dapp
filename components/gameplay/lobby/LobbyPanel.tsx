@@ -21,24 +21,30 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
     const {pokemonBattlersSelected, addPokemon, removePokemon, clearPokemonSet} =useGameplayLobby();
     const [draggedCard, setDraggedCard] = useState<PokemonCard | null>(null);
     const MAX_SELECTED = 2;
-    const { userGeneratedCards } = usePokeData();
 
     const { data: pokemonCards = [], isLoading, isError, refetch } = useQuery({
         queryKey: ["NFT-deck", walletAddress],
         queryFn: async () => {
-            const nftCards: PokemonCard[] = [];
-            for (const pokeCard of userGeneratedCards) {
-                try {
-                    const response = await pinata.gateways.public.get(pokeCard.pinataId);
-                    console.log(response, "response lobby");
-                    if (response.data) {
-                        nftCards.push(response.data as unknown as PokemonCard);
-                    }
-                } catch (error) {
-                    console.error(`Failed to fetch card ${pokeCard.card.pinataId}`, error);
-                }
-            }
-            return nftCards;
+         const request = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/pokemon-cards/find-all/${walletAddress}`, {
+            method:"POST",
+            headers:{
+              'Content-Type':'application/json',
+              authorization: walletAddress as string,
+            },
+            body:JSON.stringify({
+              where:{
+                isStaked:false,
+              }
+            })
+          });
+
+          const {data, error} = await request.json();
+
+          if(error){
+            throw new Error(error);
+          }
+
+          return data as PokemonCard[];
         },
         enabled: Boolean(walletAddress),
         retry: 5,
@@ -59,17 +65,17 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
     }, [draggedCard, pokemonBattlersSelected]);
 
     const removeFromSlot = (card: PokemonCard) => {
-        removePokemon(card.attributes.id);
+        removePokemon(card.nftId);
     };
 
     const addToSlot = (card: PokemonCard) => {
-        if (pokemonBattlersSelected.length < MAX_SELECTED && !pokemonBattlersSelected.find((c) => c.attributes.id === card.attributes.id)) {
+        if (pokemonBattlersSelected.length < MAX_SELECTED && !pokemonBattlersSelected.find((c) => c.nftId === card.nftId)) {
             addPokemon(card);
         }
     };
 
     const availableCards = useMemo(() => {
-        return pokemonCards.filter((c) => !pokemonBattlersSelected.find((pc) => pc.attributes.id === c.attributes.id));
+        return pokemonCards.filter((c) => !pokemonBattlersSelected.find((pc) => pc.nftId === c.nftId));
     }, [pokemonCards, pokemonBattlersSelected]);
 
     const canBattle = pokemonBattlersSelected.length === MAX_SELECTED;
@@ -83,17 +89,17 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
 
 const joinBattleRoom = ()=>{
 const convertedSelectedPokemon:PokemonBattler[] = pokemonBattlersSelected.map((card)=> ({
-        pokemonId: card.attributes.id,
-        pokedexIndex: card.attributes.pokedexIndex,
-        rarityLevel: RARITY_CONFIG[card.attributes.rarity].dailyReward,
-        types: card.attributes.type,
-        hp: card.attributes.hp,
-        maxHp: card.attributes.hp,
-        attack: card.attributes.attack,
-        defense: card.attributes.defense,   
-        sprites:{front: card.attributes.sprites[0], back: card.attributes.sprites[1]},
+        pokemonId: card.nftId,
+        pokedexIndex: card.pokedexId,
+        rarityLevel: RARITY_CONFIG[card.rarity].dailyReward,
+        types: card.type,
+        hp: card.hp,
+        maxHp: card.hp,
+        attack: card.attack,
+        defense: card.defense,   
+        sprites:{front: card.sprites[0], back: card.sprites[1]},
         name: card.name,
-        cries: card.attributes.cries
+        cries: card.cries
       })) as unknown as PokemonBattler[];
 
     let participantDetails:Player={

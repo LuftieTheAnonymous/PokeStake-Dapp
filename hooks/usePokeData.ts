@@ -1,7 +1,7 @@
 'use client';
 
 import { snorlieCoinABI, snorlieCoinContractAddress } from "@/contracts-abis/SnorlieCoin";
-import { type PokemonCard, type Rarity, SaleListing, pokemonAmountModulator, rarityModulator } from "../lib/types";
+import { IpfsPokecardFormat, type PokemonCard, type Rarity, SaleListing, pokemonAmountModulator, rarityModulator } from "../lib/types";
 import { useAccount, useBlockNumber, useReadContracts, useWriteContract } from 'wagmi'
 import { useMemo } from "react";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
@@ -13,12 +13,15 @@ import { pinata } from "@/utils/PinataConfig";
 import { readContract } from '@wagmi/core';
 import { marketPlaceAbi, marketPlaceAddress } from "@/contracts-abis/MarketPlace";
 import { toast } from "sonner";
+import { usePrivy } from "@privy-io/react-auth";
 
 function usePokeData() {
 const pokemonClient = new PokemonClient();
-  const {address, isConnected, isConnecting}= useAccount();
+const {user} = usePrivy();
+const address = user?.wallet?.address;
   const {writeContract}=useWriteContract();
   const {data:blockNumber}=useBlockNumber();
+  const isConnected = !!address;
 const {data} = useReadContracts({
   contracts: [
     // [0] - snorlieCoin balanceOf
@@ -255,7 +258,7 @@ async function drawCard() {
 
       if(!data || typeof data[1].result === 'undefined') return {card:null, error: "Result not found for new Card"}
 
-        const newCard: PokemonCard = {
+        const newCard:IpfsPokecardFormat = {
           name: pokemon.card.name,
           image: pokemon.card.pokemonImage as string,
           description: pokemon.card.description,
@@ -276,7 +279,7 @@ async function drawCard() {
       }
 
 
- async function mintDrawnPokemon(drawnPokemonCard:PokemonCard){
+ async function mintDrawnPokemon(drawnPokemonCard:IpfsPokecardFormat){
   try {
 
     const storeInPinata = await pinata.upload.public.json(drawnPokemonCard,{
@@ -470,7 +473,6 @@ return {
   snorliesBalance,
   walletAddress: address,
   isConnected,
-  isConnecting,
   isElligibleToDraw,
   totalSupply,
   getListings,

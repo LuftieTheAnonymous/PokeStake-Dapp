@@ -25,7 +25,6 @@ const navItems = [
   { href: "/gallery", label: "Gallery", icon: ImageIcon },
   {href:"/marketplace", label:"MarketPlace", icon: ShoppingCart},
   {href:'/gameplay', label:'Gameplay', icon:Gamepad2},
-  {href:'/profile', label:'Profile', icon: User2Icon}
 ];
 
 export function Navigation() {

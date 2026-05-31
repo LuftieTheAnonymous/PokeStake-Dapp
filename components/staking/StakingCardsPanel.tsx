@@ -19,7 +19,6 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { pinata } from "@/utils/PinataConfig";
 import { useBlockNumber, useWatchContractEvent } from "wagmi";
 import { CustomConnectButton } from "@/components/custom-connect-button";
 import { pokeCardCollectionAbi, pokeCardCollectionAddress } from "@/contracts-abis/PokeCardCollection";
@@ -85,43 +84,45 @@ function StakingCardsPanel({}: Props) {
   });
   
 
+ const enabled = typeof selectedTab !== 'undefined' && !!walletAddress && walletAddress.length > 0;
+
  const {data:pokemonCards, isLoading, error}=useQuery({
   queryKey:["NFTies-staked", selectedTab, walletAddress], 
   queryFn: async () => {
-
-    let nftCards: {card: PokemonCard, isStaked: boolean, stakedAtBlock:bigint}[] = [];
-    
-    const sourceCards = selectedTab === 'staked' ? userStakedPokeCards : userGeneratedCards;
-    
-    if (!sourceCards || sourceCards.length === 0) {
-      return nftCards;
-    }
-
-    for (let index = 0; index < sourceCards.length; index++) {
-      const pokeCard = sourceCards[index];
-      
-      try {
-        const pinataFoundElement = await pinata.gateways.public.get(pokeCard.pinataId);
-        
-        if (pinataFoundElement.data) {
-          nftCards.push({
-            card: pinataFoundElement.data as unknown as PokemonCard,
-            stakedAtBlock: pokeCard.stakedAtBlock || BigInt(0),
-            isStaked: selectedTab === 'staked'
-          });
+    try{
+      const request = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/pokemon-cards/find-all/${walletAddress}`, {
+      method:"POST",
+      headers:{
+      'Content-Type':'application/json',
+        authorization: walletAddress as string,
+      },
+      body:JSON.stringify({
+        where:{
+          isStaked: selectedTab === 'staked' ? true : false,
         }
-      } catch (err) {
-        console.error(`Failed to fetch card ${pokeCard.pinataId}:`, err);
-      }
+      })
+    });
+
+    if(!request.ok){
+      throw new Error("Something went wrong with the request");
     }
+
+    const nftCards = await request.json();
+    
+    console.log(nftCards);
   
-    return nftCards;
+    return nftCards.data as PokemonCard[];
+    }catch(err){
+      return [];
+    }
   },
-  enabled: typeof selectedTab !== 'undefined' && walletAddress && walletAddress.length > 0, 
+  enabled,
   retry: 5, 
   refetchInterval: 10000, 
   refetchIntervalInBackground: true
 });
+
+
 
   const handleStake = (tokenId:bigint) => {
     stakeCard(tokenId);
@@ -248,7 +249,7 @@ function StakingCardsPanel({}: Props) {
                       )}
                     >
                       <Unlock className="h-4 w-4" />
-                      Available ({userGeneratedCards.length})
+                      Available ({ownedPokeCards})
                     </button>
                     <button
                       onClick={() => setSelectedTab("staked")}
@@ -300,15 +301,15 @@ function StakingCardsPanel({}: Props) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {pokemonCards && pokemonCards.map((card) => (
-              <div key={card.card.attributes.id} className="space-y-2">
-                <PokeCard card={card.card} showStats={false} />
+              <div key={card.id} className="space-y-2">
+                <PokeCard card={card} showStats={false} />
                 <Button
-                  onClick={() => approved && approvedTokenId === BigInt(card.card.attributes.id - 1) ? handleStake(BigInt(card.card.attributes.id - 1)) : approveToStakingProtocol(BigInt(card.card.attributes.id - 1), setApproved)}
+                  onClick={() => approved && approvedTokenId === BigInt(card.nftId) ? handleStake(BigInt(card.nftId)) : approveToStakingProtocol(BigInt(card.nftId), setApproved)}
                   className="w-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
                   size="sm"
                 >
                   <Lock className="h-4 w-4 mr-1" />
-                  {approved && approvedTokenId === BigInt(card.card.attributes.id - 1) ? "Stake" : "Approve"}
+                  {approved && approvedTokenId === BigInt(card.nftId) ? "Stake" : "Approve"}
                 </Button>
               </div>
             ))}
@@ -343,16 +344,16 @@ function StakingCardsPanel({}: Props) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {pokemonCards && pokemonCards.map((stakedCard) => {
-              const timeRemaining = getTimeRemaining(stakedCard.stakedAtBlock);
+              const timeRemaining = getTimeRemaining(BigInt(stakedCard!.stakedAtBlock as unknown as number));
               const isLocked = timeRemaining !== null;
-              const timeStaked = blockNumber ? (((Number(blockNumber - stakedCard.stakedAtBlock)*12) / 86400)) : 0;
+              const timeStaked = blockNumber ? (((Number(BigInt(blockNumber) - BigInt(stakedCard.stakedAtBlock as unknown as number))*12) / 86400)) : 0;
               
-              const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.card.attributes.rarity as Rarity)) as Rarity].dailyReward;
+              const currentRewards = timeStaked * RARITY_CONFIG[Object.keys(RARITY_CONFIG).at(Number(stakedCard.rarity as Rarity)) as Rarity].dailyReward;
     
               return (
-                <div key={stakedCard.card.attributes.id} className="space-y-2">
+                <div key={stakedCard.id} className="space-y-2">
                   <div className="relative">
-                    <PokeCard card={stakedCard.card} showStats={false} />
+                    <PokeCard card={stakedCard} showStats={false} />
                     {/* Overlay Info */}
                     <div className="absolute bottom-0 left-0 right-0 p-2 bg-background/90 backdrop-blur-sm border-t border-border/50">
                       <div className="flex items-center justify-between text-xs">
@@ -369,7 +370,7 @@ function StakingCardsPanel({}: Props) {
                     </div>
                   ) : (
                     <Button
-                      onClick={() => handleUnstake(BigInt(stakedCard.card.attributes.id))}
+                      onClick={() => handleUnstake(BigInt(stakedCard.nftId))}
                       className="w-full bg-accent/10 text-accent hover:bg-accent/20 border border-accent/30"
                       size="sm"
                     >

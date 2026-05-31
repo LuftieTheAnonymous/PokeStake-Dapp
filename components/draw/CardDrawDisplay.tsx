@@ -6,7 +6,7 @@ import Link from "next/link";
 import { PokeCard } from "@/components/pokemon-card";
 import { Button } from "@/components/ui/button";
 import { PokeCoinIcon } from "@/components/token-balance";
-import type { PokemonCard as PokemonCardType } from "@/lib/types";
+import type { IpfsPokecardFormat, PokemonCard as PokemonCardType } from "@/lib/types";
 import { RARITY_CONFIG } from "@/lib/types";
 import { Sparkles, Ghost, ChevronRight } from "lucide-react";
 import { useWatchContractEvent } from "wagmi";
@@ -16,7 +16,7 @@ import { CustomConnectButton } from "@/components/custom-connect-button";
 
 
 function CardDrawDisplay() {
-  const [drawnCard, setDrawnCard] = useState<PokemonCardType | null>(null);
+  const [drawnCard, setDrawnCard] = useState<IpfsPokecardFormat | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [error, setError]=useState<any>();
@@ -194,7 +194,22 @@ const handleDraw = async () => {
                      ) : drawnCard && showCard && !error ? (
                        /* Revealed Card */
                        <div className="w-52">
-                         <PokeCard card={drawnCard} animated />
+                        <PokeCard card={{
+                          name: drawnCard.name,
+                          image: drawnCard.image,
+                          description: drawnCard.description,
+                          attack: drawnCard.attributes.attack,
+                          defense: drawnCard.attributes.defense,
+                          nftId: BigInt(drawnCard.attributes.id),
+                          pokedexId: drawnCard.attributes.pokedexIndex,
+                          isStaked:false,
+                          stakedAtBlock:null,
+                          cries: drawnCard.attributes.cries,
+                          battleExperience: BigInt(0),
+                          types: drawnCard.attributes.type,
+                          rarity: drawnCard.attributes.rarity,
+                          hp: drawnCard.attributes.hp
+                         } as PokemonCardType} animated />
                        </div>
                      ) : (
                        /* Empty State */
