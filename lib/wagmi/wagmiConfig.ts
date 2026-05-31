@@ -5,6 +5,6 @@ import { sepolia } from 'wagmi/chains'
 export const config = createConfig({
   chains: [sepolia],
   transports: {
-    [sepolia.id]: http(process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL as string),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_ETH_SEPOLIA_URL as string),
   },
 })

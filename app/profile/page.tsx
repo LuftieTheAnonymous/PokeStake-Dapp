@@ -58,12 +58,22 @@ export default function ProfilePage() {
 
   const { mutate: saveProfile } = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trainers/update/${address}`, {
+      console.log(data);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/trainers/update/${address}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          authorization: address as string,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          walletAddress:address,
+          data:{
+            nickname:data.nickname,
+            email: data.email,
+            description: data.description
+          }
+        }),
       });
       return response.json();
     },

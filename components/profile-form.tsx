@@ -13,7 +13,7 @@ interface SocialLink {
 }
 
 interface ProfileFormData {
-  username: string;
+  nickname: string;
   description: string;
   socialMedias: SocialLink[];
 }
@@ -71,8 +71,8 @@ export function ProfileForm({ data, onSave, isEditing = false }: ProfileFormProp
       <div>
         <label className="block text-sm font-semibold mb-2">Username</label>
         <Input
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+          value={formData.nickname}
+          onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
           placeholder="Your username"
         />
       </div>
