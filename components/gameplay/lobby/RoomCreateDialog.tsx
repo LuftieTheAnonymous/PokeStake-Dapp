@@ -37,7 +37,7 @@ const generateRandomRoomId=()=>{
         pokemonId: card.nftId,
         pokedexIndex: card.pokedexId,
         rarityLevel: RARITY_CONFIG[card.rarity].dailyReward,
-        types: card.type,
+        types: card.types,
         hp: card.hp,
         maxHp: card.hp,
         attack: card.attack,
