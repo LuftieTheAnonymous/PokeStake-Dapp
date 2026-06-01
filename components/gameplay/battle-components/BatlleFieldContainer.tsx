@@ -225,9 +225,9 @@ function BatlleFieldContainer({
         setShowVictory(true);
         if (data.battleId && data.rewardAmount && data.winnerSignature) {
           setBattleReward({
-            battleId: data.battleId,
+            battleId: BigInt(data.battleId),
             winner: data.winnerAddress,
-            rewardAmount: data.rewardAmount,
+            rewardAmount: BigInt(data.rewardAmount),
             signature: data.winnerSignature,
           });
         }
