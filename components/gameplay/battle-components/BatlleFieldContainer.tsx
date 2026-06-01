@@ -25,19 +25,23 @@ import { toast } from "sonner";
 import { redirect } from "next/navigation";
 import BattleHook from "./BattleHook";
 import { useInterval } from "@/hooks/useInterval";
-import { count } from "console";
+import { useWriteContract } from "wagmi";
+import {
+  claimContractAddress,
+  claimRewardAbi,
+} from "@/contracts-abis/BattleRewardClaimContract";
 
 function BatlleFieldContainer({
   emit,
   off,
   on,
   socket,
-  once
+  once,
 }: {
   emit: (event: string, ...args: any[]) => void;
   on: (event: any, handler: any) => void;
   off: (event: any, handler?: any) => void;
-  once:(event:any, handler:any)=>void;
+  once: (event: any, handler: any) => void;
   socket: Socket;
 }) {
   const battleRoomState = useBattleRoomState();
@@ -50,11 +54,15 @@ function BatlleFieldContainer({
   const [showDefeat, setShowDefeat] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [movePerformed, setMovePerformed] = useState(false);
-
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showFightIntro, setShowFightIntro] = useState(false);
-
-  const [moveTimeoutCounter, setMoveTimeoutCounter]=useState<number>(30);
+  const [moveTimeoutCounter, setMoveTimeoutCounter] = useState<number>(30);
+  const [battleReward, setBattleReward] = useState<{
+    battleId: bigint;
+    winner: string;
+    rewardAmount: bigint;
+    signature: string;
+  } | null>(null);
 
   const playerPokemonData =
     battleRoomState.host === walletAddress
@@ -99,186 +107,251 @@ function BatlleFieldContainer({
         ? true
         : false;
 
-const playerJoinHandler = useEffectEvent((res: {
-  data: {   
-    message: string;
-    battleRoom: BattleRoom;
-  };
-  error: null;
-}) => {
-  console.log(res);
-  if (res.error) {
-    toast.error(res.error);
-    return;
-  }
-  toast.success(res.data.message);
-  battleRoomState.updateRoomState(res.data.battleRoom);
+  const { writeContract } = useWriteContract();
 
-  // Only host emits, but server broadcasts to both
-  if (
-    res.data.battleRoom.hostPlayer &&
-    res.data.battleRoom.inviteePlayer &&
-    walletAddress === res.data.battleRoom.host
-  ) {
-    emit("start-battle", res.data.battleRoom.roomId); // ← Keep this
-  }
-});
+  const playerJoinHandler = useEffectEvent(
+    (res: {
+      data: {
+        message: string;
+        battleRoom: BattleRoom;
+      };
+      error: null;
+    }) => {
+      console.log(res);
+      if (res.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(res.data.message);
+      battleRoomState.updateRoomState(res.data.battleRoom);
 
-const playerBattleStarted = useEffectEvent(({
-  message,
-  battleRoom,
-  startTime,
-}: {
-  message: string;
-  battleRoom: BattleRoom;
-  startTime: number;
-}) => {
-  setShowFightIntro(false); // Don't show ball yet
-  setMessage(message);
-  setCountdown(5);
+      // Only host emits, but server broadcasts to both
+      if (
+        res.data.battleRoom.hostPlayer &&
+        res.data.battleRoom.inviteePlayer &&
+        walletAddress === res.data.battleRoom.host
+      ) {
+        emit("start-battle", res.data.battleRoom.roomId); // ← Keep this
+      }
+    },
+  );
 
-  // Use server time for sync, check every 100ms
-  const countdownInterval = setInterval(() => {
-    const now = Date.now();
-    const remaining = Math.ceil(((startTime) - now) / 1000);
+  const playerBattleStarted = useEffectEvent(
+    ({
+      message,
+      battleRoom,
+      startTime,
+    }: {
+      message: string;
+      battleRoom: BattleRoom;
+      startTime: number;
+    }) => {
+      setShowFightIntro(false); // Don't show ball yet
+      setMessage(message);
+      setCountdown(5);
 
-    if (remaining > 0) {
-      setCountdown(remaining); // 5, 4, 3, 2, 1
-    } else {
-      setCountdown(0);
-      clearInterval(countdownInterval);
-      setShowFightIntro(true); // Show ball AFTER countdown
+      // Use server time for sync, check every 100ms
+      const countdownInterval = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.ceil((startTime - now) / 1000);
 
-      setTimeout(() => {
-        setShowFightIntro(false);
-        setCountdown(null);
-        battleRoomState.updateRoomState(battleRoom);
-      }, 2500);
+        if (remaining > 0) {
+          setCountdown(remaining); // 5, 4, 3, 2, 1
+        } else {
+          setCountdown(0);
+          clearInterval(countdownInterval);
+          setShowFightIntro(true); // Show ball AFTER countdown
+
+          setTimeout(() => {
+            setShowFightIntro(false);
+            setCountdown(null);
+            battleRoomState.updateRoomState(battleRoom);
+          }, 2500);
+        }
+      }, 100); // Check more frequently for smooth sync
+
+      return () => {
+        clearInterval(countdownInterval);
+      };
+    },
+  );
+
+  const timeoutEventHandler = useEffectEvent(() => {
+    if (!battleRoomState) {
+      toast.error("no battle yet");
+      return;
     }
-  }, 100); // Check more frequently for smooth sync
 
-  return () => {
-    clearInterval(countdownInterval);
-  };
-});
-      
-const timeoutEventHandler = useEffectEvent(() => {
-
-   if (!battleRoomState) {
-    toast.error("no battle yet");
-    return;
-  }
-
-    if (battleRoomState.turnChangedAt && battleRoomState.isBattleStarted && !battleRoomState.isBattleFinished) {
-      const timeoutSeconds = Math.floor(new Date().getTime() - battleRoomState.turnChangedAt);
+    if (
+      battleRoomState.turnChangedAt &&
+      battleRoomState.isBattleStarted &&
+      !battleRoomState.isBattleFinished
+    ) {
+      const timeoutSeconds = Math.floor(
+        new Date().getTime() - battleRoomState.turnChangedAt,
+      );
       setMoveTimeoutCounter(Math.floor(timeoutSeconds / 1000));
       if (timeoutSeconds >= MAX_TURN_DURATION && isYourTurn) {
-      emit("handle-timeout", battleRoomState.roomId);
+        emit("handle-timeout", battleRoomState.roomId);
       }
     }
-
-
   });
 
   const updateTheBattleResult = useEffectEvent(
     ({
       data,
     }: {
-      data: {
-        winnerAddress: `0x${string}` | undefined;
-        message: string;
-        battleRoom: BattleRoom;
-      };
+      data:
+        | {
+            battleId: bigint;
+            winnerAddress: string;
+            rewardAmount: bigint;
+            battleRoom: BattleRoom;
+            winnerSignature: string;
+            message: string;
+          }
+        | {
+            message: string;
+            battleRoom: BattleRoom;
+            battleId: bigint;
+            winnerAddress?: undefined;
+            rewardAmount?: undefined;
+            winnerSignature?: undefined;
+          };
     }) => {
       setMessage(data.message);
       battleRoomState.updateRoomState(data.battleRoom);
       if (data.winnerAddress === walletAddress) {
         setShowVictory(true);
+        if (data.battleId && data.rewardAmount && data.winnerSignature) {
+          setBattleReward({
+            battleId: data.battleId,
+            winner: data.winnerAddress,
+            rewardAmount: data.rewardAmount,
+            signature: data.winnerSignature,
+          });
+        }
       } else {
         setShowDefeat(true);
       }
-    }
+    },
   );
 
-  const pokemonChangeHandler = useEffectEvent(({
-        data,
-        error,
-      }: {
-        data: {
-          battleRoom: BattleRoom;
-          selectedPokemon: PokemonBattler;
-          message: string;
-        };
-        error: string | null;
-      }) => {
-        if (error) {
-          toast.error(error);
-          return;
-        }
+  const pokemonChangeHandler = useEffectEvent(
+    ({
+      data,
+      error,
+    }: {
+      data: {
+        battleRoom: BattleRoom;
+        selectedPokemon: PokemonBattler;
+        message: string;
+      };
+      error: string | null;
+    }) => {
+      if (error) {
+        toast.error(error);
+        return;
+      }
 
-        console.log(data);
+      console.log(data);
 
-        setMessage(`Go, ${data.selectedPokemon.name}!`);
-        
+      setMessage(`Go, ${data.selectedPokemon.name}!`);
+
+      setTimeout(() => {
+        setMessage(data.message);
+        battleRoomState.updateRoomState(data.battleRoom);
+      }, 500);
+
+      setTimeout(() => {
+        setMessage(`What will ${data.selectedPokemon.name} do?`);
+        setIsAnimating(false);
+      }, 800);
+    },
+  );
+
+  const movePerformedHandler = useEffectEvent(
+    ({
+      data,
+      error,
+    }: {
+      data: {
+        battleRoom: BattleRoom;
+        damage: number;
+        message: string;
+      };
+      error: string | null;
+    }) => {
+      if (error) {
+        toast.error(error);
+        return;
+      }
+
+      if (
+        isAnimating ||
+        !playerPokemonData ||
+        !opponentPokemonData ||
+        !playerPokemonData.currentPlayerPokemon ||
+        !opponentPokemonData.currentPlayerPokemon ||
+        playerPokemonData.currentPlayerPokemon.hp <= 0 ||
+        opponentPokemonData.currentPlayerPokemon.hp <= 0
+      )
+        return;
+
+      setIsAnimating(true);
+      // RESET shakes immediately
+      setPlayerHit(false);
+
+      const lastMoveCommiter =
+        data.battleRoom.moveHistory[data.battleRoom.moveHistory.length - 1]
+          .player;
+      const youAttacked =
+        (lastMoveCommiter === "host" &&
+          walletAddress === battleRoomState.host) ||
+        (lastMoveCommiter === "invitee" &&
+          walletAddress !== battleRoomState.host);
+
+      if (youAttacked) {
+        // You attacked, opponent shakes
+        const newOpHp = Math.max(
+          0,
+          (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp -
+            data.damage,
+        );
+
+        setTimeout(() => {
+          setPlayerHit(true);
+        }, 0);
+
+        setTimeout(() => {
+          setPlayerHit(false);
+
+          if (newOpHp <= 0) {
+            setMessage(
+              `${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`,
+            );
+            setTimeout(() => {
+              battleRoomState.updateRoomState(data.battleRoom);
+              setIsAnimating(false);
+            }, 1000);
+          } else {
+            setTimeout(() => {
+              setMessage(data.message);
+              battleRoomState.updateRoomState(data.battleRoom);
+              setIsAnimating(false);
+            }, 400);
+          }
+        }, 500);
+      } else {
+        // Opponent attacked, you shake
+        const newPlHp = Math.max(
+          0,
+          (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp -
+            data.damage,
+        );
+
         setTimeout(() => {
           setMessage(data.message);
-          battleRoomState.updateRoomState(data.battleRoom);
-        }, 500);
-
-        setTimeout(() => {
-          setMessage(`What will ${data.selectedPokemon.name} do?`);
-          setIsAnimating(false);
-        }, 800);
-      });
-  
-  
-  const movePerformedHandler=useEffectEvent(({
-        data,
-        error,
-      }: {
-        data: {
-          battleRoom: BattleRoom;
-          damage: number;
-          message: string;
-        };
-        error: string | null;
-      }) => {
-        if (error) {
-          toast.error(error);
-          return;
-        }
-
-        if (
-          isAnimating ||
-          !playerPokemonData ||
-          !opponentPokemonData ||
-          !playerPokemonData.currentPlayerPokemon ||
-          !opponentPokemonData.currentPlayerPokemon ||
-          playerPokemonData.currentPlayerPokemon.hp <= 0 ||
-          opponentPokemonData.currentPlayerPokemon.hp <= 0
-        )
-          return;
-
-        setIsAnimating(true);
-        // RESET shakes immediately
-        setPlayerHit(false);
-
-        const lastMoveCommiter =
-          data.battleRoom.moveHistory[data.battleRoom.moveHistory.length - 1]
-            .player;
-        const youAttacked =
-          (lastMoveCommiter === "host" &&
-            walletAddress === battleRoomState.host) ||
-          (lastMoveCommiter === "invitee" &&
-            walletAddress !== battleRoomState.host);
-
-        if (youAttacked) {
-          // You attacked, opponent shakes
-          const newOpHp = Math.max(
-            0,
-            (opponentPokemonData.currentPlayerPokemon as PokemonBattler).hp -
-              data.damage,
-          );
 
           setTimeout(() => {
             setPlayerHit(true);
@@ -287,78 +360,49 @@ const timeoutEventHandler = useEffectEvent(() => {
           setTimeout(() => {
             setPlayerHit(false);
 
-            if (newOpHp <= 0) {
+            if (newPlHp <= 0) {
               setMessage(
-                `${(opponentPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`,
+                `${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`,
               );
               setTimeout(() => {
+                const nextAlive = playerPokemonData.pokemonDeck.findIndex(
+                  (p) =>
+                    p.pokemonId !==
+                      playerPokemonData.currentPlayerPokemon?.pokemonId &&
+                    p.hp > 0,
+                );
+                if (nextAlive !== -1) {
+                  setShowSwapMenu(true);
+                }
                 battleRoomState.updateRoomState(data.battleRoom);
                 setIsAnimating(false);
-              }, 1000);
+              }, 700);
             } else {
               setTimeout(() => {
-                setMessage(data.message);
+                setMessage(`What will ${walletAddress} do?`);
                 battleRoomState.updateRoomState(data.battleRoom);
                 setIsAnimating(false);
-              }, 400);
+              }, 500);
             }
-          }, 500);
-        } else {
-          // Opponent attacked, you shake
-          const newPlHp = Math.max(
-            0,
-            (playerPokemonData.currentPlayerPokemon as PokemonBattler).hp -
-              data.damage,
-          );
+          }, 400);
+        }, 800);
+      }
+      setMovePerformed(false);
+    },
+  );
 
-          setTimeout(() => {
-            setMessage(data.message);
-
-            setTimeout(() => {
-              setPlayerHit(true);
-            }, 0);
-
-            setTimeout(() => {
-              setPlayerHit(false);
-
-              if (newPlHp <= 0) {
-                setMessage(
-                  `${(playerPokemonData.currentPlayerPokemon as PokemonBattler).name} fainted!`,
-                );
-                setTimeout(() => {
-                  const nextAlive = playerPokemonData.pokemonDeck.findIndex(
-                    (p) =>
-                      p.pokemonId !==
-                        playerPokemonData.currentPlayerPokemon?.pokemonId &&
-                      p.hp > 0,
-                  );
-                  if (nextAlive !== -1) {
-                    setShowSwapMenu(true);
-                  }
-                  battleRoomState.updateRoomState(data.battleRoom);
-                  setIsAnimating(false);
-                }, 700);
-              } else {
-                setTimeout(() => {
-                  setMessage(`What will ${walletAddress} do?`);
-                  battleRoomState.updateRoomState(data.battleRoom);
-                  setIsAnimating(false);
-                }, 500);
-              }
-            }, 400);
-          }, 800);
-        }
-        setMovePerformed(false);
-      });
-
-  
-  const timeoutHandler = useEffectEvent((res:{data: {
-    message: string;
-    battleRoom: BattleRoom;
-}, error:null})=>{
-  setMessage(res.data.message);
-  battleRoomState.updateRoomState(res.data.battleRoom);
-  })
+  const timeoutHandler = useEffectEvent(
+    (res: {
+      data: {
+        message: string;
+        battleRoom: BattleRoom;
+      };
+      error: null;
+    }) => {
+      setMessage(res.data.message);
+      battleRoomState.updateRoomState(res.data.battleRoom);
+    },
+  );
 
   useEffect(() => {
     if (
@@ -369,23 +413,20 @@ const timeoutEventHandler = useEffectEvent(() => {
     }
   }, [allOpponentsDefeated, allPlayersDefeated, showVictory, showDefeat]);
 
-useInterval(()=>{
-  timeoutEventHandler();
-}, 1000);
-
-useEffect(()=>{
-  on('turn-timeout', timeoutHandler);
-
-  return ()=>{
-    off('turn-timeout');
-  }
-},[])
+  useInterval(() => {
+    timeoutEventHandler();
+  }, 1000);
 
   useEffect(() => {
-    on(
-      "player-joined",
-      playerJoinHandler
-    );
+    on("turn-timeout", timeoutHandler);
+
+    return () => {
+      off("turn-timeout");
+    };
+  }, []);
+
+  useEffect(() => {
+    on("player-joined", playerJoinHandler);
 
     return () => {
       off("player-joined");
@@ -393,10 +434,7 @@ useEffect(()=>{
   }, []);
 
   useEffect(() => {
-    once(
-      "battle-started",
-      playerBattleStarted
-    );
+    once("battle-started", playerBattleStarted);
 
     return () => {
       off("battle-started");
@@ -404,10 +442,7 @@ useEffect(()=>{
   }, [socket, battleRoomState]);
 
   useEffect(() => {
-    once(
-      "battle-finished",
-      updateTheBattleResult
-    );
+    once("battle-finished", updateTheBattleResult);
 
     return () => {
       off("battle-finished");
@@ -415,10 +450,7 @@ useEffect(()=>{
   }, []);
 
   useEffect(() => {
-    on(
-      "pokemon-change",
-    pokemonChangeHandler
-    );
+    on("pokemon-change", pokemonChangeHandler);
 
     return () => {
       off("pokemon-change");
@@ -426,24 +458,17 @@ useEffect(()=>{
   }, [battleRoomState, socket]);
 
   useEffect(() => {
-    on(
-      "move-performed",
-      movePerformedHandler
-    );
+    on("move-performed", movePerformedHandler);
 
-    return ()=> off('move-pefrormed');
+    return () => off("move-pefrormed");
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!!battleRoomState.currentTurn)
       setMessage(
         `What will ${battleRoomState.currentTurn === "host" ? battleRoomState.host : battleRoomState.inviteePlayer?.playerNickname} do?`,
       );
-  }, [
-    battleRoomState.currentTurn
-  ]);
-
-
+  }, [battleRoomState.currentTurn]);
 
   const handleFight = () => {
     emit("perform-move", battleRoomState.roomId);
@@ -464,28 +489,43 @@ useEffect(()=>{
     setShowSwapMenu(false);
   };
 
+  const claimReward = useCallback(async () => {
+    try {
+      if(!battleReward) {
+        toast.error("No reward to claim");
+        return;
+      }
 
-  const generateProof = useCallback(async () => {
-    // This is where you'd integrate with your zk proof generation logic
-    // For demonstration, we'll just simulate a delay and return a mock proof
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("mock-proof");
-      }, 2000);
-    });
+      writeContract(
+        {
+          abi: claimRewardAbi,
+          address: claimContractAddress,
+          functionName: "claimBattleReward",
+          args: [battleReward.battleId, battleReward.winner, battleReward.rewardAmount, battleReward.signature],
+        },
+        {
+          onSuccess(data) {
+            toast.success("Reward claimed successfully!");
+          },
+          onError(error) {
+            toast.error("Failed to claim reward: " + error.message);
+          },
+          onSettled() {
+            toast.loading("Claiming reward...");
+          },
+        },
+      );
+    } catch (error) {}
   }, []);
-
 
   return (
     <>
-    <div className="flex-1 relative overflow-hidden">
-    {/* Battlefield */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Battlefield */}
 
-
-    
-      {countdown !== null  && (
-        <BattleHook countdown={countdown} showFightIntro={showFightIntro} />
-      )}
+        {countdown !== null && (
+          <BattleHook countdown={countdown} showFightIntro={showFightIntro} />
+        )}
 
         <TopBar
           walletAddress={walletAddress as `0x${string}`}
@@ -496,13 +536,11 @@ useEffect(()=>{
             battleRoomState.hostPlayer !== null
           }
         />
-        {battleRoomState.isBattleStarted &&
-        <div className="absolute top-0 text-xl font-bold flex items-center justify-center right-0 z-50 m-2 w-12 h-12 rounded-lg bg-black/80 border-2 border-(--pokemon-blue)">
-          <p>{moveTimeoutCounter}</p>
-        </div> 
-        }
-       
-        
+        {battleRoomState.isBattleStarted && (
+          <div className="absolute top-0 text-xl font-bold flex items-center justify-center right-0 z-50 m-2 w-12 h-12 rounded-lg bg-black/80 border-2 border-(--pokemon-blue)">
+            <p>{moveTimeoutCounter}</p>
+          </div>
+        )}
 
         {/* Sky gradient */}
         <div className="absolute h-screen inset-0 bg-gradient-to-b from-[hsl(200,60%,70%)] via-[hsl(120,30%,65%)] to-[hsl(100,35%,50%)]" />
@@ -653,14 +691,9 @@ useEffect(()=>{
               {`Congratulations! You defeated ${battleRoomState.currentTurn === "host" ? battleRoomState.inviteePlayer?.playerNickname : battleRoomState.hostPlayer?.playerNickname}.`}
             </DialogDescription>
             <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={generateProof}
-                className="gap-2"
-              >
+              <Button variant="outline" onClick={claimReward} className="gap-2">
                 Claim Reward
               </Button>
-           
             </div>
           </div>
         </DialogContent>
@@ -680,12 +713,13 @@ useEffect(()=>{
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => emit('leave-battle-room', battleRoomState.roomId)}
+                onClick={() =>
+                  emit("leave-battle-room", battleRoomState.roomId)
+                }
                 className="gap-2"
               >
                 <ArrowLeft className="w-4 h-4" /> Lobby
               </Button>
-              
             </div>
           </div>
         </DialogContent>

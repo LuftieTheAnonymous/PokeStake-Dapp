@@ -1,13 +1,13 @@
-export const claimContractAddress = "";
+export const claimContractAddress = "0x91f349Bec7eD67890F7900843cfd187f650FA3aa";
 
-export const claimContractAbi = [
+export const claimRewardAbi = [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "_verifier",
+          "name": "_backendSigner",
           "type": "address",
-          "internalType": "contract IVerifier"
+          "internalType": "address"
         },
         {
           "name": "_snorlieCoin",
@@ -19,110 +19,88 @@ export const claimContractAbi = [
     },
     {
       "type": "function",
-      "name": "DEFAULT_ADMIN_ROLE",
+      "name": "backendSigner",
       "inputs": [],
-      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
       "stateMutability": "view"
     },
     {
       "type": "function",
-      "name": "addValidMerkleRoot",
+      "name": "claimBattleReward",
       "inputs": [
-        { "name": "_merkleRoot", "type": "bytes32", "internalType": "bytes32" }
+        { "name": "battleId", "type": "uint256", "internalType": "uint256" },
+        { "name": "winner", "type": "address", "internalType": "address" },
+        {
+          "name": "rewardAmount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        { "name": "signature", "type": "bytes", "internalType": "bytes" }
       ],
       "outputs": [],
       "stateMutability": "nonpayable"
     },
     {
       "type": "function",
-      "name": "getRoleAdmin",
-      "inputs": [
-        { "name": "role", "type": "bytes32", "internalType": "bytes32" }
-      ],
-      "outputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "grantRole",
-      "inputs": [
-        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
-        { "name": "account", "type": "address", "internalType": "address" }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "hasRole",
-      "inputs": [
-        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
-        { "name": "account", "type": "address", "internalType": "address" }
-      ],
+      "name": "claimedBattles",
+      "inputs": [{ "name": "", "type": "bytes32", "internalType": "bytes32" }],
       "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
       "stateMutability": "view"
     },
     {
       "type": "function",
-      "name": "renounceRole",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setBackendSigner",
       "inputs": [
-        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
+        { "name": "newSigner", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setPaused",
+      "inputs": [{ "name": "_paused", "type": "bool", "internalType": "bool" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "snorlieCoin",
+      "inputs": [],
+      "outputs": [
         {
-          "name": "callerConfirmation",
+          "name": "",
           "type": "address",
-          "internalType": "address"
+          "internalType": "contract SnorlieCoin"
         }
       ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "revokeRole",
-      "inputs": [
-        { "name": "role", "type": "bytes32", "internalType": "bytes32" },
-        { "name": "account", "type": "address", "internalType": "address" }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "rewardClaim",
-      "inputs": [
-        { "name": "_proof", "type": "bytes", "internalType": "bytes" },
-        {
-          "name": "_nullifierHash",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        { "name": "_hashSecret", "type": "bytes32", "internalType": "bytes32" },
-        { "name": "_merkleRoot", "type": "bytes32", "internalType": "bytes32" }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "supportsInterface",
-      "inputs": [
-        { "name": "interfaceId", "type": "bytes4", "internalType": "bytes4" }
-      ],
-      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
       "stateMutability": "view"
     },
     {
       "type": "event",
-      "name": "Added_MerkleRoot",
+      "name": "RewardClaimed",
       "inputs": [
         {
-          "name": "_merkleRoot",
-          "type": "bytes32",
+          "name": "battleId",
+          "type": "uint256",
           "indexed": false,
-          "internalType": "bytes32"
+          "internalType": "uint256"
         },
         {
-          "name": "addedAtBlock",
+          "name": "winner",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
           "type": "uint256",
           "indexed": false,
           "internalType": "uint256"
@@ -130,132 +108,21 @@ export const claimContractAbi = [
       ],
       "anonymous": false
     },
-    {
-      "type": "event",
-      "name": "RewardClaim",
-      "inputs": [
-        {
-          "name": "_proof",
-          "type": "bytes",
-          "indexed": false,
-          "internalType": "bytes"
-        },
-        {
-          "name": "_nullifierHash",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "blockNumber",
-          "type": "uint256",
-          "indexed": false,
-          "internalType": "uint256"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "RoleAdminChanged",
-      "inputs": [
-        {
-          "name": "role",
-          "type": "bytes32",
-          "indexed": true,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "previousAdminRole",
-          "type": "bytes32",
-          "indexed": true,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "newAdminRole",
-          "type": "bytes32",
-          "indexed": true,
-          "internalType": "bytes32"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "RoleGranted",
-      "inputs": [
-        {
-          "name": "role",
-          "type": "bytes32",
-          "indexed": true,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "account",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        },
-        {
-          "name": "sender",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "RoleRevoked",
-      "inputs": [
-        {
-          "name": "role",
-          "type": "bytes32",
-          "indexed": true,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "account",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        },
-        {
-          "name": "sender",
-          "type": "address",
-          "indexed": true,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    { "type": "error", "name": "AccessControlBadConfirmation", "inputs": [] },
+    { "type": "error", "name": "BattleAlreadyClaimed", "inputs": [] },
+    { "type": "error", "name": "ECDSAInvalidSignature", "inputs": [] },
     {
       "type": "error",
-      "name": "AccessControlUnauthorizedAccount",
+      "name": "ECDSAInvalidSignatureLength",
       "inputs": [
-        { "name": "account", "type": "address", "internalType": "address" },
-        { "name": "neededRole", "type": "bytes32", "internalType": "bytes32" }
-      ]
-    },
-    { "type": "error", "name": "InvalidProof", "inputs": [] },
-    {
-      "type": "error",
-      "name": "Invalid_MerkleRoot",
-      "inputs": [
-        { "name": "_root", "type": "bytes32", "internalType": "bytes32" }
+        { "name": "length", "type": "uint256", "internalType": "uint256" }
       ]
     },
     {
       "type": "error",
-      "name": "NullifierHash_AlreadyUsed",
-      "inputs": [
-        {
-          "name": "_nullifierHash",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ]
-    }
+      "name": "ECDSAInvalidSignatureS",
+      "inputs": [{ "name": "s", "type": "bytes32", "internalType": "bytes32" }]
+    },
+    { "type": "error", "name": "InvalidSignature", "inputs": [] },
+    { "type": "error", "name": "NotBattleWinner", "inputs": [] },
+    { "type": "error", "name": "RewardClaimPaused", "inputs": [] }
   ];

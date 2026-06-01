@@ -1,4 +1,4 @@
-export const pokemonStakingAddress = "0x0e986227f7d44846bcB0a1739A0131C88E06B5b7";
+export const pokemonStakingAddress = "0xf004a6425A45B486617c62c5363A8899d0562d70";
 
 export const pokemonStakingAbi= [
     {

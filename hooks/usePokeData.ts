@@ -138,9 +138,7 @@ async function drawRandomNumber(setDrawingState:(state:boolean)=>void){
  const result = writeContract({
   abi: VRFConsumerAbi,
   address: VrfConsumerAddress,
-  functionName:"requestRandomWords",
-  args:[],
-  gas: BigInt(200_000),
+  functionName:"requestRandomWords"
 },{
   onError(error, variables, onMutateResult, context) {
     console.log("Error of drawing random number");

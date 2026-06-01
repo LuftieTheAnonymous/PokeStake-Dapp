@@ -34,17 +34,17 @@ const generateRandomRoomId=()=>{
 
     const createBattleRoom = (roomId:string, invitee:`0x${string}`, playerNickname?:string)=>{
       const convertedSelectedPokemon:PokemonBattler[] = pokemonBattlersSelected.map((card)=> ({
-        pokemonId: card.attributes.id,
-        pokedexIndex: card.attributes.pokedexIndex,
-        rarityLevel: RARITY_CONFIG[card.attributes.rarity].dailyReward,
-        types: card.attributes.type,
-        hp: card.attributes.hp,
-        maxHp: card.attributes.hp,
-        attack: card.attributes.attack,
-        defense: card.attributes.defense,
-        sprites:{front: card.attributes.sprites[0], back: card.attributes.sprites[1]},
+        pokemonId: card.nftId,
+        pokedexIndex: card.pokedexId,
+        rarityLevel: RARITY_CONFIG[card.rarity].dailyReward,
+        types: card.type,
+        hp: card.hp,
+        maxHp: card.hp,
+        attack: card.attack,
+        defense: card.defense,
+        sprites:{front: card.sprites[0], back: card.sprites[1]},
         name: card.name,
-        cries: card.attributes.cries
+        cries: card.cries
       })) as unknown as PokemonBattler[];
 
       let hostDetails:Player={

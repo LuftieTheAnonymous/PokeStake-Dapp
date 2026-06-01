@@ -20,7 +20,7 @@ function LobbyPanel({emit}:{emit:(event:string, ...args:any[])=>void}) {
     const [ playerNickname, setPlayerNickname ] = useState("");
     const {pokemonBattlersSelected, addPokemon, removePokemon, clearPokemonSet} =useGameplayLobby();
     const [draggedCard, setDraggedCard] = useState<PokemonCard | null>(null);
-    const MAX_SELECTED = 2;
+    const MAX_SELECTED = 1;
 
     const { data: pokemonCards = [], isLoading, isError, refetch } = useQuery({
         queryKey: ["NFT-deck", walletAddress],

@@ -1,4 +1,4 @@
-export const marketPlaceAddress="0x0596c79013C72996780844Cd3066b4bac582d172";
+export const marketPlaceAddress="0x94CCa95C94f1693bD0FB8dEA1534bb39C7f0B879";
 
 export const marketPlaceAbi=[
     {
