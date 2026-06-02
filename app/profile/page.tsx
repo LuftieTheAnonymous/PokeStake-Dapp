@@ -5,7 +5,6 @@ import { ProfileForm } from "@/components/profile-form";
 import { ThemeSelector } from "@/components/theme-selector";
 import { Button } from "@/components/ui/button";
 import { SOCIAL_MEDIA_OPTIONS } from "@/lib/social-media";
-import { useThemeColors } from "@/hooks/use-theme-colors";
 import type { SocialMediaType } from "@/lib/social-media";
 import type { PokemonTheme } from "@/lib/themes";
 import { Edit2, Save, Upload } from "lucide-react";
@@ -23,7 +22,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const { user } = usePrivy();
   const {login} = useLogin();
-  const address = user?.wallet?.address;
+  const address = user?.wallet?.address as `0x${string}`;
 
   const { data: profile } = useQuery({
     queryKey: ["userProfile", address],

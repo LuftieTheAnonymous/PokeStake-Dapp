@@ -56,7 +56,7 @@ const {data} = useReadContracts({
     {'abi':marketPlaceAbi, address:marketPlaceAddress, functionName:"getListings"}
   
   ],
-  account: address,
+  account: address as `0x${string}`,
   query: { enabled: typeof address === 'string',retry:5, refetchInterval:100000, refetchIntervalInBackground:true, 
   'refetchOnReconnect':false, 'refetchOnMount':true }
 });

@@ -1,45 +1,57 @@
 "use client";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { SOCIAL_MEDIA_OPTIONS } from "@/lib/social-media";
+import { SOCIAL_MEDIA_OPTIONS, SocialMediaType } from "@/lib/social-media";
 import { useThemeInitializer } from "@/hooks/use-theme-colors";
 import { MessageSquare, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import Avatar from "boring-avatars"
+import usePokeData from "@/hooks/usePokeData";
+import { formatDistanceToNow } from "date-fns";
 
 export default function OtherProfilePage() {
   useThemeInitializer();
   const params = useParams();
+  const {walletAddress}=usePokeData();
   const playerId = params.profileId as string;
 
-  const  { data:profile, error, isLoading, } = useQuery({
-    queryKey: ['profile', playerId],
+  const { data: profile } = useQuery({
+    queryKey: ["userProfile", playerId],
     queryFn: async () => {
-  try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/trainers/${playerId}`);
-    
-      if (!response.ok) {
-      throw new Error('Failed to fetch profile data');
-    }
-    
-    const jsonData = await response.json();
+      if (!playerId) return null;
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/trainers/${playerId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `${walletAddress}`,
+          },
+          body: JSON.stringify({
+            include: {
+              socialMedias: true,
+              pokemons: true,
+              pokemonCardListings: true,
+            },
+          }),
+        });
 
-    return jsonData;
-}
-catch (error) {
-    console.error('Error fetching profile data:', error);
-    return null;
-}
-}
+        const {data} = await response.json();
+
+        return data;
+      } catch (error) {
+        console.error("Error fetching user profile:", String(error));
+        return null;
+      }
+    },
+    enabled: Boolean(playerId),
   });
-
-
 
   return (
     <div className="min-h-screen relative">
-
-      <main className="relative">
+{
+  profile &&
+  <main className="relative">
         <div className="max-w-7xl mx-auto px-4 py-12">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-12">
@@ -53,7 +65,7 @@ catch (error) {
             name={profile.walletAddress} />
 
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-2">{profile.username}</h1>
+                <h1 className="text-4xl md:text-5xl font-bold mb-2">{profile.nickname}</h1>
                 <p className="text-muted-foreground font-mono">{profile.walletAddress}</p>
               </div>
             </div>
@@ -84,81 +96,34 @@ catch (error) {
               <div className="space-y-4">
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <p className="text-xs text-muted-foreground uppercase mb-1">Battles Won</p>
-                  <p className="text-3xl font-bold">{profile.stats.battles}</p>
+                  <p className="text-3xl font-bold">34</p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <p className="text-xs text-muted-foreground uppercase mb-1">Pokemon Collected</p>
-                  <p className="text-3xl font-bold">{profile.stats.pokemon}</p>
+                  <p className="text-3xl font-bold">{profile.pokemons.length}</p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
                   <p className="text-xs text-muted-foreground uppercase mb-1">Member Since</p>
-                  <p className="text-2xl font-bold">{profile.stats.memberDays} days</p>
+                  <p className="text-2xl font-bold">{formatDistanceToNow(profile.joinedAt)}</p>
                 </div>
               </div>
             </div>
 
-            {/* Profile Content */}
+             {/* Profile Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Bio Section */}
-              <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                <h2 className="text-xl font-bold mb-4">About</h2>
-                <p className="text-muted-foreground">{profile.description}</p>
+             
+        
 
-                {/* Social Links */}
-                {profile.socialLinks && profile.socialLinks.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-border/30">
-                    <h3 className="font-semibold mb-4">Social Links</h3>
-                    <div className="space-y-2">
-                      {profile.socialLinks.map((link, idx) => {
-                        const config = SOCIAL_MEDIA_OPTIONS[link.type];
-                        if (!config) return null;
-                        const Icon = config.icon;
-                        return (
-                          <div key={idx} className="flex items-center gap-3">
-                            <Icon className="h-5 w-5 text-muted-foreground" />
-                            <span className="text-sm">{config.label}</span>
-                            <span className="text-sm font-mono text-muted-foreground ml-auto">
-                              {link.handle}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+    
 
-              {/* Trade History */}
-              <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6">
-                <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                    <div>
-                      <p className="text-sm font-semibold">Completed Trade</p>
-                      <p className="text-xs text-muted-foreground">Traded 5 Pokemon</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">2 days ago</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                    <div>
-                      <p className="text-sm font-semibold">Won Battle</p>
-                      <p className="text-xs text-muted-foreground">Against PokeFan123</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">5 days ago</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                    <div>
-                      <p className="text-sm font-semibold">Joined Collection</p>
-                      <p className="text-xs text-muted-foreground">Member of Elite Four</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">1 week ago</span>
-                  </div>
-                </div>
-              </div>
+   
             </div>
+         
           </div>
         </div>
       </main>
+}
+    
     </div>
   );
 }

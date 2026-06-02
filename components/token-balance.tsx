@@ -114,7 +114,7 @@ export function TokenBalance({
       )}
     >
       <Image src={SnorlieCoin} className="w-8 h-8" width={iconSizes[size]} height={iconSizes[size]} alt="Snorlie-Coin" />
-      <span>{Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+      <span>{Number(amount).toFixed(2)}</span>
       {showLabel && <span className="text-muted-foreground">$SNORLIE</span>}
     </div>
   );

@@ -210,27 +210,20 @@ function BatlleFieldContainer({
             winnerSignature: string;
             message: string;
           }
-        | {
-            message: string;
-            battleRoom: BattleRoom;
-            battleId: bigint;
-            winnerAddress?: undefined;
-            rewardAmount?: undefined;
-            winnerSignature?: undefined;
-          };
     }) => {
       setMessage(data.message);
+      console.log("Battle finished data:", data);
       battleRoomState.updateRoomState(data.battleRoom);
       if (data.winnerAddress === walletAddress) {
         setShowVictory(true);
-        if (data.battleId && data.rewardAmount && data.winnerSignature) {
+
           setBattleReward({
             battleId: BigInt(data.battleId),
             winner: data.winnerAddress,
             rewardAmount: BigInt(data.rewardAmount),
             signature: data.winnerSignature,
           });
-        }
+  
       } else {
         setShowDefeat(true);
       }
@@ -612,7 +605,7 @@ function BatlleFieldContainer({
                 POKéMON
               </button>
               <button
-                onClick={() => redirect("/lobby")}
+                onClick={() => redirect("/profile")}
                 disabled={isAnimating || movePerformed || !isYourTurn}
                 className="btn-run rounded-xl px-4 py-3 text-sm transition-all duration-150 hover:brightness-110 active:scale-95 disabled:opacity-50"
               >

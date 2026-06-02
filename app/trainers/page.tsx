@@ -1,35 +1,56 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Navigation } from "@/components/navigation";
 import { GradientBackground } from "@/components/gradient-background";
 import { Button } from "@/components/ui/button";
 import { useThemeInitializer } from "@/hooks/use-theme-colors";
 import { Search, MessageCircle, UserPlus, Trophy, Zap } from "lucide-react";
 import Link from "next/link";
-import { useLogin } from "@privy-io/react-auth";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
+import { useQuery } from "@tanstack/react-query";
+import Avatar from "boring-avatars";
+import usePokeData from "@/hooks/usePokeData";
+import { formatDistanceToNow } from "date-fns";
 
 export default function TrainersPage() {
   useThemeInitializer();
   const {login} = useLogin();
+  const {user} = usePrivy();
+  const {walletAddress} = usePokeData();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'level' | 'cards'>('level');
 
-  const filteredTrainers = mockTrainers
-    .filter((trainer) =>
-      trainer.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const {data:trainers} = useQuery({
+    queryKey:['trainers'],
+    queryFn: async ()=>{
+  try{
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/trainers/get-all`);
+  const {data, error}= await response.json();
+  if(error){
+    throw new Error(error);
+  }
+  return data;
+  }catch(e){
+    console.error("Error fetching trainers:", e);
+  }
+    },
+    enabled: !!walletAddress
+  });
+
+  const filteredTrainers = useMemo(()=>{
+    return (trainers ? trainers : []).filter((trainer:any) =>
+      trainer.nickname.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) => {
+    .sort((a:any, b:any) => {
       if (sortBy === 'level') return b.level - a.level;
-      return b.cardsCollected - a.cardsCollected;
+      return b.pokemons.length - a.pokemons.length;
     });
+  },[trainers, searchQuery, sortBy]);
 
   if (!user) {
     return (
       <div className="min-h-screen relative">
-        <GradientBackground />
-        <Navigation />
         <main className="relative">
           <div className="max-w-7xl mx-auto px-4 py-20">
             <div className="text-center space-y-4">
@@ -38,7 +59,7 @@ export default function TrainersPage() {
                 Connect your wallet to discover and connect with other trainers
               </p>
               <Button
-                onClick={connectWallet}
+                onClick={login}
                 className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white mx-auto mt-4"
                 size="lg"
               >
@@ -53,9 +74,6 @@ export default function TrainersPage() {
 
   return (
     <div className="min-h-screen relative">
-      <GradientBackground />
-      <Navigation />
-
       <main className="relative">
         <div className="max-w-7xl mx-auto px-4 py-12">
           {/* Header */}
@@ -102,7 +120,7 @@ export default function TrainersPage() {
 
           {/* Trainers Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTrainers.map((trainer) => (
+            {filteredTrainers.map((trainer:any) => (
               <div
                 key={trainer.id}
                 className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-6 hover:border-primary/50 transition-colors"
@@ -110,13 +128,11 @@ export default function TrainersPage() {
                 {/* Avatar & Header */}
                 <div className="flex items-start gap-4 mb-4">
                   <div className="relative flex-shrink-0">
-                    <Image
-                      src={getAvatarUrl(null, trainer.walletAddress)}
-                      alt={trainer.username}
-                      width={64}
-                      height={64}
-                      className="w-16 h-16 rounded-full border-2 border-primary/50 object-cover"
-                    />
+                  <Avatar
+                  variant="beam"
+                  size={48}
+                  name={trainer.nickname}
+                  />
                     <div
                       className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${
                         trainer.status === 'online'
@@ -126,7 +142,7 @@ export default function TrainersPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold">{trainer.username}</h3>
+                    <h3 className="text-lg font-bold">{trainer.nickname}</h3>
                     <p className="text-sm text-muted-foreground">Level {trainer.level}</p>
                   </div>
                 </div>
@@ -143,27 +159,25 @@ export default function TrainersPage() {
                       <Trophy className="h-4 w-4 text-orange-500" />
                       <p className="text-xs text-muted-foreground">Battles</p>
                     </div>
-                    <p className="text-lg font-bold">{trainer.battlesWon}</p>
+                    <p className="text-lg font-bold">{trainer.battleRecords.length}</p>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="h-4 w-4 text-yellow-500" />
                       <p className="text-xs text-muted-foreground">Cards</p>
                     </div>
-                    <p className="text-lg font-bold">{trainer.cardsCollected}</p>
+                    <p className="text-lg font-bold">{trainer.pokemons.length}</p>
                   </div>
                 </div>
 
                 {/* Last Seen */}
                 <p className="text-xs text-muted-foreground mb-4">
-                  {trainer.status === 'online'
-                    ? 'Online now'
-                    : `Last seen ${Math.floor((Date.now() - trainer.lastSeen.getTime()) / 3600000)}h ago`}
+                Joined {formatDistanceToNow(new Date(trainer.joinedAt), { addSuffix: true })}
                 </p>
 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-2">
-                  <Link href={`/profile/${trainer.id}`} className="flex-1">
+                  <Link href={`/profile/${trainer.walletAddress}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       <MessageCircle className="h-4 w-4 mr-1" />
                       Profile
