@@ -25,10 +25,10 @@ import { toast } from "sonner";
 import { redirect } from "next/navigation";
 import BattleHook from "./BattleHook";
 import { useInterval } from "@/hooks/useInterval";
-import { useWriteContract } from "wagmi";
+import { useWatchContractEvent, useWriteContract } from "wagmi";
 import {
   claimContractAddress,
-  claimRewardAbi,
+  claimRewardAbi
 } from "@/contracts-abis/BattleRewardClaimContract";
 
 function BatlleFieldContainer({
@@ -52,6 +52,7 @@ function BatlleFieldContainer({
   const [showSwapMenu, setShowSwapMenu] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   const [showDefeat, setShowDefeat] = useState(false);
+  const [claimed, setClaimed]=useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [movePerformed, setMovePerformed] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -203,27 +204,26 @@ function BatlleFieldContainer({
     }: {
       data:
         | {
-            battleId: bigint;
-            winnerAddress: string;
-            rewardAmount: bigint;
-            battleRoom: BattleRoom;
-            winnerSignature: string;
-            message: string;
+         battleId: string;
+    winnerAddress: string;
+    rewardAmount: string;
+    battleRoom: BattleRoom;
+    winnerSignature: string;
+    message: string;
           }
     }) => {
       setMessage(data.message);
       console.log("Battle finished data:", data);
       battleRoomState.updateRoomState(data.battleRoom);
-      if (data.winnerAddress === walletAddress) {
-        setShowVictory(true);
-
-          setBattleReward({
+            setBattleReward({
             battleId: BigInt(data.battleId),
             winner: data.winnerAddress,
             rewardAmount: BigInt(data.rewardAmount),
             signature: data.winnerSignature,
           });
-  
+      
+      if (data.winnerAddress === walletAddress) {
+        setShowVictory(true);
       } else {
         setShowDefeat(true);
       }
@@ -396,6 +396,21 @@ function BatlleFieldContainer({
       battleRoomState.updateRoomState(res.data.battleRoom);
     },
   );
+
+  useWatchContractEvent({
+    abi: claimRewardAbi,
+    address: claimContractAddress,
+    eventName:"RewardClaimed",
+    onLogs(logs){
+    if((logs[0] as any).args.winner === walletAddress && battleReward && (logs[0] as any).args.battleId === battleReward.battleId){
+      toast.success("Reward claimed successfully !");
+      setClaimed(true);
+    }
+    },
+  onError(error) {
+    toast.error(error.shortMessage);
+  },
+  });
 
   useEffect(() => {
     if (
@@ -684,9 +699,16 @@ function BatlleFieldContainer({
               {`Congratulations! You defeated ${battleRoomState.currentTurn === "host" ? battleRoomState.inviteePlayer?.playerNickname : battleRoomState.hostPlayer?.playerNickname}.`}
             </DialogDescription>
             <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={claimReward} className="gap-2">
+              {!claimed ? (
+                     <Button variant="outline" onClick={claimReward} className="gap-2">
                 Claim Reward
               </Button>
+              ) : 
+                 <Button variant="outline" onClick={()=>redirect('/')} className="gap-2">
+                  Go To Home
+              </Button>
+            }
+         
             </div>
           </div>
         </DialogContent>

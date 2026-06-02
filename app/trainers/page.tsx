@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Navigation } from "@/components/navigation";
-import { GradientBackground } from "@/components/gradient-background";
 import { Button } from "@/components/ui/button";
 import { useThemeInitializer } from "@/hooks/use-theme-colors";
 import { Search, MessageCircle, UserPlus, Trophy, Zap } from "lucide-react";

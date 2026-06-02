@@ -1,7 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { SOCIAL_MEDIA_OPTIONS, SocialMediaType } from "@/lib/social-media";
 import { useThemeInitializer } from "@/hooks/use-theme-colors";
 import { MessageSquare, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -113,8 +112,6 @@ export default function OtherProfilePage() {
             <div className="lg:col-span-2 space-y-8">
              
         
-
-    
 
    
             </div>
